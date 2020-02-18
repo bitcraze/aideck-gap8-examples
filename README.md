@@ -1,4 +1,4 @@
-# AI-deck_example
+# AI-deck example
 
 ## About
 ### AI-deck
@@ -16,14 +16,15 @@ For this example a basic understanding on how to:
 * Use and editing Makefiles 
 
 ## Setting up the GAP8 SDK
-To get started first set up the GAP8 SDK using the instruction on this repository https://github.com/GreenWaves-Technologies/gap_sdk.  
+To get started first set up the GAP8 SDK using the instruction on this repository:
+https://github.com/GreenWaves-Technologies/gap_sdk.  
 
 
 ## Workflow using GAPFlow
 To design a neural network and deploy it on the AI-deck, you should know the workflow of the GAP8 SDK for AI applications that is provided by GreenWaves Technologies. A neural network can be designed, trained, and evaluated using Tensorflow and Keras in Python. To let this code be able to run on the AI deck you must understand how the GAPFlow works. 
 
-![GAPFlow](/images/GAPFlow.png)
-<!-- Format: ![Alt Text](url) -->
+![GAPFlow](/illustrations/GAPFlow.png)
+Format: ![Courtesy of GreenWaves Technologies](https://greenwaves-technologies.com/)
 
 What you should provide in this workflow is the NNTool state file and application code programmed in C. 
 
