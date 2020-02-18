@@ -17,6 +17,7 @@ For this example a basic understanding on how to:
 
 ## Setting up the GAP8 SDK
 To get started first set up the GAP8 SDK using the instruction on this repository:
+
 https://github.com/GreenWaves-Technologies/gap_sdk.  
 
 
@@ -40,6 +41,7 @@ https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/tools/nntool
 
 ### Autotiler use
 The Autotiler supports basic operators needed for a convolutional neural network. If you need a specialized operator for your neural network, then you can make your own autotiler operator by using this page.
+
 https://greenwaves-technologies.com/manuals/BUILD/AUTOTILER/html/index.html
 
 
