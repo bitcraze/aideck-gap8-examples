@@ -9,7 +9,9 @@ The example shows a simple convolutional neural network based on the MNIST examp
 
 This example can be easily modified to a different classification task by using a similar and simple dataset. 
 
-## For users starting with embedded applications and the Crazyflie
+In addition to get quickly started on your own AI application you can make use of the principles of Transfer Learning.
+
+### For users starting with embedded applications and the Crazyflie
 For this example a basic understanding on how to:
 * Program in Python and C
 * Use Linux systems
@@ -22,19 +24,31 @@ https://github.com/GreenWaves-Technologies/gap_sdk.
 
 
 ## Workflow using GAPFlow
-To design a neural network and deploy it on the AI-deck, you should know the workflow of the GAP8 SDK for AI applications that is provided by GreenWaves Technologies. A neural network can be designed, trained, and evaluated using Tensorflow and Keras in Python. To let this code be able to run on the AI deck you must understand how the GAPFlow works. 
+To design a neural network and deploy it on the AI-deck, you should know the workflow of the GAP8 SDK for AI applications that is provided by GreenWaves Technologies. A neural network can be designed, trained, and evaluated using Tensorflow and Keras in Python. To let this code be able to run on the AI deck an automated process is executed by the GAPFlow of the GAP8 SDK. 
 
 ![GAPFlow](/illustrations/GAPFlow.png)
-Format: ![Courtesy of GreenWaves Technologies](https://greenwaves-technologies.com/)
+Courtesy of GreenWaves Technologies: ![https://greenwaves-technologies.com/]()
 
-What you should provide in this workflow is the NNTool state file and application code programmed in C. 
+<!-- explaining about the model graph process and models -->
+
+What you should provide in this workflow is:
+* dataset with labels
+* neural network model
+* NNTool state file
+* GAP application code
+* optional: autotiler operator
+
+### Tensorflow and Keras use
+Keras provides many examples of common and simple neural networks and provides datasets along with it. Though when you want to make an application you might want to use other datasets that are relevant for your application. For this you have to supply you own dataset with labels, dataloader and transformations when required.
 
 ### NNTool use
 In this example the NNTool state file can be found in example/model/nntool_script special attention to the following command/rule 
+
 ```aquant -f 8 <image folder>/*.<image extension> -T```
 
 The NNTool makes use of post-training quantization and adjust the quantized weights using the images defined in the aforementioned rule in the state file.
 
+<!-- explain a bit more in detail about quantization -->
 
 https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/tools/nntool
 
@@ -44,6 +58,7 @@ The Autotiler supports basic operators needed for a convolutional neural network
 
 https://greenwaves-technologies.com/manuals/BUILD/AUTOTILER/html/index.html
 
+<!-- explain a bit more about how the autotiler works -->
 
 ## Application code for the AI-deck
 ### Environment
@@ -54,7 +69,11 @@ This example mainly uses the following set up.
     * Himax
 * OpenOCD as debug bridge 
 
+<!-- add explanation about application code and put link to file -->
+
 ## Application code for the Crazyflie
 ### For users starting with the Crazyflie the following should be known on how to:
 * Use LOG and PARAM in Crazyflie
 * Make an application in the Crazyflie Applayer 
+
+<!-- insert link to Bitcraze website and maybe explain about out of tree -->
