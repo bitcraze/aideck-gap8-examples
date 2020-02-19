@@ -5,7 +5,7 @@
 The AI-deck enables low power on-board artificial intelligence capabilities for the Crazyflie using a GAP8 chip with RISC-V multi-core architecture, 512 Mbit HyperFlash and 64 Mbit HyperRAM. In addition the deck has a Himax HM01B0 grayscale camera with a Wi-Fi module to stream your images to a desktop. These features fit the prerequites of a convolutional neural network, but the AI-deck is not limited to the application of CNN's. 
 
 ### Example
-The example shows a simple convolutional neural network based on the MNIST example of the GAP8 SDK. MNIST is a CNN that classifies handwritten digits ranging from  0 to 9. If the AI-deck identifies a 0 it will send a UART byte to the Crazyflie which in turn gives a command to turn right. If it identifies a 9 it will go the left. 
+The example shows a simple convolutional neural network based on the MNIST example of the GAP8 SDK. MNIST is a CNN that classifies handwritten digits ranging from  0 to 9. If the AI-deck identifies a 0 it will send a UART byte to the Crazyflie which in turn gives a command to turn right. If it identifies a 9 it will go to the left. 
 
 This example can be easily modified to a different classification task by using a similar and simple dataset. 
 
@@ -27,7 +27,7 @@ https://github.com/GreenWaves-Technologies/gap_sdk.
 To design a neural network and deploy it on the AI-deck, you should know the workflow of the GAP8 SDK for AI applications that is provided by GreenWaves Technologies. A neural network can be designed, trained, and evaluated using Tensorflow and Keras in Python. To let this code be able to run on the AI deck an automated process is executed by the GAPFlow of the GAP8 SDK. 
 
 ![GAPFlow](/illustrations/GAPFlow.png)
-Courtesy of GreenWaves Technologies: ![https://greenwaves-technologies.com/]()
+Courtesy of GreenWaves Technologies: https://greenwaves-technologies.com/
 
 <!-- explaining about the model graph process and models -->
 
@@ -39,7 +39,9 @@ What you should provide in this workflow is:
 * optional: autotiler operator
 
 ### Tensorflow and Keras use
-Keras provides many examples of common and simple neural networks and provides datasets along with it. Though when you want to make an application you might want to use other datasets that are relevant for your application. For this you have to supply you own dataset with labels, dataloader and transformations when required.
+Keras is a framework within Tensorflow. In addtion to providing a neural network framework, it also provides many examples of common and simple neural networks and provides datasets along with it. Though when you want to make an application you might want to use other datasets that are relevant for your application. For this you have to supply you own dataset with labels, dataloader and transformations when required.
+
+https://keras.io/datasets/
 
 ### NNTool use
 In this example the NNTool state file can be found in example/model/nntool_script special attention to the following command/rule 
