@@ -71,7 +71,7 @@ https://greenwaves-technologies.com/manuals/BUILD/AUTOTILER/html/index.html
 <!-- explain a bit more about how the autotiler works -->
 
 ## Application code for the AI-deck
-### Environment
+### Environment in the GAP8 SDK
 This example mainly uses the following set up. 
 * FreeRTOS as RTOS
 * PMSIS-API as low-level driver

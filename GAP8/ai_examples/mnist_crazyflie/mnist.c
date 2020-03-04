@@ -58,8 +58,8 @@ L2_MEM struct pi_uart_conf uart_conf;
 L2_MEM struct pi_device uart;
 L2_MEM uint8_t rec_digit = -1;
 
-#define PRINT_IMAGE
-#define REAL_TIME
+// #define PRINT_IMAGE
+// #define REAL_TIME
 
 //camera init parameters
 // #define CAMERA
@@ -276,7 +276,7 @@ int test_mnist(void)
 
     // Print image
   #if defined(PRINT_IMAGE)
-    printf("Image found in memory and used by cluster task");
+    printf("Image found in memory and used by cluster task\n");
     int W = 28, H = 28;
     for (int i=0; i<H; i++)
     {
