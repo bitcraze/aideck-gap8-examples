@@ -40,7 +40,6 @@ Courtesy of GreenWaves Technologies: https://greenwaves-technologies.com/
 What you should provide in this workflow is:
 * dataset with labels
 * neural network model
-* NNTool state file
 * GAP application code
 * optional: own autotiler operator
 

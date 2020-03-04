@@ -16,7 +16,7 @@ This project includes a sample based on a simple MNIST graph defined in Keras. I
 * It then compiles and runs the model to produce GAP8 code
 * Finally it builds and runs the produced code on GAP8
 
-### Makefile use
+### Compiling and running 
 While this example uses Makefiles the same steps could be achieved with any build system.
 
 The process can be run to quantize the model in 8 or 16 bits weights and activations.
