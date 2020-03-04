@@ -93,9 +93,6 @@ $(MODEL_GEN_C): $(MODEL_GEN_EXE)
 	echo "RUNNING AUTOTILER MODEL"
 	$(MODEL_GEN_EXE) -o $(MODEL_BUILD) -c $(MODEL_BUILD) $(MODEL_GEN_EXTRA_FLAGS)
 
-#Maybe add an module here that adds output to UART module to the MODEL_GEN_EXE
-#Look at PuLPDronet code for inspiration
-
 # A phony target to simplify including this in the main Makefile
 model: $(MODEL_GEN_C)
 
