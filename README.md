@@ -32,7 +32,7 @@ https://github.com/GreenWaves-Technologies/gap_sdk.
 ## Workflow using GAPFlow
 To design a neural network and deploy it on the AI-deck, you should know the workflow of the GAP8 SDK for AI applications that is provided by GreenWaves Technologies. A neural network can be designed, trained, and evaluated using Tensorflow and Keras in Python. To let this code be able to run on the AI deck, an automated process is executed by the GAPFlow of the GAP8 SDK. 
 
-![GAPFlow](/illustrations/GAPFlow.png)
+<!-- ![GAPFlow](/illustrations/GAPFlow.png) --> [insert image about GAPFlow]
 Courtesy of GreenWaves Technologies: https://greenwaves-technologies.com/
 
 <!-- explaining about the model graph process and models -->
