@@ -120,12 +120,9 @@ static int open_wifi(struct pi_device *device)
 
   pi_nina_w10_conf_init(&nina_conf);
 
-  /*nina_conf.ssid = "Bitcraze_guest";
-  nina_conf.passwd = "AwesomenessInProgress";*/
-
-  nina_conf.ssid = "Bitcraze";
-  nina_conf.passwd = "TrustIsGoodControlIsBetter";
-  nina_conf.ip_addr = "192.168.5.49";
+  nina_conf.ssid = "";
+  nina_conf.passwd = "";
+  nina_conf.ip_addr = "0.0.0.0";
   nina_conf.port = 5555;
   pi_open_from_conf(device, &nina_conf);
   if (pi_transport_open(device))
