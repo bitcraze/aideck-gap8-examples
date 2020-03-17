@@ -12,7 +12,8 @@
 #include "pmsis.h"
 #include "pmsis/drivers/uart.h"
 #include "bsp/camera/himax.h"
-// #include "tools/frame_streamer.h"
+#include "bsp/transport/nina_w10.h"
+ #include "tools/frame_streamer.h"
 #endif  /* __EMUL__ */
 
 /* Autotiler includes. */
@@ -62,21 +63,66 @@ L2_MEM uint8_t rec_digit = -1;
 #define REAL_TIME
 
 //camera init parameters
-// #define CAMERA
-#define CAM_WIDTH    324
-#define CAM_HEIGHT   244
+#define CAMERA
+#define CAM_WIDTH    320
+#define CAM_HEIGHT   240
 
 //cropping option for camera 
 // #define CAM_CROP_W   150 
 // #define CAM_CROP_H   150
-#define AT_CAMERA_INPUT_SIZE_BYTES (CAM_WIDTH*CAM_HEIGHT*sizeof(image_in_t))
+#define AT_CAMERA_INPUT_SIZE_BYTES (CAM_WIDTH*CAM_HEIGHT*sizeof(unsigned char))
 
 L2_MEM struct pi_device himax;
-L2_MEM struct pi_himax_conf cam_conf;
 L2_MEM pi_cl_alloc_req_t alloc_req;
 // L2_MEM struct pi_task_t cam_task;
 
 char *ImageName = NULL;
+
+
+/**************************
+ * CAMERA STREAMER***
+ * ************************/
+static pi_task_t task1;
+static pi_task_t task2;
+static unsigned char *imgBuff0;
+static unsigned char *imgBuff1;
+static struct pi_device camera;
+static struct pi_device wifi;
+static frame_streamer_t *streamer1;
+static frame_streamer_t *streamer2;
+static pi_buffer_t buffer;
+static pi_buffer_t buffer2;
+static volatile int stream1_done;
+static volatile int stream2_done;
+
+
+static int open_pi_camera_himax(struct pi_device *device)
+{
+  printf("3 \n");
+  struct pi_himax_conf cam_conf;
+
+  pi_himax_conf_init(&cam_conf);
+  printf("4 \n");
+
+  cam_conf.format = PI_CAMERA_QQVGA;
+
+  pi_open_from_conf(device, &cam_conf);
+    printf("5 \n");
+
+  if (pi_camera_open(device))
+    return -1;
+
+  return 0;
+}
+
+
+
+
+
+
+/***************************************
+ * 
+ * **************************************/
 
 static void cluster()
 {
@@ -128,25 +174,24 @@ int test_mnist(void)
 
 // HIMAX CAMERA init, configure, execute 
 #if defined(CAMERA)
-  ImageInCam = (image_in_t *) pi_l2_malloc(AT_CAMERA_INPUT_SIZE_BYTES);
+  pi_freq_set(PI_FREQ_DOMAIN_FC, 150000000);
+  
+
+  ImageInCam = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH*CAM_HEIGHT)*sizeof(unsigned char));
   if (ImageInCam == NULL) 
   {
     printf("[CAMERA] Failed to allocate memory for image\n");
   }
 
-  pi_himax_conf_init(&cam_conf);
-  cam_conf.i2c_itf = 0;
-  cam_conf.format = PI_CAMERA_QQVGA;        //160 by 120
-  pi_open_from_conf(&himax, &cam_conf);
-  printf("[CAMERA] Open");
-  if (pi_camera_open(&himax))
+  if (open_pi_camera_himax(&himax))
   {
-    printf("[CAMERA] Failed to open camera driver\n");
-    pmsis_exit(-7);
+    printf("Failed to open camera\n");
+    return -1;
   }
-  // static pi_buffer_t buffer;
-  // pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, ImageInCam);
-  // pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY); 
+
+  printf("Camera has opened\n");
+      return -1;
+      
 
   pi_camera_control(&himax, PI_CAMERA_CMD_START, 0);
   printf("[CAMERA] Start\n");
@@ -160,14 +205,14 @@ int test_mnist(void)
   printf("Captured image\n");
 #endif
 
-#if defined(PRINT_IMAGE) && defined(CAMERA)
+/*#if defined(PRINT_IMAGE) && defined(CAMERA)
   printf("AFTER Camera capture\n");
-  int W = 324, H = 244;
-  for (int i=0; i<H; i++)
+  int W_print = 324, H_print = 244;
+  for (int i=0; i<H_print; i++)
   {
-    for (int j=0; j<W; j++)
+    for (int j=0; j<W_print; j++)
     {
-      printf("%03d, ", ImageInCam[W* i + j]);
+      printf("%03d, ", ImageInCam[W_print* i + j]);
     }
     printf("\n");
   }
