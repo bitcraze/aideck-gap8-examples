@@ -59,8 +59,8 @@ L2_MEM struct pi_uart_conf uart_conf;
 L2_MEM struct pi_device uart;
 L2_MEM uint8_t rec_digit = -1;
 
-#define PRINT_IMAGE
-#define REAL_TIME
+// #define PRINT_IMAGE
+// #define REAL_TIME
 
 //camera init parameters
 #define CAMERA
@@ -123,6 +123,18 @@ static int open_pi_camera_himax(struct pi_device *device)
 /***************************************
  * 
  * **************************************/
+
+int MemoryPrint(int W, int H, image_in_t *ImageIn)
+{
+  for (int i=0; i<H; i++)
+  {
+    for (int j=0; j<W; j++)
+    {
+      printf("%03d, ", ImageIn[W* i + j]);
+    }
+    printf("\n");
+  }
+}
 
 static void cluster()
 {
@@ -207,15 +219,7 @@ int test_mnist(void)
 
 /*#if defined(PRINT_IMAGE) && defined(CAMERA)
   printf("AFTER Camera capture\n");
-  int W_print = 324, H_print = 244;
-  for (int i=0; i<H_print; i++)
-  {
-    for (int j=0; j<W_print; j++)
-    {
-      printf("%03d, ", ImageInCam[W_print* i + j]);
-    }
-    printf("\n");
-  }
+  MemoryPrint(CAM_WIDTH, CAM_HEIGHT, ImageInCam);
 #endif  /* PRINT_IMAGE */  
   
 // Using images from PC
@@ -236,15 +240,7 @@ int test_mnist(void)
 #endif  /* NO_IMAGE && NO CAMERA */
 
 #if defined(PRINT_IMAGE)
-  int W = 28, H = 28;
-  for (int i=0; i<H; i++)
-  {
-    for (int j=0; j<W; j++)
-    {
-      printf("%03d, ", ImageIn[W* i + j]);
-    }
-    printf("\n");
-  }
+  MemoryPrint(AT_INPUT_WIDTH, AT_INPUT_HEIGHT, ImageIn);
 #endif  /* PRINT_IMAGE */  
 
 // Allocate memory for output of Mnist network
@@ -321,16 +317,8 @@ int test_mnist(void)
 
     // Print image
   #if defined(PRINT_IMAGE)
-    printf("Image found in memory and used by cluster task");
-    int W = 28, H = 28;
-    for (int i=0; i<H; i++)
-    {
-        for (int j=0; j<W; j++)
-        {
-            printf("%03d, ", ImageIn[W*i + j]);
-        }
-        printf("\n");
-    }
+    printf("Image found in memory and used by cluster task\n");
+    MemoryPrint(AT_INPUT_WIDTH, AT_INPUT_HEIGHT, ImageIn);
   #endif  /* PRINT_IMAGE */
 
   // Cluster task
@@ -411,7 +399,8 @@ int main()
   #define __STRING(__s) __STRING1(__s)
   ImageName = __STRING(LINK_IMAGE_NAME);
   #else
-  ImageName = "../../../samples/3362_6.pgm";
+  // ImageName = "../../../samples/3362_6.pgm";
+  ImageName = "../../../samples/gimp16_2.pgm";
   #endif  /* LINK_IMAGE_NAME */
   printf("\n\n\t *** NNTOOL Mnist Example ***\n\n");
 
