@@ -64,8 +64,8 @@ L2_MEM uint8_t rec_digit = -1;
 
 //camera init parameters
 #define CAMERA
-#define CAM_WIDTH    320
-#define CAM_HEIGHT   240
+#define CAM_WIDTH    324
+#define CAM_HEIGHT   244
 
 //cropping option for camera 
 // #define CAM_CROP_W   150 
@@ -95,6 +95,33 @@ static pi_buffer_t buffer2;
 static volatile int stream1_done;
 static volatile int stream2_done;
 
+static void streamer_handler(void *arg);
+
+
+static void cam_handler(void *arg)
+{
+  printf("stream has started!\n");
+  pi_camera_control(&himax, PI_CAMERA_CMD_STOP, 0);
+
+  stream1_done = 0;
+  stream2_done = 0;
+
+  frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
+
+  return;
+
+
+}
+
+static void streamer_handler(void *arg)
+{
+  /**(int *)arg = 1;
+  if (stream1_done) // && stream2_done)
+  {
+    pi_camera_capture_async(&himax, ImageInCam, CAM_WIDTH*CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));
+    pi_camera_control(&himax, PI_CAMERA_CMD_START, 0);
+  }*/
+}
 
 static int open_pi_camera_himax(struct pi_device *device)
 {
@@ -116,9 +143,46 @@ static int open_pi_camera_himax(struct pi_device *device)
 }
 
 
+static int open_wifi(struct pi_device *device)
+{
+  struct pi_nina_w10_conf nina_conf;
 
+  pi_nina_w10_conf_init(&nina_conf);
 
+  /*nina_conf.ssid = "Bitcraze_guest";
+  nina_conf.passwd = "AwesomenessInProgress";
 
+  nina_conf.ssid = "Bitcraze";
+  nina_conf.passwd = "TrustIsGoodControlIsBetter";
+  nina_conf.ip_addr = "192.168.5.49";*/
+
+    nina_conf.ssid = "COMHEM_f00c8b";
+  nina_conf.passwd = "qmnzu2nu";
+  nina_conf.ip_addr = "192.168.0.17";
+
+  nina_conf.port = 5555;
+  pi_open_from_conf(device, &nina_conf);
+  if (pi_transport_open(device))
+    return -1;
+
+  return 0;
+}
+
+static frame_streamer_t *open_streamer(char *name)
+{
+  struct frame_streamer_conf frame_streamer_conf;
+
+  frame_streamer_conf_init(&frame_streamer_conf);
+
+  frame_streamer_conf.transport = &wifi;
+  frame_streamer_conf.format = FRAME_STREAMER_FORMAT_JPEG;
+  frame_streamer_conf.width = CAM_WIDTH;
+  frame_streamer_conf.height = CAM_HEIGHT;
+  frame_streamer_conf.depth = 1;
+  frame_streamer_conf.name = name;
+
+  return frame_streamer_open(&frame_streamer_conf);
+}
 
 /***************************************
  * 
@@ -195,6 +259,17 @@ int test_mnist(void)
     printf("[CAMERA] Failed to allocate memory for image\n");
   }
 
+  // TEST---------------------------------
+
+    imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH*CAM_HEIGHT)*sizeof(unsigned char));
+  if (imgBuff0 == NULL) {
+      printf("Failed to allocate Memory for Image \n");
+      return 1;
+  }
+
+
+  //TEST ---------------------------------
+
   if (open_pi_camera_himax(&himax))
   {
     printf("Failed to open camera\n");
@@ -202,19 +277,45 @@ int test_mnist(void)
   }
 
   printf("Camera has opened\n");
-      return -1;
-      
+
+  if (open_wifi(&wifi))
+  {
+    printf("Failed to open wifi\n");
+    return -1;
+  }
+  printf("Wifi has opened\n");
+
+  streamer1 = open_streamer("camera");
+  if (streamer1 == NULL)
+    return -1;
+  printf("streamer has opened\n");
+
+  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, ImageInCam);
+  pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+  printf("buffers are set\n");
+
+  /*pi_camera_control(&himax, PI_CAMERA_CMD_STOP, 0);
+  printf("buffers are set\n");
+
+  pi_camera_capture_async(&himax, ImageInCam, CAM_WIDTH*CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));
+  pi_camera_control(&himax, PI_CAMERA_CMD_START, 0);*/
 
   pi_camera_control(&himax, PI_CAMERA_CMD_START, 0);
   printf("[CAMERA] Start\n");
   pi_time_wait_us(1000000);
   pi_camera_capture(&himax, ImageInCam, CAM_WIDTH*CAM_HEIGHT);
-  // pi_task_t *task_capture;
-  // task_capture = pi_task_block();
-  // pi_camera_capture_async(&himax, ImageInCam, CAM_WIDTH*CAM_HEIGHT, task_capture);
-  // pi_task_wait_on(task_capture);
   pi_camera_control(&himax, PI_CAMERA_CMD_STOP, 0);
   printf("Captured image\n");
+  frame_streamer_send_async(streamer1, &buffer, 1);
+  
+
+
+  while(1)
+  {
+    pi_yield();
+  }
+
+  
 #endif
 
 /*#if defined(PRINT_IMAGE) && defined(CAMERA)
