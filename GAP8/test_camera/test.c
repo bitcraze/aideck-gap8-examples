@@ -69,8 +69,12 @@ int main()
     }
 
     // Rotate camera orientation
-    uint8_t set_value=2;
+    uint8_t set_value=3;
+    uint8_t reg_value;
+
     pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
+    pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+    printf("img orientation %d\n",reg_value);
 
     // Reserve buffer space for image
     buff = pmsis_l2_malloc(WIDTH*HEIGHT);
