@@ -70,7 +70,7 @@ static void test_gap8(void)
     // toggle LED when sending information
     pi_gpio_pin_write(&gpio_device, 2, led_val);
     led_val ^= 1;
-    pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);     pi_uart_write(&device, &value, 1);
+    pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);  
   
   // Write the value to uart
     pi_uart_write(&device, &value, 1);
