@@ -28,17 +28,17 @@ override config_args += --config-opt=camera/image-stream=$(CURDIR)/imgTest0.pgm
 
 APP_SRCS += $(FACE_DET_SRCS)
 APP_INC  += $(TILER_INC)
-APP_CFLAGS += -O3 -g -D__PMSIS__ -DUSE_CAMERA -DUSE_STREAMER  -DNB_FRAMES=$(NB_FRAMES)
+APP_CFLAGS += -O3 -g -D__PMSIS__ -DUSE_CAMERA -DNB_FRAMES=$(NB_FRAMES)
 
 BOARD_NAME ?= gapoc_a
-PMSIS_OS ?= freertos
+PMSIS_OS ?= pulp_os
 USE_PMSIS_BSP=1
 APP_LDFLAGS += -lgaptools -lgaplib 
 
 export GAP_USE_OPENOCD=1
 io=host
 
-#APP_CFLAGS += -DGAPUINO
+# This needs to be defined or else some other IO functionalities or cluster things will break...
 APP_CFLAGS += -DHIMAX
 
 ifeq '$(BOARD_NAME)' 'gapoc_a'

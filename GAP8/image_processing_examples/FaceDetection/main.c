@@ -27,11 +27,7 @@
 #else
 #include "bsp/gapuino.h"
 #endif  /* GAPOC */
-#if defined(HIMAX)
 #include "bsp/camera/himax.h"
-#else
-#include "bsp/camera/mt9v034.h"
-#endif  /* HIMAX */
 #if defined(USE_DISPLAY)
 #include "bsp/display/ili9341.h"
 #endif  /* USE_DISPLAY */
@@ -45,13 +41,9 @@
 #include "ImageDraw.h"
 #include "setup.h"
 
-#if defined(HIMAX)
 #define CAM_WIDTH    324
 #define CAM_HEIGHT   244
-#else
-#define CAM_WIDTH    320
-#define CAM_HEIGHT   240
-#endif  /* HIMAX */
+
 
 #define LCD_WIDTH    320
 #define LCD_HEIGHT   240
@@ -96,7 +88,6 @@ static int open_display(struct pi_device *device)
 }
 
 #if defined(USE_CAMERA)
-#if defined(HIMAX)
 static int open_camera_himax(struct pi_device *device)
 {
   struct pi_himax_conf cam_conf;
@@ -111,32 +102,13 @@ static int open_camera_himax(struct pi_device *device)
 
   return 0;
 }
-#else
-static int open_camera_mt9v034(struct pi_device *device)
-{
-  struct pi_mt9v034_conf cam_conf;
-
-  pi_mt9v034_conf_init(&cam_conf);
-  cam_conf.format = PI_CAMERA_QVGA;
-
-  pi_open_from_conf(device, &cam_conf);
-  if (pi_camera_open(device))
-    return -1;
-
-  return 0;
-}
-#endif  /* HIMAX */
 #endif  /* USE_CAMERA */
 
 
 static int open_camera(struct pi_device *device)
 {
     #if defined(USE_CAMERA)
-    #if defined(HIMAX)
     return open_camera_himax(device);
-    #else
-    return open_camera_mt9v034(device);
-    #endif  /* HIMAX */
     #else
     return 0;
     #endif  /* USE_CAMERA */
@@ -323,17 +295,12 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
     
     printf("Camera open success\n");
 
-    #if defined(HIMAX)
     buffer.data = imgBuff0+CAM_WIDTH*2+2;
     buffer.stride = 4;
 
     // WIth Himax, propertly configure the buffer to skip boarder pixels
     pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0+CAM_WIDTH*2+2);
     pi_buffer_set_stride(&buffer, 4);
-    #else
-    buffer.data = imgBuff0;
-    pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
-    #endif  /* HIMAX */
     
     #if defined(USE_DISPLAY)||defined(USE_STREAMER)
     buffer_out.data = ImageOut;
@@ -401,6 +368,7 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
         #endif
         #else
+
         char * ImageName =  "../../../imgTest0.pgm";
         unsigned int Wi, Hi;
         unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
