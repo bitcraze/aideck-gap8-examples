@@ -16,6 +16,7 @@
 
 #include "stdio.h"
 //#include "ImgIO.h"
+#include "gaplib/ImgIO.h"
 
 /* PMSIS includes */
 #include "pmsis.h"
@@ -43,8 +44,8 @@
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
 
-#define LCD_WIDTH 320
-#define LCD_HEIGHT 240
+#define STREAMER_WIDTH 64
+#define STREAMER_HEIGHT 48
 
 static unsigned char *imgBuff0;
 static struct pi_device ili;
@@ -251,8 +252,13 @@ void test_facedetection(void)
   // WIth Himax, propertly configure the buffer to skip boarder pixels
   pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0 + CAM_WIDTH * 2 + 2);
   pi_buffer_set_stride(&buffer, 4);
-
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+
+  buffer_out.data = ImageOut;
+  buffer_out.stride = 0;
+  pi_buffer_init(&buffer_out, PI_BUFFER_TYPE_L2, ImageOut);
+  pi_buffer_set_format(&buffer_out, STREAMER_WIDTH, STREAMER_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+  pi_buffer_set_stride(&buffer_out, 0);
 
   ClusterCall.ImageIn = imgBuff0;
   ClusterCall.Win = W;
@@ -286,21 +292,11 @@ void test_facedetection(void)
   while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
   {
 #if defined(USE_CAMERA)
-#if defined(USE_STREAMER)
 
     pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
     pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
     pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-    frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
 
-    //frame_streamer_send(streamer1, &buffer);
-
-#else
-    pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
-    pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
-    pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-
-#endif
 #else
 
     char *ImageName = "../../../imgTest0.pgm";
@@ -315,9 +311,15 @@ void test_facedetection(void)
 
     pi_cluster_send_task_to_cl(&cluster_dev, task);
     printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
+    //WriteImageToFile("../../../img_out.ppm", STREAMER_WIDTH, STREAMER_HEIGHT, 1, ImageOut, GRAY_SCALE_IO);
+
+
+#if defined(USE_STREAMER)
+    frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
+#endif
+
     pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
 
-    //WriteImageToFile("../../../img_out.ppm", CAM_WIDTH, CAM_HEIGHT, imgBuff0);
 
     nb_frames++;
   }
