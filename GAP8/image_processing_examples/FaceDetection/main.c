@@ -142,6 +142,11 @@ static int open_camera(struct pi_device *device)
     #endif  /* USE_CAMERA */
 }
 
+//UART init param
+L2_MEM struct pi_uart_conf uart_conf;
+L2_MEM struct pi_device uart;
+L2_MEM uint8_t rec_digit = -1;
+
 #if defined(USE_STREAMER)
 
 static pi_task_t task1;
@@ -149,10 +154,7 @@ static pi_task_t task2;
 static struct pi_device wifi;
 static frame_streamer_t *streamer1;
 static volatile int stream1_done;
-//UART init param
-L2_MEM struct pi_uart_conf uart_conf;
-L2_MEM struct pi_device uart;
-L2_MEM uint8_t rec_digit = -1;
+
 
 static void streamer_handler(void *arg);
 
@@ -189,9 +191,9 @@ static int open_wifi(struct pi_device *device)
 
   pi_nina_w10_conf_init(&nina_conf);
 
-  nina_conf.ssid = "Bitcraze";
-  nina_conf.passwd = "TrustIsGoodControlIsBetter";
-  nina_conf.ip_addr = "192.168.5.49";
+  nina_conf.ssid = "COMHEM_f00c8b";
+  nina_conf.passwd = "qmnzu2nu";
+  nina_conf.ip_addr = "192.168.0.17";
   nina_conf.port = 5555;
   pi_open_from_conf(device, &nina_conf);
   if (pi_transport_open(device))
@@ -270,10 +272,6 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   }
     printf("malloc done\n");
 
-#if defined(USE_STREAMER)
-
-
-#endif
 #if defined(USE_DISPLAY)
 
     if (open_display(&ili))
@@ -283,6 +281,8 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
     }
     printf("display done\n");
 #endif
+
+#if defined(USE_CAMERA)
     if (open_camera(&cam))
     {
         printf("Failed to open camera\n");
@@ -293,6 +293,8 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
     pi_camera_reg_set(&cam, IMG_ORIENTATION, &set_value);
     pi_camera_reg_get(&cam, IMG_ORIENTATION, &reg_value);
+#endif
+
 #if defined(USE_STREAMER)
 
   if (open_wifi(&wifi))
@@ -304,6 +306,9 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   streamer1 = open_streamer("cam");
   if (streamer1 == NULL)
     return -1;
+
+#endif
+
 //  UART init and configure
   pi_uart_conf_init(&uart_conf);
   uart_conf.enable_tx = 1;
@@ -315,8 +320,6 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
       printf("[UART] open failed !\n");
       pmsis_exit(-1);
   }
-
-#endif
     
     printf("Camera open success\n");
 
@@ -397,14 +400,17 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
         pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
 
         #endif
+        #else
+        char * ImageName =  "../../../imgTest0.pgm";
+        unsigned int Wi, Hi;
+        unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
+        if ((ReadImageFromFile(ImageName, &Wi, &Hi, imgBuff0, Win*Hin*sizeof(unsigned char))==0) || (Wi!=Win) || (Hi!=Hin)) {
+          printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, Win, Hin, Wi, Hi);
+          return 1;
+        }
         #endif  /* USE_CAMERA */
-     /*char * ImageName =  "../../../imgTest0.pgm";
-    unsigned int Wi, Hi;
-    unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
-    if ((ReadImageFromFile(ImageName, &Wi, &Hi, imgBuff0, Win*Hin*sizeof(unsigned char))==0) || (Wi!=Win) || (Hi!=Hin)) {
-        printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, Win, Hin, Wi, Hi);
-        return 1;
-    }   */
+
+
         pi_cluster_send_task_to_cl(&cluster_dev, task);
         printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
         pi_uart_write(&uart, &ClusterCall.num_reponse, 1);          
