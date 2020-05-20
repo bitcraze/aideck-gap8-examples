@@ -27,10 +27,9 @@
 #else
 #include "bsp/gapuino.h"
 #endif  /* GAPOC */
+
 #include "bsp/camera/himax.h"
-#if defined(USE_DISPLAY)
-#include "bsp/display/ili9341.h"
-#endif  /* USE_DISPLAY */
+
 #if defined(USE_STREAMER)
 #include "bsp/transport/nina_w10.h"
 #include "tools/frame_streamer.h"
@@ -64,28 +63,7 @@ struct pi_cluster_task *task;
 struct pi_cluster_conf conf;
 ArgCluster_T ClusterCall;
 
-#if defined(USE_DISPLAY)
-void setCursor(struct pi_device *device,signed short x, signed short y);
-void writeFillRect(struct pi_device *device, unsigned short x, unsigned short y, unsigned short w, unsigned short h, unsigned short color);
-void writeText(struct pi_device *device,char* str,int fontsize);
-#endif  /* USE_DISPLAY */
 
-static int open_display(struct pi_device *device)
-{
-#if defined(USE_DISPLAY)
-    struct pi_ili9341_conf ili_conf;
-
-    pi_ili9341_conf_init(&ili_conf);
-
-    pi_open_from_conf(device, &ili_conf);
-
-    if (pi_display_open(device))
-    {
-        return -1;
-    }
-#endif
-    return 0;
-}
 
 #if defined(USE_CAMERA)
 static int open_camera_himax(struct pi_device *device)
@@ -244,15 +222,6 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   }
     printf("malloc done\n");
 
-#if defined(USE_DISPLAY)
-
-    if (open_display(&ili))
-    {
-        printf("Failed to open display\n");
-        pmsis_exit(-4);
-    }
-    printf("display done\n");
-#endif
 
 #if defined(USE_CAMERA)
     if (open_camera(&cam))
@@ -301,15 +270,7 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
     // WIth Himax, propertly configure the buffer to skip boarder pixels
     pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0+CAM_WIDTH*2+2);
     pi_buffer_set_stride(&buffer, 4);
-    
-    #if defined(USE_DISPLAY)||defined(USE_STREAMER)
-    buffer_out.data = ImageOut;
-    buffer_out.stride = 0;
-    pi_buffer_init(&buffer_out, PI_BUFFER_TYPE_L2, ImageOut);
-    pi_buffer_set_format(&buffer_out, 64, 44, 1, PI_BUFFER_FORMAT_GRAY);
-
-   // pi_buffer_set_stride(&buffer_out, 0);
-    #endif /* USE_DISPLAY */
+  
    
 
     pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
@@ -340,12 +301,7 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
     task->entry = (void *)faceDet_cluster_main;
     task->arg = &ClusterCall;
 
-    #if defined(USE_DISPLAY)
-    //Setting Screen background to white
-    writeFillRect(&ili, 0, 0, 240, 320, 0xFFFF);
-    setCursor(&ili, 0, 0);
-    writeText(&ili,"      Greenwaves \n       Technologies", 2);
-    #endif  /* USE_DISPLAY */
+
     printf("main loop start\n");
 
     int nb_frames = 0;
@@ -385,17 +341,6 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
         //WriteImageToFile("../../../img_out.ppm", CAM_WIDTH, CAM_HEIGHT, imgBuff0);
 
-        #if defined(USE_DISPLAY)
-        pi_display_write(&ili, &buffer_out, 40, 40, 160, 120);
-        if (ClusterCall.num_reponse)
-        {
-            sprintf(str_to_lcd, "Face detected: %d\n", ClusterCall.num_reponse);
-            setCursor(&ili, 0, 170);
-            writeText(&ili, str_to_lcd, 2);
-            //sprintf(str_to_lcd,"1 Image/Sec: \n%d uWatt @ 1.2V   \n%d uWatt @ 1.0V   %c", (int)((float)(1/(50000000.f/ClusterCall.cycles)) * 28000.f),(int)((float)(1/(50000000.f/ClusterCall.cycles)) * 16800.f),'\0');
-            //sprintf(out_perf_string,"%d  \n%d  %c", (int)((float)(1/(50000000.f/cycles)) * 28000.f),(int)((float)(1/(50000000.f/cycles)) * 16800.f),'\0');
-        }
-        #endif  /* USE_DISPLAY */
 
         nb_frames++;
     }
