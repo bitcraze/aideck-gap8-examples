@@ -15,27 +15,25 @@
  */
 
 #include "stdio.h"
-//#include "ImgIO.h"
-#include "gaplib/ImgIO.h"
+
 
 /* PMSIS includes */
 #include "pmsis.h"
 #include "bsp/buffer.h"
 
 /* PMSIS BSP includes */
-#if defined(GAPOC)
-#include "bsp/gapoc_a.h"
-#else
-#include "bsp/gapuino.h"
-#endif /* GAPOC */
-
+#include "bsp/ai_deck.h"
 #include "bsp/camera/himax.h"
+
+/* Gaplib includes */
+#include "gaplib/ImgIO.h"
 
 #if defined(USE_STREAMER)
 #include "bsp/transport/nina_w10.h"
 #include "tools/frame_streamer.h"
-#endif
+#endif /* USE_STREAMER */
 
+// All includes for facedetector application
 #include "faceDet.h"
 #include "FaceDetKernels.h"
 #include "ImageDraw.h"
@@ -44,26 +42,30 @@
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
 
-#define STREAMER_WIDTH 64
-#define STREAMER_HEIGHT 48
+#define IMAGE_OUT_WIDTH 64
+#define IMAGE_OUT_HEIGHT 48
 
+// Intializing buffers for camera images
 static unsigned char *imgBuff0;
 static struct pi_device ili;
 static pi_buffer_t buffer;
-static pi_buffer_t buffer_out;
 static struct pi_device cam;
 
+// Initialize buffers for images handled in the cluster
+static pi_buffer_t buffer_out;
 L2_MEM unsigned char *ImageOut;
 L2_MEM unsigned int *ImageIntegral;
 L2_MEM unsigned int *SquaredImageIntegral;
 L2_MEM char str_to_lcd[100];
 
+// Intialize structures for clusters
 struct pi_device cluster_dev;
 struct pi_cluster_task *task;
 struct pi_cluster_conf conf;
 ArgCluster_T ClusterCall;
 
 #if defined(USE_CAMERA)
+// Open himax camera funciton
 static int open_camera_himax(struct pi_device *device)
 {
   struct pi_himax_conf cam_conf;
@@ -95,33 +97,19 @@ L2_MEM struct pi_device uart;
 L2_MEM uint8_t rec_digit = -1;
 
 #if defined(USE_STREAMER)
-
+//  Initialize structs and function for streamer through wifi
 static pi_task_t task1;
-static pi_task_t task2;
 static struct pi_device wifi;
 static frame_streamer_t *streamer1;
 static volatile int stream1_done;
 
-static void streamer_handler(void *arg);
-
-static void cam_handler(void *arg)
-{
-
-  stream1_done = 0;
-
-  return;
-}
-
 static void streamer_handler(void *arg)
 {
   *(int *)arg = 1;
-  if (stream1_done) // && stream2_done)
+  if (stream1_done) 
   {
   }
 }
-#endif
-
-#if defined(USE_STREAMER)
 
 static int open_wifi(struct pi_device *device)
 {
@@ -129,9 +117,9 @@ static int open_wifi(struct pi_device *device)
 
   pi_nina_w10_conf_init(&nina_conf);
 
-  nina_conf.ssid = "COMHEM_f00c8b";
-  nina_conf.passwd = "qmnzu2nu";
-  nina_conf.ip_addr = "192.168.0.17";
+  nina_conf.ssid = "";
+  nina_conf.passwd = "";
+  nina_conf.ip_addr = "192.168.0.0";
   nina_conf.port = 5555;
   pi_open_from_conf(device, &nina_conf);
   if (pi_transport_open(device))
@@ -154,10 +142,12 @@ static frame_streamer_t *open_streamer(char *name)
   frame_streamer_conf.name = name;
 
   return frame_streamer_open(&frame_streamer_conf);
-}
+} /* USE_STREAMER */
 
 #endif
 
+
+// Functions and init for LED toggle
 static pi_task_t led_task;
 static int led_val = 0;
 static struct pi_device gpio_device;
@@ -168,6 +158,8 @@ static void led_handle(void *arg)
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
 }
 
+
+
 void test_facedetection(void)
 {
 
@@ -177,9 +169,8 @@ void test_facedetection(void)
   unsigned int Wout = 64, Hout = 48;
   unsigned int ImgSize = W * H;
 
-  pi_freq_set(PI_FREQ_DOMAIN_FC, 250000000);
+  // Start LED toggle
   pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
-
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
   imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
   if (imgBuff0 == NULL)
@@ -188,11 +179,10 @@ void test_facedetection(void)
     pmsis_exit(-1);
   }
 
-  //This can be moved in init
+  // Malloc up image buffers to be used in the cluster
   ImageOut = (unsigned char *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned char));
   ImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
   SquaredImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
-
   if (ImageOut == 0)
   {
     printf("Failed to allocate Memory for Image (%d bytes)\n", ImgSize * sizeof(unsigned char));
@@ -216,6 +206,7 @@ void test_facedetection(void)
 
   pi_camera_reg_set(&cam, IMG_ORIENTATION, &set_value);
   pi_camera_reg_get(&cam, IMG_ORIENTATION, &reg_value);
+  printf("Camera set up\n");
 #endif
 
 #if defined(USE_STREAMER)
@@ -225,27 +216,28 @@ void test_facedetection(void)
     printf("Failed to open wifi\n");
     return -1;
   }
+  printf("WIFI connected\n"); // check this with NINA printout
 
   streamer1 = open_streamer("cam");
   if (streamer1 == NULL)
     return -1;
+  printf("Streamer set up\n");
 
 #endif
 
-  //  UART init and configure
+  //  UART init with Crazyflie and configure
   pi_uart_conf_init(&uart_conf);
   uart_conf.enable_tx = 1;
   uart_conf.enable_rx = 0;
   pi_open_from_conf(&uart, &uart_conf);
-  printf("[UART] Open\n");
   if (pi_uart_open(&uart))
   {
     printf("[UART] open failed !\n");
     pmsis_exit(-1);
   }
+  printf("[UART] Open\n");
 
-  printf("Camera open success\n");
-
+  // Setup buffer for images
   buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
   buffer.stride = 4;
 
@@ -257,9 +249,10 @@ void test_facedetection(void)
   buffer_out.data = ImageOut;
   buffer_out.stride = 0;
   pi_buffer_init(&buffer_out, PI_BUFFER_TYPE_L2, ImageOut);
-  pi_buffer_set_format(&buffer_out, STREAMER_WIDTH, STREAMER_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+  pi_buffer_set_format(&buffer_out, IMAGE_OUT_WIDTH, IMAGE_OUT_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
   pi_buffer_set_stride(&buffer_out, 0);
 
+  // Assign pointers for cluster structure
   ClusterCall.ImageIn = imgBuff0;
   ClusterCall.Win = W;
   ClusterCall.Hin = H;
@@ -276,29 +269,31 @@ void test_facedetection(void)
   //Set Cluster Frequency to max
   pi_freq_set(PI_FREQ_DOMAIN_CL, 175000000);
 
+  // Send intializer function to cluster
   task = (struct pi_cluster_task *)pmsis_l2_malloc(sizeof(struct pi_cluster_task));
   memset(task, 0, sizeof(struct pi_cluster_task));
   task->entry = (void *)faceDet_cluster_init;
   task->arg = &ClusterCall;
-
   pi_cluster_send_task_to_cl(&cluster_dev, task);
 
+  // Assign function for main cluster loop
   task->entry = (void *)faceDet_cluster_main;
   task->arg = &ClusterCall;
 
   printf("main loop start\n");
 
+  // Start looping through images
   int nb_frames = 0;
   while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
   {
 #if defined(USE_CAMERA)
-
+    // Capture image
     pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
     pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
     pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-
 #else
-
+    // Read in image to check if NN is still working
+    // TODO: this breaks after the second read....
     char *ImageName = "../../../imgTest0.pgm";
     unsigned int Wi, Hi;
     unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
@@ -308,18 +303,18 @@ void test_facedetection(void)
       return 1;
     }
 #endif /* USE_CAMERA */
-
+ 
+    // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
     printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
-    //WriteImageToFile("../../../img_out.ppm", STREAMER_WIDTH, STREAMER_HEIGHT, 1, ImageOut, GRAY_SCALE_IO);
-
+    //WriteImageToFile("../../../img_out.ppm", IMAGE_OUT_WIDTH, IMAGE_OUT_HEIGHT, 1, ImageOut, GRAY_SCALE_IO);
 
 #if defined(USE_STREAMER)
+    // Send image to the streamer to see the result
     frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
 #endif
-
+    // Send result through the uart to the crazyflie as single characters
     pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
-
 
     nb_frames++;
   }

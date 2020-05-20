@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-RM=rm -f
+RM = rm -f
 
 APP = face_detection
 
@@ -24,15 +24,13 @@ FACE_DET_MODEL_GEN_C = $(addsuffix .c, $(FACE_DET_MODEL_GEN))
 FACE_DET_MODEL_GEN_CLEAN = $(FACE_DET_MODEL_GEN_C) $(addsuffix .h, $(FACE_DET_MODEL_GEN))
 FACE_DET_SRCS +=  main.c faceDet.c FaceDetBasicKernels.c ImageDraw.c $(FACE_DET_MODEL_GEN_C)
 
-override config_args += --config-opt=camera/image-stream=$(CURDIR)/imgTest0.pgm
-
 APP_SRCS += $(FACE_DET_SRCS)
 APP_INC  += $(TILER_INC)
-APP_CFLAGS += -O3 -g -D__PMSIS__ -DUSE_CAMERA -DNB_FRAMES=$(NB_FRAMES)
+APP_CFLAGS += -O3 -g -D__PMSIS__ -DUSE_CAMERA -DUSE_STREAMER -DNB_FRAMES=$(NB_FRAMES)
 
-BOARD_NAME ?= gapoc_a
+BOARD_NAME ?= ai_deck
 PMSIS_OS ?= pulp_os
-USE_PMSIS_BSP=1
+USE_PMSIS_BSP = 1
 APP_LDFLAGS += -lgaptools -lgaplib 
 
 export GAP_USE_OPENOCD=1
@@ -40,11 +38,6 @@ io=host
 
 # This needs to be defined or else some other IO functionalities or cluster things will break...
 APP_CFLAGS += -DHIMAX
-
-ifeq '$(BOARD_NAME)' 'gapoc_a'
-PLPBRIDGE_FLAGS += -ftdi
-APP_CFLAGS += -DGAPOC_A
-endif
 
 PLPBRIDGE_FLAGS += -jtag
 

@@ -1,5 +1,5 @@
 
-When installing the gap sdk, make sure that you have installed everything:
+When installing the gap sdk (3.4), make sure that you have installed everything:
 `make all`
 `make openocd`
 `make gap_tools`
