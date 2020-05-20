@@ -26,7 +26,7 @@
 #include "bsp/gapoc_a.h"
 #else
 #include "bsp/gapuino.h"
-#endif  /* GAPOC */
+#endif /* GAPOC */
 
 #include "bsp/camera/himax.h"
 
@@ -40,12 +40,11 @@
 #include "ImageDraw.h"
 #include "setup.h"
 
-#define CAM_WIDTH    324
-#define CAM_HEIGHT   244
+#define CAM_WIDTH 324
+#define CAM_HEIGHT 244
 
-
-#define LCD_WIDTH    320
-#define LCD_HEIGHT   240
+#define LCD_WIDTH 320
+#define LCD_HEIGHT 240
 
 static unsigned char *imgBuff0;
 static struct pi_device ili;
@@ -63,8 +62,6 @@ struct pi_cluster_task *task;
 struct pi_cluster_conf conf;
 ArgCluster_T ClusterCall;
 
-
-
 #if defined(USE_CAMERA)
 static int open_camera_himax(struct pi_device *device)
 {
@@ -80,16 +77,15 @@ static int open_camera_himax(struct pi_device *device)
 
   return 0;
 }
-#endif  /* USE_CAMERA */
-
+#endif /* USE_CAMERA */
 
 static int open_camera(struct pi_device *device)
 {
-    #if defined(USE_CAMERA)
-    return open_camera_himax(device);
-    #else
-    return 0;
-    #endif  /* USE_CAMERA */
+#if defined(USE_CAMERA)
+  return open_camera_himax(device);
+#else
+  return 0;
+#endif /* USE_CAMERA */
 }
 
 //UART init param
@@ -105,35 +101,26 @@ static struct pi_device wifi;
 static frame_streamer_t *streamer1;
 static volatile int stream1_done;
 
-
 static void streamer_handler(void *arg);
-
 
 static void cam_handler(void *arg)
 {
 
   stream1_done = 0;
 
-
-return;
+  return;
 }
-
-
 
 static void streamer_handler(void *arg)
 {
   *(int *)arg = 1;
   if (stream1_done) // && stream2_done)
   {
-
   }
 }
 #endif
 
 #if defined(USE_STREAMER)
-
-
-
 
 static int open_wifi(struct pi_device *device)
 {
@@ -152,7 +139,6 @@ static int open_wifi(struct pi_device *device)
   return 0;
 }
 
-
 static frame_streamer_t *open_streamer(char *name)
 {
   struct frame_streamer_conf frame_streamer_conf;
@@ -169,9 +155,7 @@ static frame_streamer_t *open_streamer(char *name)
   return frame_streamer_open(&frame_streamer_conf);
 }
 
-
 #endif
-
 
 static pi_task_t led_task;
 static int led_val = 0;
@@ -183,57 +167,54 @@ static void led_handle(void *arg)
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
 }
 
-
 void test_facedetection(void)
 {
 
+  printf("Entering main controller...\n");
 
-    printf("Entering main controller...\n");
+  unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
+  unsigned int Wout = 64, Hout = 48;
+  unsigned int ImgSize = W * H;
 
-    unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
-    unsigned int Wout = 64, Hout = 48;
-    unsigned int ImgSize = W*H;
-
-    pi_freq_set(PI_FREQ_DOMAIN_FC,250000000);
-pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
+  pi_freq_set(PI_FREQ_DOMAIN_FC, 250000000);
+  pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
-    imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH*CAM_HEIGHT)*sizeof(unsigned char));
-    if (imgBuff0 == NULL)
-    {
-        printf("Failed to allocate Memory for Image \n");
-        pmsis_exit(-1);
-    }
-
-    //This can be moved in init
-    ImageOut             = (unsigned char *) pmsis_l2_malloc((Wout*Hout)*sizeof(unsigned char));
-    ImageIntegral        = (unsigned int *)  pmsis_l2_malloc((Wout*Hout)*sizeof(unsigned int));
-    SquaredImageIntegral = (unsigned int *)  pmsis_l2_malloc((Wout*Hout)*sizeof(unsigned int));
-
-    if (ImageOut == 0)
-    {
-        printf("Failed to allocate Memory for Image (%d bytes)\n", ImgSize*sizeof(unsigned char));
-        pmsis_exit(-2);
-    }
-    if ((ImageIntegral == 0) || (SquaredImageIntegral == 0))
-    {
-        printf("Failed to allocate Memory for one or both Integral Images (%d bytes)\n", ImgSize*sizeof(unsigned int));
-        pmsis_exit(-3);
+  imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
+  if (imgBuff0 == NULL)
+  {
+    printf("Failed to allocate Memory for Image \n");
+    pmsis_exit(-1);
   }
-    printf("malloc done\n");
 
+  //This can be moved in init
+  ImageOut = (unsigned char *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned char));
+  ImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
+  SquaredImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
+
+  if (ImageOut == 0)
+  {
+    printf("Failed to allocate Memory for Image (%d bytes)\n", ImgSize * sizeof(unsigned char));
+    pmsis_exit(-2);
+  }
+  if ((ImageIntegral == 0) || (SquaredImageIntegral == 0))
+  {
+    printf("Failed to allocate Memory for one or both Integral Images (%d bytes)\n", ImgSize * sizeof(unsigned int));
+    pmsis_exit(-3);
+  }
+  printf("malloc done\n");
 
 #if defined(USE_CAMERA)
-    if (open_camera(&cam))
-    {
-        printf("Failed to open camera\n");
-        pmsis_exit(-5);
-    }
-        uint8_t set_value=3;
-    uint8_t reg_value;
+  if (open_camera(&cam))
+  {
+    printf("Failed to open camera\n");
+    pmsis_exit(-5);
+  }
+  uint8_t set_value = 3;
+  uint8_t reg_value;
 
-    pi_camera_reg_set(&cam, IMG_ORIENTATION, &set_value);
-    pi_camera_reg_get(&cam, IMG_ORIENTATION, &reg_value);
+  pi_camera_reg_set(&cam, IMG_ORIENTATION, &set_value);
+  pi_camera_reg_get(&cam, IMG_ORIENTATION, &reg_value);
 #endif
 
 #if defined(USE_STREAMER)
@@ -250,7 +231,7 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
 #endif
 
-//  UART init and configure
+  //  UART init and configure
   pi_uart_conf_init(&uart_conf);
   uart_conf.enable_tx = 1;
   uart_conf.enable_rx = 0;
@@ -258,100 +239,94 @@ pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   printf("[UART] Open\n");
   if (pi_uart_open(&uart))
   {
-      printf("[UART] open failed !\n");
-      pmsis_exit(-1);
+    printf("[UART] open failed !\n");
+    pmsis_exit(-1);
   }
-    
-    printf("Camera open success\n");
 
-    buffer.data = imgBuff0+CAM_WIDTH*2+2;
-    buffer.stride = 4;
+  printf("Camera open success\n");
 
-    // WIth Himax, propertly configure the buffer to skip boarder pixels
-    pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0+CAM_WIDTH*2+2);
-    pi_buffer_set_stride(&buffer, 4);
-  
-   
+  buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
+  buffer.stride = 4;
 
-    pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+  // WIth Himax, propertly configure the buffer to skip boarder pixels
+  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0 + CAM_WIDTH * 2 + 2);
+  pi_buffer_set_stride(&buffer, 4);
 
-    ClusterCall.ImageIn              = imgBuff0;
-    ClusterCall.Win                  = W;
-    ClusterCall.Hin                  = H;
-    ClusterCall.Wout                 = Wout;
-    ClusterCall.Hout                 = Hout;
-    ClusterCall.ImageOut             = ImageOut;
-    ClusterCall.ImageIntegral        = ImageIntegral;
-    ClusterCall.SquaredImageIntegral = SquaredImageIntegral;
+  pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
-    pi_cluster_conf_init(&conf);
-    pi_open_from_conf(&cluster_dev, (void*)&conf);
-    pi_cluster_open(&cluster_dev);
+  ClusterCall.ImageIn = imgBuff0;
+  ClusterCall.Win = W;
+  ClusterCall.Hin = H;
+  ClusterCall.Wout = Wout;
+  ClusterCall.Hout = Hout;
+  ClusterCall.ImageOut = ImageOut;
+  ClusterCall.ImageIntegral = ImageIntegral;
+  ClusterCall.SquaredImageIntegral = SquaredImageIntegral;
 
-    //Set Cluster Frequency to max
-    pi_freq_set(PI_FREQ_DOMAIN_CL,175000000);
+  pi_cluster_conf_init(&conf);
+  pi_open_from_conf(&cluster_dev, (void *)&conf);
+  pi_cluster_open(&cluster_dev);
 
-    task = (struct pi_cluster_task *) pmsis_l2_malloc(sizeof(struct pi_cluster_task));
-    memset(task, 0, sizeof(struct pi_cluster_task));
-    task->entry = (void *)faceDet_cluster_init;
-    task->arg = &ClusterCall;
+  //Set Cluster Frequency to max
+  pi_freq_set(PI_FREQ_DOMAIN_CL, 175000000);
+
+  task = (struct pi_cluster_task *)pmsis_l2_malloc(sizeof(struct pi_cluster_task));
+  memset(task, 0, sizeof(struct pi_cluster_task));
+  task->entry = (void *)faceDet_cluster_init;
+  task->arg = &ClusterCall;
+
+  pi_cluster_send_task_to_cl(&cluster_dev, task);
+
+  task->entry = (void *)faceDet_cluster_main;
+  task->arg = &ClusterCall;
+
+  printf("main loop start\n");
+
+  int nb_frames = 0;
+  while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
+  {
+#if defined(USE_CAMERA)
+#if defined(USE_STREAMER)
+
+    pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
+    pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
+    pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
+    frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
+
+    //frame_streamer_send(streamer1, &buffer);
+
+#else
+    pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
+    pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
+    pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
+
+#endif
+#else
+
+    char *ImageName = "../../../imgTest0.pgm";
+    unsigned int Wi, Hi;
+    unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
+    if ((ReadImageFromFile(ImageName, &Wi, &Hi, imgBuff0, Win * Hin * sizeof(unsigned char)) == 0) || (Wi != Win) || (Hi != Hin))
+    {
+      printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, Win, Hin, Wi, Hi);
+      return 1;
+    }
+#endif /* USE_CAMERA */
 
     pi_cluster_send_task_to_cl(&cluster_dev, task);
+    printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
+    pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
 
-    task->entry = (void *)faceDet_cluster_main;
-    task->arg = &ClusterCall;
+    //WriteImageToFile("../../../img_out.ppm", CAM_WIDTH, CAM_HEIGHT, imgBuff0);
 
-
-    printf("main loop start\n");
-
-    int nb_frames = 0;
-    while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
-    {
-        #if defined(USE_CAMERA)
-        #if defined(USE_STREAMER)
-
-          pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
-        pi_camera_capture(&cam, imgBuff0, CAM_WIDTH*CAM_HEIGHT);
-        pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-        frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
-
-        //frame_streamer_send(streamer1, &buffer);
-
-        #else
-        pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
-        pi_camera_capture(&cam, imgBuff0, CAM_WIDTH*CAM_HEIGHT);
-        pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-
-        #endif
-        #else
-
-        char * ImageName =  "../../../imgTest0.pgm";
-        unsigned int Wi, Hi;
-        unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
-        if ((ReadImageFromFile(ImageName, &Wi, &Hi, imgBuff0, Win*Hin*sizeof(unsigned char))==0) || (Wi!=Win) || (Hi!=Hin)) {
-          printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, Win, Hin, Wi, Hi);
-          return 1;
-        }
-        #endif  /* USE_CAMERA */
-
-
-        pi_cluster_send_task_to_cl(&cluster_dev, task);
-        printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
-        pi_uart_write(&uart, &ClusterCall.num_reponse, 1);          
-
-        //WriteImageToFile("../../../img_out.ppm", CAM_WIDTH, CAM_HEIGHT, imgBuff0);
-
-
-        nb_frames++;
-    }
-    printf("Test face detection done.\n");
-    pmsis_exit(0);
+    nb_frames++;
+  }
+  printf("Test face detection done.\n");
+  pmsis_exit(0);
 }
 
 int main(void)
 {
-   printf("\n\t*** PMSIS FaceDetection Test ***\n\n");
-   return pmsis_kickoff((void *) test_facedetection);
-
+  printf("\n\t*** PMSIS FaceDetection Test ***\n\n");
+  return pmsis_kickoff((void *)test_facedetection);
 }
-
