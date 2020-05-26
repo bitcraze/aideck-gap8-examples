@@ -34,33 +34,35 @@ The process can be run to quantize the model in 8 or 16 bits weights and activat
 
 To build and run on GAP8:
 
-make all run
+    make all run
 
 To build and run on GVSOC
 
-make all run platform=gvsoc
+    make all run platform=gvsoc
 
 The image loaded is included in a header file. This can be modified in the Makefile. There are also make options to load the file via the bridge. This mode is not supported for GVSOC.
 
 To clean the generated model and code but not the trained network type
 
-make clean
+    make clean
 
 To clean the trained keras save file type
 
-make clean_train
+    make clean_train
 
 To build and run the network compiled on the pc
 
-make -f emul.mk all
+    make -f emul.mk all
 
 This will produce an executable, mnist_emul, that can be used to evaluate files
 
-e.g. ./mnist_emul images/5558_6.pgm 
+    e.g. ./mnist_emul images/5558_6.pgm 
 
 This mode allows the application to be run with PC tools like valgrind which is very interesting for debugging.
 The cluster only has one core in this mode.
 
 The build defaults to 8 bit quantization. 16 bit quantization can be selected by preceeding the build lines above with MODEL_BITS=16.
 
-e.g. MODEL_BITS=16 make -f emul.mk all
+e.g. 
+
+    MODEL_BITS=16 make -f emul.mk all

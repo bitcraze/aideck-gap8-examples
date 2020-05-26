@@ -18,6 +18,7 @@ Follow the instructions of https://github.com/GreenWaves-Technologies/gap_sdk.
 Next to the regular SDK (make all), make sure to also build GAPtools (make gap_tools) and OpenOCD (make openocd)
 
 ## Flash the NINA module
+See [the nina flashing](/nina-instructions/nina-flash-isnstructions) instructiosn
 
 
 ## Source GAP sdk for the AIdeck
@@ -44,7 +45,12 @@ nina_conf.ip_addr = "0.0.0.0";
 ## Build and flash the wifi example
 This is how you can run the wifi example on L2 RAM (this is not an actual flash, as soon as the aideck resets, this is removed)
 ~~~~~shell
-make clean
-make all
-make run
+make clean all run io=host
+~~~~~
+
+this flashes the program directly on the aideck
+
+~~~~~shell
+make clean all
+make image flash io=host
 ~~~~~
