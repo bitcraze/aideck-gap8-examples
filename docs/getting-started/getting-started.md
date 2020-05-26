@@ -1,24 +1,21 @@
-# AI-deck example
+---
+title: Getting started
+page_id: getting-started
+---
 
 ## About
 ### AI-deck
 The AI-deck enables low power on-board artificial intelligence capabilities for the Crazyflie using a GAP8 chip with RISC-V multi-core architecture, 512 Mbit HyperFlash and 64 Mbit HyperRAM. In addition the deck has a Himax HM01B0 grayscale camera with a NiNA W102 Wi-Fi module to stream your images to a desktop. These features fit the prerequites of a convolutional neural network, but the AI-deck is not limited to the application of CNN's. 
-
-### Example
-The example shows a simple convolutional neural network based on the MNIST example of the GAP8 SDK. MNIST is a CNN that classifies handwritten digits ranging from 0 to 9. Added to this is a simple application for the Crazyflie where it takes the output of the MNIST network and uses that to switch states. If the neural network identifies a 1, the GAP8 code will send a UART byte to the Crazyflie which in turn gives a command to unlock. If the neural network identifies a 9 it will unlock. If the Crazyflie is unlocked then it will turn right or left when the neural network identifies a 4 or 5, respectively.
-
-This example can be easily modified to a different classification task by using a similar and simple dataset. 
-
-In addition, to get quickly started on your own neural network you can make use of the principles of Transfer Learning.
 
 ### For users starting with embedded applications and the Crazyflie
 For this example a basic understanding on how to:
 * Program in Python and C
 * Use Linux systems
 * Use Makefiles 
+* Some basic knowledge about embedded programming
 
 ### Required hardware
-* Olimex ARM-USB-TINY-H JTAG
+* An JTAG debugger (we used a Olimex ARM-USB-TINY-H JTAG)
 * ARM JTAG 20 to 10 pin adapter 
 * CrazyFlie 2.1
 * AI-Deck
@@ -69,23 +66,4 @@ https://greenwaves-technologies.com/manuals/BUILD/AUTOTILER/html/index.html
 
 <!-- explain a bit more about how the autotiler works -->
 
-## Application code for the AI-deck
-### Environment in the GAP8 SDK
-This example mainly uses the following set up. 
-* FreeRTOS as RTOS
-* PMSIS-API as low-level driver
-    * UART
-* PMSIS-BSP as high-level driver
-    * Himax
-* OpenOCD as hardware debugger
 
-<!-- add explanation about application code and put link to file -->
-
-## Application code for the Crazyflie
-### For users starting with the Crazyflie the following should be known on how to:
-* Use LOG and PARAM in Crazyflie
-* Make an application in the Crazyflie Applayer 
-
-An example on how to do this can be found here https://github.com/ataffanel/crazyflie-push-demo.
-
-<!-- insert link to Bitcraze website and maybe explain about out of tree -->

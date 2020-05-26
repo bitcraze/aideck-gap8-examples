@@ -1,1 +1,12 @@
 - page_id: home
+- title: Getting Started
+  subs:
+      - {page_id: getting-started}
+#- title: Test functions
+#- title: Image Processing examples
+- title: AI examples
+  subs:
+      - {page_id: mnist-example}
+
+
+  
