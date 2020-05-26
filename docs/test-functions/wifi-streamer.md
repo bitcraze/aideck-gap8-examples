@@ -1,3 +1,9 @@
+---
+title: WiFi Video Streamer
+page_id: wifi-streamer
+---
+
+
 # Wifi video streamer
 
 This example show how to set up the GAP8 to stream videos through the NINA (esp) wifi module. 

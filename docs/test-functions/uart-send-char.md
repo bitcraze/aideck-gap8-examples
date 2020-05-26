@@ -1,3 +1,9 @@
+---
+title: Send character over UART
+page_id: uart-send-char
+---
+
+
 First get the 3.1 GAP SDK to get OpenOCD for gap8.
 
 Configure it for this target:

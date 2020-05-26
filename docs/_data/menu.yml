@@ -2,11 +2,22 @@
 - title: Getting Started
   subs:
       - {page_id: getting-started}
-#- title: Test functions
-#- title: Image Processing examples
+- title: Test functions
+  subs:
+      - {page_id: test-camera}
+      - {page_id: uart-send-char}
+      - {page_id: wifi-streamer}
+- title: Image Processing examples
+  subs:
+      - {page_id: face-detection}
 - title: AI examples
   subs:
+      - {page_id: gap-flow}
       - {page_id: mnist-example}
+- title: NINA instructions
+  subs:
+      - {page_id: nina-flash-instructions}
+
 
 
   

@@ -1,3 +1,9 @@
+---
+title: NINA flash instructions
+page_id: nina-flash-instructions
+---
+
+
 # Building NINA 
 
 Follow instructions here for installing dependencies:
