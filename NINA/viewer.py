@@ -73,7 +73,10 @@ class ImgThread(threading.Thread):
                 imgdata = strng[start_idx:len(strng)] # Does not support start and end in same package
             elif end_idx >= 0 and imgdata:
                 imgdata += strng[0:end_idx]
-                self._callback(imgdata)
+                try:
+                    self._callback(imgdata)
+                except gi.repository.GLib.Error:
+                    pass
                 imgdata = strng[end_idx:len(strng)]
             elif imgdata:
                 imgdata += strng
