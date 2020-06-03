@@ -1,20 +1,26 @@
 menu "AI deck example Configuration"
 
-    config EXAMPLE_SSID
-        string "WiFi SSID"
-        default "myssid"
-        help
-            SSID (network name) for the example to connect to.
-
-    config EXAMPLE_PASSWORD
-        string "WiFi Password"
-        default "mypassword"
-        help
-            WiFi password (WPA or WPA2) for the example to use.
-
     config USE_AS_AP
-        bool "Act as accesspoint"
+        bool "Act as access-point"
         default y
         help
             Act as accesspoint as opposed to connecting to a wifi
+
+    menu "Credentials for connecting to another access-point"
+
+        config EXAMPLE_SSID
+            string "WiFi SSID"
+            default "myssid"
+            depends on !USE_AS_AP
+            help
+                SSID (network name) for the example to connect to.
+
+        config EXAMPLE_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            depends on !USE_AS_AP
+            help
+                WiFi password (WPA or WPA2) for the example to use.
+
+    endmenu
 endmenu
