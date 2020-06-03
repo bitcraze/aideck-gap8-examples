@@ -83,6 +83,8 @@
 /* WiFi SSID/password and AP/station is set from menuconfig */
 #ifdef CONFIG_USE_AS_AP
 #define WIFI_MODE AIDECK_WIFI_MODE_SOFTAP
+#define CONFIG_EXAMPLE_SSID NULL
+#define CONFIG_EXAMPLE_PASSWORD NULL
 #else
 #define WIFI_MODE AIDECK_WIFI_MODE_STATION
 #endif
