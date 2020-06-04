@@ -45,7 +45,7 @@ make image flash io=host
 
 ## NINA
 ### Flash the NINA module
-See [the nina flashing](/nina-instructions/nina-flash-isnstructions) instructions
+See [the nina flashing](/docs/nina-instructions/nina-flash-instructions.md) instructions
 
 ### Enter you credentials
 
@@ -57,8 +57,7 @@ cd NINA/firmware
 make menuconfig
 ```
 
-Enter the menu "AI deck example Configuration", use as AP and enter the credentials. No requild it
-and flash.
+Enter the menu "AI deck example Configuration", use as AP and enter the credentials. Now requild it and flash.
 
 ```shell
 make
