@@ -5,6 +5,8 @@ page_id: face-detection
 
 This is the face detection application based on the example as developed by Greenwaves technologies. It is a bit more tailor made towards the AIdeck and uses the wifi streamer to stream the output to your computer. 
 
+Go to the folder: *GAP8/image_processing_examples/FaceDetection*
+
 To make the facedetection application
 
     make clean
