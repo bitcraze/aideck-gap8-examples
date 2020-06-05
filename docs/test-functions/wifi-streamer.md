@@ -6,8 +6,8 @@ page_id: wifi-streamer
 
 # Wifi video streamer
 
-This example streams JPEG images from the GAP8 connected camera to a socket connected
-on WiFI
+This example streams JPEG images from the GAP8 connected camera to a socket connected on WiFI. This concerns the example in *GAP8/test_functionalities/wifi_jpeg_streamer/*
+
 
 ## Prerequisites
 * GAP8 flashed with the source in ```/GAP8/test_functionalities/wifi_jpeg_streamer```
