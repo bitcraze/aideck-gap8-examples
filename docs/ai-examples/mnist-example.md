@@ -3,13 +3,18 @@ title: MNIST Example
 page_id: mnist-example
 ---
 
+# MNIST example simplified
+
+The *GAP8/ai_examples/mnist_simple/* is a copy of Greenwaves' [MNIST example of GAPflow](https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/examples/nntool/mnist). This one is simplified for the use of only on the AIdeck.
+
+## MNIST Example
 The example shows a simple convolutional neural network based on the MNIST example of the GAP8 SDK. MNIST is a CNN that classifies handwritten digits ranging from 0 to 9. Added to this is a simple application for the Crazyflie where it takes the output of the MNIST network and uses that to switch states. If the neural network identifies a 1, the GAP8 code will send a UART byte to the Crazyflie which in turn gives a command to unlock. If the neural network identifies a 9 it will unlock. If the Crazyflie is unlocked then it will turn right or left when the neural network identifies a 4 or 5, respectively.
 
 This example can be easily modified to a different classification task by using a similar and simple dataset. 
 
 In addition, to get quickly started on your own neural network you can make use of the principles of Transfer Learning.
 
-# Sample MNIST Build using GAPFlow
+## Sample MNIST Build using GAPFlow
 
 This example is from the GAP8 SDK and is adjusted so that it run can use functionalities of the AI-deck and Crazyflie. The original example of the GAP8 SDK can be found here https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/examples/nntool/mnist.
 
