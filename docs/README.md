@@ -7,7 +7,7 @@ This repository contains examples for the AIdeck of the crazyflie and is maintai
 
 
 ### Getting started
-- [First time: Trying out your AIdeck](getting_started/tryout.md)
+- [First time: Trying out your AIdeck](getting-started/tryout.md)
 - [Setting up development environment](getting-started/getting-started.md)
 - [JTAG programming](getting-started/jtag-programming.md)
 
