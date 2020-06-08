@@ -8,7 +8,7 @@ The GAP8 SDK has recently added support for OpenOCD and debuggers with a ftdi in
 
 Tested programmers:
 - Olimex ARM-USB-TINY-H
-- [ESP-prog](https://www.digikey.se/product-detail/en/schtoeta-engineering-limited/ESP-PROG/1965-ESP-PROG-ND/10259352?utm_adgroup=Programmers%2C%20Emulators%2C%20Debuggers&utm_source=google&utm_medium=cpc&utm_campaign=Shopping_Product_Development%20Boards%2C%20Kits%2C%20Programmers&utm_term=&productid=10259352&gclid=EAIaIQobChMIzPWTjq7y6QIVA8AYCh01ywkxEAYYASABEgK-NfD_BwE) (it is not part of the gap_sdk yet, so you need to get this file in your openocd list of programmers: [esp32_devkitj_v1.cfg.cdf](https://github.com/espressif/openocd-esp32/blob/master/tcl/interface/ftdi/esp32_devkitj_v1.cfg))
+- preliminary suggestion: [ESP-prog](https://www.digikey.se/product-detail/en/schtoeta-engineering-limited/ESP-PROG/1965-ESP-PROG-ND/10259352?utm_adgroup=Programmers%2C%20Emulators%2C%20Debuggers&utm_source=google&utm_medium=cpc&utm_campaign=Shopping_Product_Development%20Boards%2C%20Kits%2C%20Programmers&utm_term=&productid=10259352&gclid=EAIaIQobChMIzPWTjq7y6QIVA8AYCh01ywkxEAYYASABEgK-NfD_BwE) (it is not part of the gap_sdk yet, so you need to get this file in your openocd list of programmers with the reset capability enabled: [esp32_devkitj_v1.cfg.cdf](https://github.com/espressif/openocd-esp32/blob/master/tcl/interface/ftdi/esp32_devkitj_v1.cfg))
 
 
 ## JTAG connectors
