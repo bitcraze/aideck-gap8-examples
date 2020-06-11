@@ -14,21 +14,7 @@ This example streams JPEG images from the GAP8 connected camera to a socket conn
 * Nina flashed with the source in ```/NINA/firmware```
 
 ## GAP8
-### Install the GAP sdk
-Follow the instructions of https://github.com/GreenWaves-Technologies/gap_sdk. 
-
-Next to the regular SDK (make all), make sure to also build GAPtools (make gap_tools) and OpenOCD (make openocd)
-
-### Source GAP sdk for the AIdeck
-Type the following command in the terminal in which you will be flashing your AIdeck with
-~~~~~shell
-source [GAP_SDK]/configs/ai_deck.sh
-~~~~~
-
-Depended on the programmer you are using, you might need to change the following line in the *.sh file:
-~~~~~shell
-export OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-ocd-h.cfg
-~~~~~
+Make sure you have followed [these instructions](../getting-started/getting-started.md) to set up your development environment for the GAP8.
 
 ### Build and flash the wifi example
 This is how you can run the wifi example on L2 RAM (this is not an actual flash, as soon as the aideck resets, this is removed)
