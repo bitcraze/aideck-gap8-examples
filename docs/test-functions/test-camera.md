@@ -3,8 +3,10 @@ title: Test Himax Camera
 page_id: test-camera
 ---
 
-
 # Testing the Himax camera on the AIdeck
+
+
+This concers the example in folder *GAP8/test_functionalities/test_camera/*
 
 In the makefile enable `APP_CFLAGS += -DASYNC_CAPTURE` if you want to test the asynchronous camera capture and remove it if you want to test the normal one.
 

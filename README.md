@@ -1,3 +1,4 @@
 # AI-deck examples repository
 
-Check out the **docs** folder for starting guides. 
+Check out the [documentation](https://github.com/bitcraze/AIdeck_examples/tree/master/docs)
+folder for starting guides. 
