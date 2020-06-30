@@ -6,6 +6,8 @@ page_id: tryout
 
 When you first receive your AIdeck, it should be flashed with a wifi streamer example of the camera image stream. Once the AI-deck is powered up by the Crazyflie, it will automatically create an hotspot called 'Bitcraze AI-deck Example'.
 
+*If you do not find the hotspot 'Bitcraze AI-deck Example', it might be that the example has not been flashed on your AIdeck, depended on the source where you bought your copy from, then you might need to flash the wifi example on yourselve (go [here](/docs/test-functions/wifi-streamer.md)).*
+
 On your crazyflie, make sure that it is updated to the latest firmware. Also make sure that you force the AIdeck driver in your config.mk, as it will reset the AI-deck properly upon startup.
  
 `#CFLAGS += -DDECK_FORCE=bcAIDeck`
