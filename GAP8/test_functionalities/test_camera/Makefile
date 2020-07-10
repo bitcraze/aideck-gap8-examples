@@ -1,6 +1,10 @@
 APP = test
-APP_SRCS += test.c ImgIO.c
-APP_CFLAGS += -O3 -g
+APP_SRCS += test.c 
+APP_CFLAGS += -O3 -g 
+
+APP_LDFLAGS += -lgaptools -lgaplib 
+
+PMSIS_OS ?= pulp_os
 
 APP_CFLAGS += -DASYNC_CAPTURE
 
