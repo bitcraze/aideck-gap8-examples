@@ -30,6 +30,6 @@ RUN pip3 install requests
 
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make openocd"
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make pulp-os"
-RUN mkdir data
 
-WORKDIR /module
+RUN mkdir -p /module/data/
+WORKDIR /module/data/
