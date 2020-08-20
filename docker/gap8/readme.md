@@ -40,14 +40,14 @@ On your host navigate to the `make`-file you want to execute. For example
 cd <path/to/AIdeck_examples/Repository>/GAP8/image_processing_examples/image_manipulations
 ```
 
-The following docker commands will build and run the program on RAM (this will disappear after restart of the aideck)
+The following docker commands will build and run the program on RAM (this will disappear after restart of the aideck). Make sure to replace the /dev/ttyUSB0 with the actual path of your debugger (which can be found by dmesg on Ubuntu). Also make sure that the right .cfg file is selected that fits your debuggger.
 
 ```
-docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB5 --privileged -P gapsdk:3.6 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
+docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.6 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
 ```
 
 The following docker commands will build and flash the program on the GAP8 (this will NOT disappear after restart of the aideck).
 
 ```
-docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB5 --privileged -P gapsdk:3.6 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all image flash'
+docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.6 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all image flash'
 ```
