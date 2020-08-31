@@ -33,6 +33,8 @@ docker commit <container id> gapsdk:3.6
 
 This will save the install of the autotiler on your image.
 
+_Note: if you would you would like to also build docker images for SDK version 3.4 and 3.5, just replace the line that checkouts the right version of the sdk to either **git checkout release-v3.4** or **git checkout release-v3.5**. Don't forget to change the version name to **gapsdk:3.4** or **gapsdk:3.5**_
+
 ### Running an Example
 On your host navigate to the `make`-file you want to execute. For example
 
