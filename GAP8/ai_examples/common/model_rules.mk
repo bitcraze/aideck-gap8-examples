@@ -94,6 +94,8 @@ clean_model:
 	$(RM) $(MODEL_BUILD)/*.dat
 
 clean_train:
+	$(RM) $(MODEL_H5)
+	$(RM) $(TRAINED_TFLITE_MODEL)
 	$(RM) -rf $(MODEL_TRAIN_BUILD)
 
 clean_images:
