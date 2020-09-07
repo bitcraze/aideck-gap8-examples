@@ -23,12 +23,16 @@
 #include "../../common/img_proc.h"
 
 #define WIDTH    324
+#ifdef QVGA_MODE
 #define HEIGHT   244
+#else
+#define HEIGHT   324
+#endif
 #define BUFF_SIZE (WIDTH*HEIGHT)
 
 PI_L2 unsigned char *buff;
 
-PI_L2 unsigned char *buff_output;
+PI_L2 unsigned char *buff_demosaick;
 
 static struct pi_device camera;
 static volatile int done;
@@ -82,20 +86,30 @@ int main()
     pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
     printf("img orientation %d\n",reg_value);
 
+    #ifdef QVGA_MODE
+    set_value=1;
+    pi_camera_reg_set(&camera, QVGA_WIN_EN, &set_value);
+    pi_camera_reg_get(&camera, QVGA_WIN_EN, &reg_value);
+    printf("qvga window enabled %d\n",reg_value);
+    #endif
+
     // Reserve buffer space for image
-    buff = pmsis_l2_malloc(WIDTH*HEIGHT);
+    buff = pmsis_l2_malloc(BUFF_SIZE);
     if (buff == NULL){ return -1;}
 
     #ifdef COLOR_IMAGE
-    buff_output = pmsis_l2_malloc(WIDTH*HEIGHT*3);
-    if (buff_output == NULL){ return -1;}
+    buff_demosaick = pmsis_l2_malloc(BUFF_SIZE*3);
+    #else
+    buff_demosaick = pmsis_l2_malloc(BUFF_SIZE);
     #endif
+    if (buff_demosaick == NULL){ return -1;}
     printf("Initialized buffers\n");
 
 
 
     #ifdef ASYNC_CAPTURE
     // Start up async capture task
+    done = 0;
     pi_task_t task;
     pi_camera_capture_async(&camera, buff, BUFF_SIZE, pi_task_callback(&task, handle_transfer_end, NULL));
     #endif
@@ -109,7 +123,9 @@ int main()
     #endif
 
     #ifdef COLOR_IMAGE
-    demosaicking(buff, buff_output,WIDTH,HEIGHT);
+    demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 0);
+    #else
+    demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 1);
     #endif
 
     // Stop the camera and immediately close it
@@ -118,7 +134,10 @@ int main()
     
     // Write to file
     #ifdef COLOR_IMAGE
-    WriteImageToFile("../../../img_color.ppm", WIDTH, HEIGHT,sizeof(uint32_t), buff_output, RGB888_IO);
+    WriteImageToFile("../../../img_color.ppm", WIDTH, HEIGHT, sizeof(uint32_t), buff_demosaick, RGB888_IO);
+    #else
+    WriteImageToFile("../../../img_gray.ppm", WIDTH, HEIGHT, sizeof(uint8_t), buff_demosaick, GRAY_SCALE_IO);
     #endif
-    WriteImageToFile("../../../img_raw.ppm", WIDTH, HEIGHT,sizeof(uint8_t), buff, GRAY_SCALE_IO );
+
+    WriteImageToFile("../../../img_raw.ppm", WIDTH, HEIGHT, sizeof(uint8_t), buff, GRAY_SCALE_IO );
 }

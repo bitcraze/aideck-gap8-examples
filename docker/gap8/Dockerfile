@@ -34,4 +34,5 @@ RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make pulp-os"
 RUN pip3 install tensorflow==1.15.2
 
 RUN mkdir -p /module/data/
+RUN mkdir -p /common/
 WORKDIR /module/data/

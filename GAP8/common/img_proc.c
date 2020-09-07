@@ -15,8 +15,11 @@ void demosaicking(char *input, char* output, int width, int height, bool graysca
             if (x == 0 || y == 0 || x == width-1 || y == height-1)
             {
                 output[idx * 3] = 0;
-                output[idx * 3 + 1] = 0;
-                output[idx * 3 + 2] = 0;
+                if(!grayscale)
+                {
+                    output[idx * 3 + 1] = 0;
+                    output[idx * 3 + 2] = 0;
+                }
             }
             else
             {
