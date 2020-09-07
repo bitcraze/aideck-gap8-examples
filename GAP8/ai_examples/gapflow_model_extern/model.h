@@ -2,7 +2,7 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
-#define __PREFIX(x) Model ## x
+#define __PREFIX(x) model ## x
 
 #include "Gap.h"
 
@@ -13,15 +13,14 @@
 #include <fcntl.h>
 #include <sys/param.h>
 #include <string.h>
-#endif
-
-#ifndef DONT_DUMP
-#ifndef TENSOR_DUMP_FILE
-    #define TENSOR_DUMP_FILE "tensor_dump_file.dat"
-#endif
-#include "helpers.h"
-#endif
-
 extern AT_HYPERFLASH_FS_EXT_ADDR_TYPE model_L3_Flash;
+#endif
+
+#if defined(USE_HYPER)
+extern AT_HYPERFLASH_FS_EXT_ADDR_TYPE model_L3_Flash;
+#elif defined(USE_SPI)
+extern AT_QSPIFLASH_FS_EXT_ADDR_TYPE model_L3_Flash;
+#endif
+
 
 #endif
