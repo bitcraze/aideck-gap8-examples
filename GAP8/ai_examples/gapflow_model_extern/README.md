@@ -18,6 +18,8 @@ While this example uses Makefiles the same steps could be achieved with any buil
 The process can be run to quantize the model in 16 or 8 bits weights and activations.
 
 ## Build and run without Docker
+*This example uses the SDK Version `3.7`.*
+
 To build and run on GAP8:
 ```
 make all run
@@ -53,6 +55,8 @@ e.g. QUANT_BITS=16 make -f emul.mk all
 ```
 
 ## Build and run within the docker
+*This example uses the SDK Version `3.7`.*
+
 Navigate to top-level folder of the ai examples
 ```
 cd <path/to/ai-deck/repository>/GAP8/ai_examples
