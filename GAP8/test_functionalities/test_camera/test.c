@@ -49,7 +49,9 @@ static int open_camera(struct pi_device *device)
     struct pi_himax_conf cam_conf;
     pi_himax_conf_init(&cam_conf);
 
+#if defined(QVGA_MODE)
     cam_conf.format = PI_CAMERA_QVGA;
+#endif
 
     pi_open_from_conf(device, &cam_conf);
     if (pi_camera_open(device))
@@ -59,7 +61,7 @@ static int open_camera(struct pi_device *device)
 }
 
 
-int main()
+int test_camera()
 {
     printf("Entering main controller\n");
 
@@ -74,7 +76,7 @@ int main()
     if (open_camera(&camera))
     {
         printf("Failed to open camera\n");
-        return -1;
+        pmsis_exit(-1);
     }
 
 
@@ -113,7 +115,7 @@ int main()
     pi_task_t task;
     pi_camera_capture_async(&camera, buff, BUFF_SIZE, pi_task_callback(&task, handle_transfer_end, NULL));
     #endif
-    
+
     // Start the camera
     pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
     #ifdef ASYNC_CAPTURE
@@ -122,16 +124,17 @@ int main()
     pi_camera_capture(&camera, buff, BUFF_SIZE);
     #endif
 
+    // Stop the camera and immediately close it
+    pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+    pi_camera_close(&camera);
+
+
     #ifdef COLOR_IMAGE
     demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 0);
     #else
     demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 1);
     #endif
 
-    // Stop the camera and immediately close it
-    pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-    pi_camera_close(&camera);
-    
     // Write to file
     #ifdef COLOR_IMAGE
     WriteImageToFile("../../../img_color.ppm", WIDTH, HEIGHT, sizeof(uint32_t), buff_demosaick, RGB888_IO);
@@ -140,4 +143,12 @@ int main()
     #endif
 
     WriteImageToFile("../../../img_raw.ppm", WIDTH, HEIGHT, sizeof(uint8_t), buff, GRAY_SCALE_IO );
+
+    pmsis_exit(0);
+}
+
+int main(void)
+{
+    printf("\n\t*** PMSIS Camera with LCD Example ***\n\n");
+    return pmsis_kickoff((void *) test_camera);
 }
