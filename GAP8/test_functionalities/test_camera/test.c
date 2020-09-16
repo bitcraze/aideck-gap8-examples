@@ -95,6 +95,13 @@ int test_camera()
     printf("qvga window enabled %d\n",reg_value);
     #endif
 
+    #ifndef ASYNC_CAPTURE
+    set_value=0;                                                                                                                                                                   
+    pi_camera_reg_set(&camera, VSYNC_HSYNC_PIXEL_SHIFT_EN, &set_value);
+    pi_camera_reg_get(&camera, VSYNC_HSYNC_PIXEL_SHIFT_EN, &reg_value);
+    printf("vsync hsync pixel shift enabled %d\n",reg_value);
+    #endif
+
     // Reserve buffer space for image
     buff = pmsis_l2_malloc(BUFF_SIZE);
     if (buff == NULL){ return -1;}
