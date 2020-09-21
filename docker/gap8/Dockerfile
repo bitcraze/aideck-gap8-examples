@@ -35,5 +35,4 @@ RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make pulp-os"
 RUN pip3 install tensorflow==1.15.2 scikit-image==0.15.0 scikit-learn==0.21.3
 
 RUN mkdir -p /module/data/
-RUN mkdir -p /common/
 WORKDIR /module/data/

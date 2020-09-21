@@ -20,7 +20,7 @@
 
 #include "gaplib/ImgIO.h"
 
-#include "../../common/img_proc.h"
+#include "img_proc.h"
 
 #define WIDTH    324
 #ifdef QVGA_MODE

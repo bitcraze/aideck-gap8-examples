@@ -19,5 +19,5 @@ for onram flashing with your programmer.
 ## Run in Docker
 To build and execute in the docker we need to place the `demosaicking`-files in the `common`-folder inside the docker.
 ```
-docker run --rm -it -v $PWD:/module/data/ -v $PWD/../../common/:/common/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.7 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
+docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.7 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
 ```
