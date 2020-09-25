@@ -14,7 +14,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html
 
 The env var IDF_PATH must be define and the esp toolchain must be in the path.
 
-Also the openocd as provided by esp shoudl be installed:
+Also the openocd as provided by esp should be installed:
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/jtag-debugging/building-openocd-linux.html?highlight=openocd
 
