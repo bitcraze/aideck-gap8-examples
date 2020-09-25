@@ -1,8 +1,8 @@
 adjust
-fusions --pow2
-aquant images/* -s POW2 -f 16
-imageformat input_1 bw16 out_int16
-set graph_dump_tensor 7
+fusions --scale8
+set input_norm_func "x: x/128-1"
+aquant images/* -s SQ8
+imageformat input_1 bw8 offset_int8
 set graph_reorder_constant_in true
 set graph_produce_node_names true
 set graph_produce_operinfos true

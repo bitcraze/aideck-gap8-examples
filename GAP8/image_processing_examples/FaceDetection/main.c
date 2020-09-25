@@ -294,12 +294,12 @@ void test_facedetection(void)
 #else
     // Read in image to check if NN is still working
     // TODO: this breaks after the second read....
-    char *ImageName = "../../../imgTest0.pgm";
-    unsigned int Wi, Hi;
-    unsigned int Win = CAM_WIDTH, Hin = CAM_HEIGHT;
-    if ((ReadImageFromFile(ImageName, &Wi, &Hi, imgBuff0, Win * Hin * sizeof(unsigned char)) == 0) || (Wi != Win) || (Hi != Hin))
+    char imageName[64];
+	  sprintf(imageName, "../../../imgTest%d.pgm", nb_frames);
+    printf("Loading %s ...\n", imageName);
+    if (ReadImageFromFile(imageName, CAM_WIDTH, CAM_HEIGHT, 1, imgBuff0, CAM_WIDTH * CAM_HEIGHT * sizeof(char), IMGIO_OUTPUT_CHAR, 0))
     {
-      printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, Win, Hin, Wi, Hi);
+      printf("Failed to load image %s\n", imageName);
       return 1;
     }
 #endif /* USE_CAMERA */

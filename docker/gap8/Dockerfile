@@ -13,7 +13,8 @@ RUN cd gap_riscv_toolchain_ubuntu_18 && ./install.sh "/usr/lib/gap_riscv_toolcha
 
 RUN git clone https://github.com/GreenWaves-Technologies/gap_sdk.git
 
-RUN cd gap_sdk && git checkout SDK_3.6.1_I2S && git submodule update --init --recursive
+ARG GAP_SDK_VERSION
+RUN cd gap_sdk && git fetch --all --tags && git checkout tags/release-v${GAP_SDK_VERSION} && git submodule update --init --recursive
 
 RUN pip3 install -U pip && cd gap_sdk && pip3 install -r requirements.txt && pip3 install -r tools/nntool/requirements.txt
 
@@ -30,6 +31,8 @@ RUN pip3 install requests
 
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make openocd"
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make pulp-os"
+
+RUN pip3 install tensorflow==1.15.2 scikit-image==0.15.0 scikit-learn==0.21.3
 
 RUN mkdir -p /module/data/
 WORKDIR /module/data/
