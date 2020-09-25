@@ -21,7 +21,10 @@ For this example a basic understanding on how to:
 * AI-Deck
 
 ## Setting up the GAP8 SDK
-To get started, first set up the GAP8 SDK using the instruction on this repository:
+
+* If you would like to use the SDK through docker, please go here: [docker gap8 instructions](getting-started/docker-gap8.md)
+
+To setup the SDK natively on you machine, then first set up the GAP8 SDK using the instruction on this repository:
 
 https://github.com/GreenWaves-Technologies/gap_sdk.  
 
