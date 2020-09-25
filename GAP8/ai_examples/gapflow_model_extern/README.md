@@ -57,11 +57,11 @@ e.g. QUANT_BITS=16 make -f emul.mk all
 ## Build and run within the docker
 *This example uses the SDK Version `3.7`.*
 
-Navigate to top-level folder of the ai examples
+Navigate to top-level folder of the example
 ```
-cd <path/to/ai-deck/repository>/GAP8/ai_examples
+cd <path/to/ai-deck/repository>/GAP8/ai_examples/gapflow_model_extern/
 ```
 Build and execute in Docker similar as the other examples
 ```
-docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.7 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/gapflow_model_extern/;  make clean clean_train clean_model clean_images all run'
+docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P gapsdk:3.7 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean clean_train clean_model clean_images all run'
 ```

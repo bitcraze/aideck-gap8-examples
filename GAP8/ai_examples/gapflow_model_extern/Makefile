@@ -54,7 +54,7 @@ $(info Building GAP8 mode with $(QUANT_BITS) bit quantization)
 
 TRAINED_TFLITE_MODEL=model/$(MODEL_PREFIX).tflite
 
-include ../common/model_decl.mk
+include model_decl.mk
 
 # Here we set the memory allocation for the generated kernels
 # REMEMBER THAT THE L1 MEMORY ALLOCATION MUST INCLUDE SPACE
@@ -86,7 +86,7 @@ all:: model
 clean:: clean_model
 
 include train_model.mk
-include ../common/model_rules.mk
+include model_rules.mk
 $(info APP_SRCS... $(APP_SRCS))
 $(info APP_CFLAGS... $(APP_CFLAGS))
 include $(RULES_DIR)/pmsis_rules.mk

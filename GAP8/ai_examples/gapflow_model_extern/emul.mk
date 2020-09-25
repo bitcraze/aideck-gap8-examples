@@ -22,7 +22,7 @@ else
 endif
 TRAINED_TFLITE_MODEL=model/$(MODEL_PREFIX).tflite
 
-include ../common/model_decl.mk
+include model_decl.mk
 
 MODEL_GEN_EXTRA_FLAGS= -f $(MODEL_BUILD)
 MODEL_GENFLAGS_EXTRA+=
@@ -71,4 +71,4 @@ clean: clean_model
 
 .PHONY: depend clean
 include train_model.mk
-include ../common/model_rules.mk
+include model_rules.mk
