@@ -6,7 +6,7 @@ page_id: nina-flash-instructions
 
 # Building NINA 
 
-If you would like to use docker to setup the NINA environment, go to the [docker nina instructions](nina-instructions/docker-nina.md)
+If you would like to use docker to setup the NINA environment, go to the [docker nina instructions](../nina-instructions/docker-nina.md)
 
 Follow instructions here for installing dependencies:
 
