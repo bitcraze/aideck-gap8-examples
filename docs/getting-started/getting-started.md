@@ -22,7 +22,7 @@ For this example a basic understanding on how to:
 
 ## Setting up the GAP8 SDK
 
-* If you would like to use the SDK through docker, please go here: [docker gap8 instructions](getting-started/docker-gap8.md)
+* If you would like to use the SDK through docker, please go here: [docker gap8 instructions](../getting-started/docker-gap8.md)
 
 To setup the SDK natively on you machine, then first set up the GAP8 SDK using the instruction on this repository:
 
@@ -50,7 +50,7 @@ What you should provide in this workflow is:
 * GAP application code
 * optional: own autotiler operator
 
-Check out the  [gapflow](/ai-examples/gap-flow) explaination in the ai-example folder
+Check out the  [gapflow](../ai-examples/gap-flow) explanation in the ai-example folder
 
 ### Tensorflow and Keras use
 Keras is a framework within Tensorflow. In addtion to providing a neural network framework, it also provides examples of common and simple neural networks and provides datasets along with it. Though when you want to make an application you might want to use other datasets that are relevant for your application. For this you have to supply your own dataset with labels, augmentation and transformations when required.
