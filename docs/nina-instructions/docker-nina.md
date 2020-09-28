@@ -6,7 +6,7 @@ page_id: docker-nina
 
 # Docker Nina
 
-Build the docker image while in the same directory as the docker file.
+Build the docker image while in the same directory as the docker file (found in AIdeck_examples/docker/nina/)
 
 *Note: Depending on your operating system and docker installation you might need to perform the following commands with `sudo`. For more information see the [docker documentation](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)*.
 
