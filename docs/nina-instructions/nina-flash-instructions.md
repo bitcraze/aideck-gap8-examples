@@ -8,17 +8,17 @@ page_id: nina-flash-instructions
 
 If you would like to use docker to setup the NINA environment, go to the [docker nina instructions](../nina-instructions/docker-nina.md)
 
-Follow instructions here for installing dependencies:
+Follow instructions [here](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for installing dependencies:
 
-https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html
 
 ***Make sure you install IDF version v3.3.1***
 
-The env var IDF_PATH must be define and the esp toolchain must be in the path.
+* The env var IDF_PATH must be define and the esp toolchain must be in the path.
 
-Also the openocd as provided by esp should be installed:
+* Also the [openocd as provided by esp](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/jtag-debugging/building-openocd-linux.html?highlight=openocd
+) should be installed:
 
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/jtag-debugging/building-openocd-linux.html?highlight=openocd
+* Remember that you need to do _make_ and _make clean_ in NINA/firmware folder to build the NINA's firmware
 
 To flash with openocd
 
