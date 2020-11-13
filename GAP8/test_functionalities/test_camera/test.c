@@ -20,15 +20,19 @@
 
 #include "gaplib/ImgIO.h"
 
-#include "../../common/img_proc.h"
+#include "img_proc.h"
 
 #define WIDTH    324
+#ifdef QVGA_MODE
 #define HEIGHT   244
+#else
+#define HEIGHT   324
+#endif
 #define BUFF_SIZE (WIDTH*HEIGHT)
 
 PI_L2 unsigned char *buff;
 
-PI_L2 unsigned char *buff_output;
+PI_L2 unsigned char *buff_demosaick;
 
 static struct pi_device camera;
 static volatile int done;
@@ -45,7 +49,9 @@ static int open_camera(struct pi_device *device)
     struct pi_himax_conf cam_conf;
     pi_himax_conf_init(&cam_conf);
 
+#if defined(QVGA_MODE)
     cam_conf.format = PI_CAMERA_QVGA;
+#endif
 
     pi_open_from_conf(device, &cam_conf);
     if (pi_camera_open(device))
@@ -55,7 +61,7 @@ static int open_camera(struct pi_device *device)
 }
 
 
-int main()
+int test_camera()
 {
     printf("Entering main controller\n");
 
@@ -70,7 +76,7 @@ int main()
     if (open_camera(&camera))
     {
         printf("Failed to open camera\n");
-        return -1;
+        pmsis_exit(-1);
     }
 
 
@@ -82,24 +88,41 @@ int main()
     pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
     printf("img orientation %d\n",reg_value);
 
+    #ifdef QVGA_MODE
+    set_value=1;
+    pi_camera_reg_set(&camera, QVGA_WIN_EN, &set_value);
+    pi_camera_reg_get(&camera, QVGA_WIN_EN, &reg_value);
+    printf("qvga window enabled %d\n",reg_value);
+    #endif
+
+    #ifndef ASYNC_CAPTURE
+    set_value=0;                                                                                                                                                                   
+    pi_camera_reg_set(&camera, VSYNC_HSYNC_PIXEL_SHIFT_EN, &set_value);
+    pi_camera_reg_get(&camera, VSYNC_HSYNC_PIXEL_SHIFT_EN, &reg_value);
+    printf("vsync hsync pixel shift enabled %d\n",reg_value);
+    #endif
+
     // Reserve buffer space for image
-    buff = pmsis_l2_malloc(WIDTH*HEIGHT);
+    buff = pmsis_l2_malloc(BUFF_SIZE);
     if (buff == NULL){ return -1;}
 
     #ifdef COLOR_IMAGE
-    buff_output = pmsis_l2_malloc(WIDTH*HEIGHT*3);
-    if (buff_output == NULL){ return -1;}
+    buff_demosaick = pmsis_l2_malloc(BUFF_SIZE*3);
+    #else
+    buff_demosaick = pmsis_l2_malloc(BUFF_SIZE);
     #endif
+    if (buff_demosaick == NULL){ return -1;}
     printf("Initialized buffers\n");
 
 
 
     #ifdef ASYNC_CAPTURE
     // Start up async capture task
+    done = 0;
     pi_task_t task;
     pi_camera_capture_async(&camera, buff, BUFF_SIZE, pi_task_callback(&task, handle_transfer_end, NULL));
     #endif
-    
+
     // Start the camera
     pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
     #ifdef ASYNC_CAPTURE
@@ -108,17 +131,31 @@ int main()
     pi_camera_capture(&camera, buff, BUFF_SIZE);
     #endif
 
-    #ifdef COLOR_IMAGE
-    demosaicking(buff, buff_output,WIDTH,HEIGHT);
-    #endif
-
     // Stop the camera and immediately close it
     pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
     pi_camera_close(&camera);
-    
+
+
+    #ifdef COLOR_IMAGE
+    demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 0);
+    #else
+    demosaicking(buff, buff_demosaick, WIDTH, HEIGHT, 1);
+    #endif
+
     // Write to file
     #ifdef COLOR_IMAGE
-    WriteImageToFile("../../../img_color.ppm", WIDTH, HEIGHT,sizeof(uint32_t), buff_output, RGB888_IO);
+    WriteImageToFile("../../../img_color.ppm", WIDTH, HEIGHT, sizeof(uint32_t), buff_demosaick, RGB888_IO);
+    #else
+    WriteImageToFile("../../../img_gray.ppm", WIDTH, HEIGHT, sizeof(uint8_t), buff_demosaick, GRAY_SCALE_IO);
     #endif
-    WriteImageToFile("../../../img_raw.ppm", WIDTH, HEIGHT,sizeof(uint8_t), buff, GRAY_SCALE_IO );
+
+    WriteImageToFile("../../../img_raw.ppm", WIDTH, HEIGHT, sizeof(uint8_t), buff, GRAY_SCALE_IO );
+
+    pmsis_exit(0);
+}
+
+int main(void)
+{
+    printf("\n\t*** PMSIS Camera with LCD Example ***\n\n");
+    return pmsis_kickoff((void *) test_camera);
 }

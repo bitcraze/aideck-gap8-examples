@@ -12,6 +12,7 @@ This repository contains examples for the AIdeck of the crazyflie and is maintai
 - [First time: Trying out your AIdeck](getting-started/tryout.md)
 - [Setting up development environment](getting-started/getting-started.md)
 - [JTAG programming](getting-started/jtag-programming.md)
+- [Docker GAP-SDK](getting-started/docker-gap8.md)
 
 ### Test AI-deck functions
 - [Send a character through UART](test-functions/uart-send-char.md)
@@ -27,5 +28,5 @@ This repository contains examples for the AIdeck of the crazyflie and is maintai
 
 ## NINA
 - [NINA flash instructions](nina-instructions/nina-flash-instructions.md)
-
+- [Docker NINA](nina-instructions/docker-nina.md)
 

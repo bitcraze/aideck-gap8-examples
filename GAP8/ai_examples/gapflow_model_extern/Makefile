@@ -8,30 +8,41 @@ ifndef GAP_SDK_HOME
   $(error Source sourceme in gap_sdk first)
 endif
 
-io=host
-
 include common.mk
 
-QUANT_BITS ?= 8
+LOAD_QUANTIZATION= #-q #to load a tflite quantized model
+IMAGE=$(CURDIR)/samples/5223_5.pgm
 
-$(info Building GAP8 mode with $(QUANT_BITS) bit quantization)
+io=host
 
-# For debugging don't load an image
-# Run the network with zeros
-# NO_IMAGE=1
 
-# The training of the model is slightly different depending on
-# the quantization. This is because in 8 bit mode we used signed
-# 8 bit so the input to the model needs to be shifted 1 bit
-ifeq ($(QUANT_BITS),8)
-  $(info Configure 8 bit model)
-  APP_CFLAGS += -DQUANT_8BIT
-  NNTOOL_SCRIPT=model/nntool_script8
-  MODEL_SUFFIX = _8BIT
+RAM_FLASH_TYPE ?= HYPER
+#PMSIS_OS=freertos
+
+ifeq '$(RAM_FLASH_TYPE)' 'HYPER'
+APP_CFLAGS += -DUSE_HYPER
+MODEL_L3_EXEC=hram
+MODEL_L3_CONST=hflash
+else
+APP_CFLAGS += -DUSE_SPI
+CONFIG_SPIRAM = 1
+MODEL_L3_EXEC=qspiram
+MODEL_L3_CONST=qpsiflash
+endif
+
+
+QUANT_BITS?=8
+BUILD_DIR=BUILD
+ifeq ($(QUANT_BITS), 8)
+	MODEL_SQ8=1
+  ifeq '$(RAM_FLASH_TYPE)' 'HYPER'
+	   NNTOOL_SCRIPT=model/nntool_script
+  else
+    NNTOOL_SCRIPT=model/nntool_script_spi
+  endif
+  	MODEL_SUFFIX = _SQ8BIT
 else
   ifeq ($(QUANT_BITS),16)
-    $(info Configure 16 bit model)
-    APP_CFLAGS += -DQUANT_16BIT
     NNTOOL_SCRIPT=model/nntool_script16
     MODEL_SUFFIX = _16BIT
   else
@@ -39,56 +50,44 @@ else
   endif
 endif
 
-include $(GAP_SDK_HOME)/examples/nntool/common/model_decl.mk
-include common_rules.mk
+$(info Building GAP8 mode with $(QUANT_BITS) bit quantization)
+
+TRAINED_TFLITE_MODEL=model/$(MODEL_PREFIX).tflite
+
+include model_decl.mk
 
 # Here we set the memory allocation for the generated kernels
 # REMEMBER THAT THE L1 MEMORY ALLOCATION MUST INCLUDE SPACE
 # FOR ALLOCATED STACKS!
-CLUSTER_STACK_SIZE=2048
+CLUSTER_STACK_SIZE=4028
 CLUSTER_SLAVE_STACK_SIZE=1024
 TOTAL_STACK_SIZE=$(shell expr $(CLUSTER_STACK_SIZE) \+ $(CLUSTER_SLAVE_STACK_SIZE) \* 7)
 MODEL_L1_MEMORY=$(shell expr 60000 \- $(TOTAL_STACK_SIZE))
-MODEL_L2_MEMORY=370000
+MODEL_L2_MEMORY=250000
 MODEL_L3_MEMORY=8388608
 
-# hram - HyperBus RAM
-# qspiram - Quad SPI RAM
-MODEL_L3_EXEC=hram
-# hflash - HyperBus Flash
-# qpsiflash - Quad SPI Flash
-MODEL_L3_CONST=hflash
-
-# use a custom template to switch on the performance checking
-MODEL_GENFLAGS_EXTRA=
-
 pulpChip = GAP
+PULP_APP = model
+
 APP = model
-USE_PMSIS_BSP=1
+APP_SRCS += $(MODEL_PREFIX).c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB)
 
-APP_SRCS += $(MODEL_PREFIX).c $(MODEL_COMMON_SRCS) $(MODEL_SRCS) $(GAP_LIB_PATH)/img_io/ImgIO.c
-
-APP_CFLAGS += -g -O1 -mno-memcpy -fno-tree-loop-distribute-patterns -DDONT_DUMP
-APP_CFLAGS += -I. -I$(MODEL_COMMON_INC) -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(TILER_CNN_KERNEL_PATH) -I$(MODEL_BUILD)
-APP_CFLAGS += -DPERF $(MODEL_SIZE_CFLAGS) -DSLAVE_STACK_SIZE=$(CLUSTER_SLAVE_STACK_SIZE) -DSTACK_SIZE=$(CLUSTER_STACK_SIZE)
+APP_CFLAGS += -g -O1 -mno-memcpy -fno-tree-loop-distribute-patterns
+APP_CFLAGS += -I. -I$(MODEL_COMMON_INC) -I$(TILER_EMU_INC) -I$(TILER_INC) $(CNN_LIB_INCLUDE) -I$(MODEL_BUILD)
+APP_CFLAGS += -DPERF -DAT_MODEL_PREFIX=$(MODEL_PREFIX) $(MODEL_SIZE_CFLAGS)
+APP_CFLAGS += -DSTACK_SIZE=$(CLUSTER_STACK_SIZE) -DSLAVE_STACK_SIZE=$(CLUSTER_SLAVE_STACK_SIZE)
+APP_CFLAGS += -DAT_IMAGE=$(IMAGE)
 
 READFS_FILES=$(abspath $(MODEL_TENSORS))
-PLPBRIDGE_FLAGS += -f
-
-ifdef NO_IMAGE
-  APP_CFLAGS += -DNO_IMAGE
-endif
 
 # all depends on the model
 all:: model
 
 clean:: clean_model
 
-clean_all: clean clean_train
-	rm -rf BUILD*
-
-.PHONY: clean_all
-
-include $(GAP_SDK_HOME)/examples/nntool/common/model_rules.mk
+include train_model.mk
+include model_rules.mk
+$(info APP_SRCS... $(APP_SRCS))
+$(info APP_CFLAGS... $(APP_CFLAGS))
 include $(RULES_DIR)/pmsis_rules.mk
 
