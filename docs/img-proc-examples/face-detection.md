@@ -25,6 +25,7 @@ To flash the code fully on the ai deck:
     
 
 In the makefile you can uncomment the following lines if you would like to use the himax camera (works in SDK 3.7) or the streamer (only works untill 3.5) :
+
     # APP_CFLAGS += -DUSE_CAMERA
     # APP_CFLAGS += -DUSE_STREAMER 
 
