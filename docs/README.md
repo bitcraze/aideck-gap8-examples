@@ -5,11 +5,11 @@ page_id: home
 
 # AI-deck Documentation index
 
-This repository contains examples for the AIdeck of the crazyflie and is maintained by bitcraze.c. These repositories rely on the gap_sdk of greenwave technologies.
+This repository contains examples for the AI-deck of the crazyflie and is maintained by bitcraze.c. These repositories rely on the gap_sdk of greenwave technologies.
 
 
 ### Getting started
-- [First time: Trying out your AIdeck](getting-started/tryout.md)
+- [First time: Trying out your AI-deck](getting-started/tryout.md)
 - [Setting up development environment](getting-started/getting-started.md)
 - [JTAG programming](getting-started/jtag-programming.md)
 - [Docker GAP-SDK](getting-started/docker-gap8.md)

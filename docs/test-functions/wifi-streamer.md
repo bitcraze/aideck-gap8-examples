@@ -19,12 +19,12 @@ This example was tested and working under SDK version `3.5`. There is a reported
 Make sure you have followed [these instructions](../getting-started/getting-started.md) to set up your development environment for the GAP8.
 
 ### Build and flash the wifi example
-This is how you can run the wifi example on L2 RAM (this is not an actual flash, as soon as the AIdeck resets, this is removed)
+This is how you can run the wifi example on L2 RAM (this is not an actual flash, as soon as the AI-deck resets, this is removed)
 ~~~~~shell
 make clean all run io=host
 ~~~~~
 
-this flashes the program directly on the AIdeck
+this flashes the program directly on the AI-deck
 
 ~~~~~shell
 make clean all
