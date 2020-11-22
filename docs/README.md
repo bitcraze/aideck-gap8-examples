@@ -12,19 +12,18 @@ This repository contains examples for the AI-deck of the crazyflie and is mainta
 - [First time: Trying out your AI-deck](getting-started/tryout.md)
 - [Setting up development environment](getting-started/getting-started.md)
 - [JTAG programming](getting-started/jtag-programming.md)
-- [Docker GAP-SDK](getting-started/docker-gap8.md)
+- [Docker GAP8 SDK](getting-started/docker-gap8.md)
 
 ### Test AI-deck functions
 - [Send a character through UART](test-functions/uart-send-char.md)
-- [Testing the camera](test-functions/test-camera.md)
-- [WiFi-streamer](test-functions/wifi-streamer.md)
+- [Testing the Himax camera](test-functions/test-camera.md)
+- [WiFi video streamer](test-functions/wifi-streamer.md)
 
 ### Image processing Examples
 - [Face detection example](img-proc-examples/face-detection.md)
 
 ### AI-examples
-- [GAP flow](ai-examples/gap-flow.md)
-- [mnist example](ai-examples/mnist-example.md)
+- [MNIST example](ai-examples/gapflow-model-extern.md)
 
 ## NINA
 - [NINA flash instructions](nina-instructions/nina-flash-instructions.md)
