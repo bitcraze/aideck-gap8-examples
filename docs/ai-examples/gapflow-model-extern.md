@@ -16,7 +16,7 @@ In train_model.mk the accuracy of a neural network can be increased by setting t
 * It first trains the network using keras
 * It then exports the network to H5 format
 * It then converts the H5 file to a TFLITE file using TensorFlow's TFLITE converter
-* It then generates an nntool state file by running an nntool script with commands to adjust the tensor and activation order, fuse certain operations together and automatically quantify the graph
+* It then generates a nntool state file by running a nntool script with commands to adjust the tensor and activation order, fuse certain operations together and automatically quantify the graph
 * It then uses this state file to generate an AutoTiler graph model
 * It then compiles and runs the model to produce GAP8 code
 * Finally it builds and runs the produced code on GAP8
