@@ -20,7 +20,7 @@ echo 'export GAP_SDK_VERSION=3.7' >> ~/.bashrc
 _Note: if you would like to also build docker images for SDK version 3.4, 3.5 or 3.6, just replace the previous version number. The build process will checkout the right version of the SDK_
 
 ```
-docker build --tag gapsdk:${GAP_SDK_VERSION} --build-arg GAP_SDK_VERSION .
+docker build --tag gapsdk:${GAP_SDK_VERSION} --build-arg GAP_SDK_VERSION=$GAP_SDK_VERSION .
 ```
 
 Open up the container to install the auto tiler
