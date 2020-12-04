@@ -77,6 +77,8 @@ static int open_camera_himax(struct pi_device *device)
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
+  
+  pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
   return 0;
 }

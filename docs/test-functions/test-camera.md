@@ -6,7 +6,7 @@ page_id: test-camera
 # Testing the Himax camera on the AIdeck
 
 
-This concerns the example in folder *AIdeck_examples/GAP8/test_functionalities/test_camera/*. This was tested on **GAP_SDK version 3.7**.
+This concerns the example in folder *AIdeck_examples/GAP8/test_functionalities/test_camera/*. This was tested on **GAP_SDK version 3.8.1**.
 
 In the makefile enable `APP_CFLAGS += -DASYNC_CAPTURE` if you want to test the asynchronous camera capture and remove it if you want to test the normal one. To save a color image enable `APP_CFLAGS += -DCOLOR_IMAGE`. And, to capture a `324x324` image enable `APP_CFLAGS += -DQVGA_MODE`. *Please note though that capturing an image in non-QVGA mode might not always work correctly.*
 

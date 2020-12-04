@@ -8,7 +8,7 @@ page_id: wifi-streamer
 
 This example streams JPEG images from the GAP8 connected camera to a socket connected on WiFI. This concerns the example in *AIdeck_examples/GAP8/test_functionalities/wifi_jpeg_streamer/*.
 
-This example was tested and working under SDK version `3.5`. There is a reported problem for the wifi example for version 3.6 and up, so please check out this [issue](https://github.com/bitcraze/AIdeck_examples/issues/19).
+This was tested on **GAP_SDK version 3.8.1**.
 
 
 ## Prerequisites

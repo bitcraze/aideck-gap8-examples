@@ -10,7 +10,7 @@ Prebuild the docker image while in the same directory as the docker file.
 *Note: Depending on your operating system and docker installation you might need to perform the following commands with `sudo`. For more information see the [docker documentation](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)*.
 
 ```
-export GAP_SDK_VERSION=3.7
+export GAP_SDK_VERSION=3.8.1
 ```
 If you want to permanently use that version, we recommend that you put it inside your `.bashrc`. For example by appending it
 ```
@@ -47,7 +47,7 @@ export GAP_SDK_VERSION=3.7
 docker commit <container id> gapsdk:${GAP_SDK_VERSION}
 ```
 
-This will save the install of the autotiler on your image.
+This will save the install of the autotiler on your image. You can close the container in the other terminal with 'exit'
 
 ### Running an Example
 On your host navigate to the `make`-file you want to execute. For example

@@ -5,7 +5,7 @@ page_id: gapflow-model-extern
 
 # MNIST example simplified
 
-The *GAP8/ai_examples/mnist_simple/* is a copy of Greenwaves' [MNIST example of GAPflow](https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/examples/nntool/mnist). This example was tested and working in SDK `3.7`.
+The *GAP8/ai_examples/mnist_simple/* is a copy of Greenwaves' [MNIST example of GAPflow](https://github.com/GreenWaves-Technologies/gap_sdk/tree/master/examples/nntool/mnist). This was tested on **GAP_SDK version 3.8.1**.
 
 The GAP*flow* is expressed as Makefiles in the 'common' folder. It uses the NNTool and Autotiler tool consecutively as explained in the main folder.
 

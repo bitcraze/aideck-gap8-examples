@@ -74,11 +74,12 @@ static int open_pi_camera_himax(struct pi_device *device)
 
   pi_himax_conf_init(&cam_conf);
 
-  cam_conf.format = PI_CAMERA_QQVGA;
+  cam_conf.format = PI_CAMERA_QVGA;
 
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
+  pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
   return 0;
 }
