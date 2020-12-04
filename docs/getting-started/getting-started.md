@@ -28,7 +28,7 @@ To setup the SDK natively on your machine, then first set up the GAP8 SDK using 
 
 https://github.com/GreenWaves-Technologies/gap_sdk.  
 
-When installing the gap sdk (3.4), make sure that you have installed everything:
+When installing the gap sdk (3.8.1), make sure that you have installed everything:
 
     make all
     make openocd

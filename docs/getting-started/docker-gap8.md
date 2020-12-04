@@ -43,7 +43,7 @@ docker ps
 
 Copy and past the container ID and replace the <container id> on the line here below, then run it in the separate terminal (also adapt the SDK version if you did before)
 ```
-export GAP_SDK_VERSION=3.7
+export GAP_SDK_VERSION=3.8.1
 docker commit <container id> gapsdk:${GAP_SDK_VERSION}
 ```
 

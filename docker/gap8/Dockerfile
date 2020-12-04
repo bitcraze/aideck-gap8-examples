@@ -31,6 +31,8 @@ RUN python -m pip install configparser
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make all;"
 
 RUN cd gap_sdk; pip3 install -r tools/nntool/requirements.txt
+RUN pip3 install tensorflow==1.15.2
+RUN pip3 install h5py==2.10.0
 
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make nntool"
 
