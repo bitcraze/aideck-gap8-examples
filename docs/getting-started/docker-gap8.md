@@ -14,10 +14,10 @@ export GAP_SDK_VERSION=3.8.1
 ```
 If you want to permanently use that version, we recommend that you put it inside your `.bashrc`. For example by appending it
 ```
-echo 'export GAP_SDK_VERSION=3.7' >> ~/.bashrc 
+echo 'export GAP_SDK_VERSION=3.8.1' >> ~/.bashrc 
 ```
 
-_Note: if you would like to also build docker images for SDK version 3.4, 3.5 or 3.6, just replace the previous version number. The build process will checkout the right version of the SDK_
+_Note: if you would like to also build docker images for SDK version 3.4, 3.5, 3.6 or 3.7, just replace the previous version number. The build process will checkout the right version of the SDK_
 
 ```
 docker build --tag gapsdk:${GAP_SDK_VERSION} --build-arg GAP_SDK_VERSION .
