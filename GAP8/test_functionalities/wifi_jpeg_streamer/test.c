@@ -38,20 +38,6 @@ static void cam_handler(void *arg)
   frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
 
   return;
-
-  for (int i=0; i<CAM_HEIGHT; i++)
-  {
-    for (int j=0; j<CAM_WIDTH; j++)
-    {
-      int index = i*CAM_WIDTH + j;
-      if (imgBuff0[index] > 64)
-        imgBuff1[index] = imgBuff0[index];
-      else
-        imgBuff1[index] = 0;
-    }
-  }
-
-  frame_streamer_send_async(streamer2, &buffer2, pi_task_callback(&task2, streamer_handler, (void *)&stream2_done));
 }
 
 
@@ -162,13 +148,9 @@ int main()
 {
   printf("Entering main controller...\n");
 
-  
-
-  //pi_time_wait_us(1*1000*1000);
-
   pi_freq_set(PI_FREQ_DOMAIN_FC, 150000000);
 
-    pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
+  pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
 
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
 
@@ -177,47 +159,46 @@ int main()
       printf("Failed to allocate Memory for Image \n");
       return 1;
   }
-  printf("1\n");
-
-  imgBuff1 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH*CAM_HEIGHT)*sizeof(unsigned char));
-  if (imgBuff1 == NULL) {
-      printf("Failed to allocate Memory for Image \n");
-      return 1;
-  }
-  printf("2\n");
+  printf("Allocated Memory for Image\n");
 
   if (open_camera(&camera))
   {
     printf("Failed to open camera\n");
     return -1;
   }
-  printf("3\n");
+  printf("Opened Camera\n");
+
+  // rotate image
+  uint8_t set_value=3;
+  uint8_t reg_value;
+
+  pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
+  pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+  if (set_value!=reg_value)
+  {
+    printf("Failed to rotate camera image\n");
+    return -1;
+  }
+  printf("Rotated camera image\n");
+
 
   if (open_wifi(&wifi))
   {
     printf("Failed to open wifi\n");
     return -1;
   }
+  printf("Opened WIFI\n");
 
-  printf("4\n");
+
 
   streamer1 = open_streamer("camera");
   if (streamer1 == NULL)
     return -1;
 
-    //pi_freq_set(PI_FREQ_DOMAIN_CL, 40000000);
-
-  //streamer2 = open_streamer("filtered");
-  //if (streamer2 == NULL)
-  //  return -1;
-
-  printf("5\n");
+  printf("Opened streamer\n");
 
   pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
-
-  pi_buffer_init(&buffer2, PI_BUFFER_TYPE_L2, imgBuff1);
-  pi_buffer_set_format(&buffer2, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   pi_camera_capture_async(&camera, imgBuff0, CAM_WIDTH*CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));
