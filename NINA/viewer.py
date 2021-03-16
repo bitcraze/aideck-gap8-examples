@@ -60,26 +60,31 @@ class ImgThread(threading.Thread):
         print("Socket connected")
 
         imgdata = None
+        data_buffer = bytearray()
 
         while(1):
-            strng = client_socket.recv(512)
+            # Reveive image data from the AI-deck
+            data_buffer.extend(client_socket.recv(512))
 
             # Look for start-of-frame and end-of-frame
-            start_idx = strng.find(b"\xff\xd8")
-            end_idx = strng.find(b"\xff\xd9")
+            start_idx = data_buffer.find(b"\xff\xd8")
+            end_idx = data_buffer.find(b"\xff\xd9")
 
-            # Concatenate image data, once finished send it to the UI
-            if start_idx >= 0:
-                imgdata = strng[start_idx:len(strng)] # Does not support start and end in same package
-            elif end_idx >= 0 and imgdata:
-                imgdata += strng[0:end_idx]
+            # At startup we might get an end before we get the first start, if
+            # that is the case then throw away the data before start
+            if end_idx > -1 and end_idx < start_idx:
+                data_buffer = data_buffer[start_idx:]
+
+            # We have a start and an end of the image in the buffer now
+            if start_idx > -1 and end_idx > -1 and end_idx > start_idx:
+                # Pick out the image to render ...
+                imgdata = data_buffer[start_idx:end_idx + 2]
+                # .. and remove it from the buffer
+                data_buffer = data_buffer[end_idx + 2 :]
                 try:
                     self._callback(imgdata)
                 except gi.repository.GLib.Error:
-                    pass
-                imgdata = strng[end_idx:len(strng)]
-            elif imgdata:
-                imgdata += strng
+                    print("Error rendering image")
 
 # UI for showing frames from AI-deck example
 class FrameViewer(Gtk.Window):

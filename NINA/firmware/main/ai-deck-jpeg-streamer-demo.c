@@ -132,11 +132,11 @@ static void send_imagedata_to_client(uint32_t type, uint32_t size, uint32_t info
   if (wifi_is_socket_connected())
   {
 
+    wifi_send_packet( (const char*) buffer, size);
+
     if (new_frame) {
       wifi_send_packet( (const char*) &jpeg_footer, sizeof(jpeg_footer) );
     }
-
-    wifi_send_packet( (const char*) buffer, size);
 
     if (new_frame) {
       wifi_send_packet( (const char*) &jpeg_header, sizeof(jpeg_header) );
