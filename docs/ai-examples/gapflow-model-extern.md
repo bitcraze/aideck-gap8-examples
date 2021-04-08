@@ -11,7 +11,7 @@ The GAP*flow* is expressed as Makefiles in the 'common' folder. It uses the NNTo
 
 This project includes a sample based on a simple MNIST graph defined in Keras. It goes from training right through to working code on GAP8 or the same code running on the PC for debugging purposes.
 
-In train_model.mk the accuracy of a neural network can be increased by setting the epochs of the training.  
+In train_model.mk the accuracy of a neural network can be increased by setting the epochs of the training.
 
 * It first trains the network using keras
 * It then exports the network to H5 format

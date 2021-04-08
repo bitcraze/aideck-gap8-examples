@@ -2,6 +2,9 @@
 - title: Getting Started
   subs:
       - {page_id: getting-started}
+      - {page_id: tryout}
+      - {page_id: docker-gap8}
+      - {page_id: jtag-programming}
 - title: Test functions
   subs:
       - {page_id: test-camera}
@@ -16,7 +19,4 @@
 - title: NINA instructions
   subs:
       - {page_id: nina-flash-instructions}
-
-
-
-  
+      - {page_id: docker-nina}
