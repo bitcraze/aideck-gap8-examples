@@ -5,6 +5,9 @@
       - {page_id: tryout}
       - {page_id: docker-gap8}
       - {page_id: jtag-programming}
+- title: Guides
+  subs:
+      - {page_id: replace-ai-deck-camera}
 - title: Test functions
   subs:
       - {page_id: test-camera}

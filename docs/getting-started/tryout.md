@@ -21,6 +21,6 @@ On your Crazyflie, make sure that it is updated to the latest firmware. Also mak
 In this repo in the folder named 'NINA' you will find a file called *[viewer.py](https://github.com/bitcraze/AIdeck_examples/blob/master/NINA/viewer.py)*. If you run this with python (preferably version 3), you will be able to see the camera image stream on your computer. This will confirm for you that your AI-deck is working.
 
 ## Explore more
-After trying out the WiFi demo and if you have a JTAG-ready programmer at your disposal, set up your development program with the [getting-started guide](getting-started.md), which also contains links to the GAP-SDK documentation from Greenwave technologies try out the face detector example we demo-ed in [this blog post](https://www.bitcraze.io/2020/05/latest-update-on-the-ai-deck/).
+After trying out the WiFi demo and if you have a JTAG-ready programmer at your disposal, set up your development program with the [getting-started guide](getting-started.md), which also contains links to the GAP-SDK documentation from Greenwave technologies. You can also check AI-deck category on the Bitcraze blog.
 
 You can find some discussions about the AI-deck in [Bitcraze forum](https://forum.bitcraze.io/viewforum.php?f=21) and [Issues](https://github.com/bitcraze/AIdeck_examples/issues).

@@ -16,7 +16,7 @@ There are two Cortex-M 10pin (2×5, 1.27mm pitch) JTAG interfaces on the AI-deck
 
 Use a 2×5 pin 1.27mm (0.05“) flat cable together with our [debug adapter](https://www.bitcraze.io/debug-adapter-kit) or e.g. an adapter such as the [Olimex ARM-JTAG-20-10](https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10), is needed to connect the debugger and the AI-deck. 
 
-![JTAG cable connected to GAP8](ai-deck-jtag-connecting.png)
+![JTAG cable connected to GAP8](/docs/images/ai-deck-jtag-connecting.png)
 
 ## Programming/Debugging
 For details follow each MCUs guide. The [getting started guide](/docs/getting-started/getting-started.md) contains basic instructions as well.
