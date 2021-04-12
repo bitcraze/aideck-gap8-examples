@@ -106,14 +106,15 @@ void cluster_demosaicking(void* args)
 
     // uint32_t total = width*height;
 
-    // amount of elements per core, rounded up
-    uint32_t x_per_core = (height+nPE-1)/nPE;
+    // amount of rows per core, rounded up
+    uint32_t y_per_core = (height+nPE-1)/nPE;
     // compute the last element of the area each core has to process
-    uint32_t upper_bound = (core_id+1)*x_per_core;
-    // as we always rounded up before (to distribute the load as equal as possible) we need to check if the upper bound is still in our matrix
+    uint32_t upper_bound = (core_id+1)*y_per_core;
+    // as we always rounded up before (to distribute the load as equal as possible) 
+    // we need to check if the upper bound is still in our matrix
     if(upper_bound > height ) upper_bound = height; 
     // loop over the area assigned to the core
-    for (y = core_id*x_per_core; y < upper_bound; y++) {
+    for (y = core_id*y_per_core; y < upper_bound; y++) {
 
         for (int x = 0; x < width ; x++)
         {
@@ -229,7 +230,8 @@ void cluster_inverting(void* args)
     uint32_t per_core = (total+nPE-1)/nPE;
     // compute the last element of the area each core has to process
     uint32_t upper_bound = (core_id+1)*per_core;
-    // as we always rounded up before (to distribute the load as equal as possible) we need to check if the upper bound is still in our matrix
+    // as we always rounded up before (to distribute the load as equal as possible) 
+    // we need to check if the upper bound is still in our matrix
     if(upper_bound > total ) upper_bound = total; 
     // loop over the area assigned to the core
     for (idx = core_id*per_core; idx < upper_bound; idx++) {
