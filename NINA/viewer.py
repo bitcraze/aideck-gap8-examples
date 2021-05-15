@@ -96,7 +96,7 @@ class FrameViewer(Gtk.Window):
         self._start = None
         self.set_default_size(374, 294)
 
-    def init_ui(self):            
+    def init_ui(self):
         self.override_background_color(Gtk.StateType.NORMAL, Gdk.RGBA(0, 0, 0, 1))
         self.set_border_width(20)
         self.set_title("Connecting...")
@@ -117,16 +117,16 @@ class FrameViewer(Gtk.Window):
             fps = 1 / (time.time() - self._start)
             GLib.idle_add(self.set_title, "{:.1f} fps / {:.1f} kb".format(fps, len(imgdata)/1000))
         self._start = time.time()
-        img_loader = GdkPixbuf.PixbufLoader()
 
         # Try to decode JPEG from the data sent from the stream
         try:
+            img_loader = GdkPixbuf.PixbufLoader()
             img_loader.write(imgdata)
+            img_loader.close()
             pix = img_loader.get_pixbuf()
             GLib.idle_add(self._update_image, pix)
         except gi.repository.GLib.Error:
             print("Could not set image!")
-        img_loader.close()
 
 # Args for setting IP/port of AI-deck. Default settings are for when
 # AI-deck is in AP mode.
