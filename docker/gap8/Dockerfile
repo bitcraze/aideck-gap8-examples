@@ -38,7 +38,7 @@ RUN pip3 install h5py==2.10.0
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make nntool"
 
 
-RUN apt-get install -y libopencv-dev python3-opencv
+RUN apt-get update && apt-get install -y libopencv-dev python3-opencv
 
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make gap_tools"
 
