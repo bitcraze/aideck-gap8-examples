@@ -18,6 +18,9 @@ Use a 2×5 pin 1.27mm (0.05“) flat cable together with our [debug adapter](htt
 
 ![JTAG cable connected to GAP8](/docs/images/ai-deck-jtag-connecting.png)
 
+## Note
+It has been found that the Himax monocrom module seem to consume so little power that the JTAG can "phantom" power it and cause it to end up in an unknown state. Therefore it might be nescessare to unplug the JTAG if the AI-deck/Crazyflie is power cycled and plug it back in after it is powered again.
+
 ## Programming/Debugging
 For details follow each MCUs guide. The [getting started guide](/docs/getting-started/getting-started.md) contains basic instructions as well.
 
