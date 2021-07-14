@@ -4,6 +4,7 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND noninteractive 
 ARG GAP_SDK_VERSION
 RUN echo $GAP_SDK_VERSION
+RUN test -n "$GAP_SDK_VERSION"
 
 # Install needed packages
 RUN apt-get update && apt-get install -y build-essential git libftdi-dev libftdi1 doxygen python3-pip libsdl2-dev curl cmake libusb-1.0-0-dev scons gtkwave libsndfile1-dev rsync autoconf automake texinfo libtool pkg-config libsdl2-ttf-dev 
@@ -37,7 +38,7 @@ RUN pip3 install h5py==2.10.0
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make nntool"
 
 
-RUN apt-get install -y libopencv-dev python3-opencv
+RUN apt-get update && apt-get install -y libopencv-dev python3-opencv
 
 RUN /bin/bash -c "cd gap_sdk/; source configs/ai_deck.sh; ls; make gap_tools"
 
