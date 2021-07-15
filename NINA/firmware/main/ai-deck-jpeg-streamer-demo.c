@@ -190,6 +190,10 @@ static void handle_gap8_package(uint8_t *buffer) {
 /* Task for receiving JPEG data from GAP8 and sending to client via WiFi */
 static void img_sending_task(void *pvParameters) {
   spi_init();
+  
+  // Add a delay so it won't start sending images right at 
+  //    the same moment it's connecting with Wifi
+  vTaskDelay(pdMS_TO_TICKS(1000));
 
   while (1)
   {
