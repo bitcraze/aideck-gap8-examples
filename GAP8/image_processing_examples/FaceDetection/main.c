@@ -78,6 +78,18 @@ static int open_camera_himax(struct pi_device *device)
   if (pi_camera_open(device))
     return -1;
   
+    // rotate image
+  uint8_t set_value=3;
+  uint8_t reg_value;
+  pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
+  pi_time_wait_us(1000000);
+  pi_camera_reg_get(device, IMG_ORIENTATION, &reg_value);
+  if (set_value!=reg_value)
+  {
+    printf("Failed to rotate camera image\n");
+    return -1;
+  }
+
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
   return 0;
@@ -203,12 +215,6 @@ void test_facedetection(void)
     printf("Failed to open camera\n");
     pmsis_exit(-5);
   }
-  uint8_t set_value = 3;
-  uint8_t reg_value;
-
-  pi_camera_reg_set(&cam, IMG_ORIENTATION, &set_value);
-  pi_camera_reg_get(&cam, IMG_ORIENTATION, &reg_value);
-  printf("Camera set up\n");
 #endif
 
 #if defined(USE_STREAMER)

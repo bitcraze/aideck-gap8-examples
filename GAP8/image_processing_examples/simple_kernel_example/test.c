@@ -81,6 +81,17 @@ static int open_camera(struct pi_device *device)
     pi_open_from_conf(device, &cam_conf);
     if (pi_camera_open(device))
         return -1;
+      uint8_t set_value=3;
+    uint8_t reg_value;
+    pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
+    pi_time_wait_us(1000000);
+    pi_camera_reg_get(device, IMG_ORIENTATION, &reg_value);
+    if (set_value!=reg_value)
+    {
+        printf("Failed to rotate camera image\n");
+        return -1;
+    }
+
     pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
     return 0;
@@ -123,12 +134,8 @@ int test_camera()
 
 
     // Rotate camera orientation
-    uint8_t set_value=3;
+    uint8_t set_value;
     uint8_t reg_value;
-
-    pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
-    pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
-    printf("img orientation %d\n",reg_value);
 
 #ifdef QVGA_MODE
     set_value=1;

@@ -83,6 +83,19 @@ static int open_pi_camera_mt9v034(struct pi_device *device)
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
+
+  // rotate image
+  uint8_t set_value=3;
+  uint8_t reg_value;
+  pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
+  pi_time_wait_us(1000000);
+  pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+  if (set_value!=reg_value)
+  {
+    printf("Failed to rotate camera image\n");
+    return -1;
+  }
+  pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   
   return 0;
 }
@@ -168,18 +181,6 @@ int main()
   }
   printf("Opened Camera\n");
 
-  // rotate image
-  uint8_t set_value=3;
-  uint8_t reg_value;
-
-  pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
-  pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
-  if (set_value!=reg_value)
-  {
-    printf("Failed to rotate camera image\n");
-    return -1;
-  }
-  printf("Rotated camera image\n");
 
 
   if (open_wifi(&wifi))
