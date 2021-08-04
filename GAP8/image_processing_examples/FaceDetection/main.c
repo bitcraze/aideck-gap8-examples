@@ -79,6 +79,7 @@ static int open_camera_himax(struct pi_device *device)
     return -1;
   
     // rotate image
+  pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
   uint8_t set_value=3;
   uint8_t reg_value;
   pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
