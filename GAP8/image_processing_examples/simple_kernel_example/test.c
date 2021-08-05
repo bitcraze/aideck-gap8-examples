@@ -81,7 +81,7 @@ static int open_camera(struct pi_device *device)
     pi_open_from_conf(device, &cam_conf);
     if (pi_camera_open(device))
         return -1;
-    pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+    pi_camera_control(device, PI_CAMERA_CMD_START, 0);
     uint8_t set_value=3;
     uint8_t reg_value;
     pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
