@@ -7,6 +7,7 @@ APP_CFLAGS += -O3 -g
 
 APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
 
+CONFIG_GAP_LIB_JPEG = 1
 
 RUNNER_CONFIG = $(CURDIR)/config.ini
 

@@ -95,22 +95,31 @@ while(1):
       imgStream = bytearray()
 
       while len(imgStream) < size:
-            packetInfoRaw = rx_bytes(4)
-            [length, dst, src] = struct.unpack('<HBB', packetInfoRaw)
-            #print("Chunk size is {} ({:02X}->{:02X})".format(length, src, dst))
-            chunk = rx_bytes(length - 2)
-            imgStream.extend(chunk)
-      with open("img.raw", "wb") as f:
-          f.write(imgStream)
+          packetInfoRaw = rx_bytes(4)
+          [length, dst, src] = struct.unpack('<HBB', packetInfoRaw)
+          #print("Chunk size is {} ({:02X}->{:02X})".format(length, src, dst))
+          chunk = rx_bytes(length - 2)
+          imgStream.extend(chunk)
+     
       count = count + 1
-      bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
-      #img2 = np.fromfile("img.raw", dtype=np.uint8)
-      bayer_img.shape = (244, 324)
       meanTimePerImage = (time.time()-start) / count
       print("{}".format(meanTimePerImage))
       print("{}".format(1/meanTimePerImage))
-      cv2.imshow('Bayer', bayer_img)
-      cv2.imshow('Color', cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA))
-      cv2.waitKey(1)
 
+      if format == 0:
+          with open("img.raw", "wb") as f:
+              f.write(imgStream)
+          bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
+          #img2 = np.fromfile("img.raw", dtype=np.uint8)
+          bayer_img.shape = (244, 324)
+          cv2.imshow('Bayer', bayer_img)
+          cv2.imshow('Color', cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA))
+          cv2.waitKey(1)
+      else:
+          with open("img.jpeg", "wb") as f:
+              f.write(imgStream)
+          nparr = np.frombuffer(imgStream, np.uint8)
+          decoded = cv2.imdecode(nparr,cv2.IMREAD_UNCHANGED)
+          cv2.imshow('JPEG', decoded)
+          cv2.waitKey(1)
 

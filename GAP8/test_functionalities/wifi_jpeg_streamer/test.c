@@ -2,6 +2,7 @@
 
 #include "bsp/camera/himax.h"
 #include "bsp/buffer.h"
+#include "gaplib/jpeg_encoder.h"
 #include "stdio.h"
 
 #include "com.h"
@@ -21,7 +22,6 @@ static pi_task_t task1;
 static unsigned char *imgBuff0;
 static struct pi_device camera;
 static pi_buffer_t buffer;
-static volatile int stream1_done;
 
 static EventGroupHandle_t evGroup;
 #define CAPTURE_DONE_BIT (1 << 0)
@@ -70,12 +70,12 @@ void rx_task(void *parameters)
   while (1)
   {
     com_read(&rxp);
-    printf("Got something from the ESP!\n");
 
     switch (rxp.data[0])
     {
     case 0x21:
-      printf("Wifi is now connected\n");
+      printf("Wifi connected (%u.%u.%u.%u)\n", rxp.data[1], rxp.data[2],
+                                               rxp.data[3], rxp.data[4]);
       wifiConnected = 1;
       break;
     case 0x23:
@@ -104,7 +104,25 @@ typedef struct
 static uint32_t start;
 static uint32_t end;
 
+static jpeg_encoder_t jpeg_encoder;
+
+typedef enum
+{
+  RAW_ENCODING = 1,
+  JPEG_ENCODING = 2
+} __attribute__((packed)) StreamerMode_t;
+
+pi_buffer_t header;
+int headerSize;
+pi_buffer_t footer;
+int footerSize;
+pi_buffer_t jpeg_data;
+uint32_t jpegSize;
+
+static StreamerMode_t streamerMode = RAW_ENCODING;
+
 static routed_packet_t txp;
+
 void camera_task(void *parameters)
 {
   vTaskDelay(2000);
@@ -144,8 +162,39 @@ void camera_task(void *parameters)
   }
   printf("Camera is open\n");
 
+  struct jpeg_encoder_conf enc_conf;
+  jpeg_encoder_conf_init(&enc_conf);
+  enc_conf.width = CAM_WIDTH;
+  enc_conf.height = CAM_HEIGHT;
+  enc_conf.flags = 0; // Move this to the cluster
+
+  if (jpeg_encoder_open(&jpeg_encoder, &enc_conf))
+  {
+    printf("Failed initialize JPEG encoder\n");
+    return -1;
+  }
+
+  printf("JPEG encoder initialized\n");
+
   pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+
+  header.size = 1024;
+  header.data = pmsis_l2_malloc(1024);
+
+  footer.size = 10;
+  footer.data = pmsis_l2_malloc(10);
+
+  // This must fit the full encoded JPEG
+  jpeg_data.size = 1024 * 15;
+  jpeg_data.data = pmsis_l2_malloc(1024 * 15);
+
+  // Check malloc!
+
+  jpeg_encoder_header(&jpeg_encoder, &header, &headerSize);
+  printf("JPEG header size is %u\n", headerSize);
+  jpeg_encoder_footer(&jpeg_encoder, &footer, &footerSize);
+  printf("JPEG footer size is %u\n", footerSize);
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   while (1)
@@ -153,60 +202,114 @@ void camera_task(void *parameters)
     if (wifiClientConnected == 1)
     {
       start = xTaskGetTickCount();
-      //memset(imgBuff0, 0, imgSize);
       pi_camera_capture_async(&camera, imgBuff0, resolution, pi_task_callback(&task1, capture_done_cb, NULL));
       pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
       end = xTaskGetTickCount();
-      //printf("Captured in %u\n", end - start);
-      // printf("0x%08X%08X%08X %08X\n",
-      //   (uint64_t) imgBuff0[0],
-      //   (uint64_t) imgBuff0[7],
-      //   (uint64_t) imgBuff0[15],
-      //   (uint64_t) imgBuff0[5000]);
-      //pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-      //printf("Captured image\n");
+      printf("Captured in %u ms\n", end - start);
 
-      start = xTaskGetTickCount();
-
-      txp.dst = MAKE_ROUTE(ESP32, WIFI_DATA);
-      txp.src = MAKE_ROUTE(GAP8, WIFI_DATA);
-
-      // First send information about the image
-      img_header_t *header = (img_header_t *)txp.data;
-      header->magic = 0xBC;
-      header->width = CAM_WIDTH;
-      header->height = CAM_HEIGHT;
-      header->depth = 1;
-      header->type = 0;
-      header->size = imgSize;
-      txp.len = sizeof(img_header_t) + 2;
-      com_write(&txp);
-
-      int i = 0;
-      int part = 0;
-      int offset = 0;
-      int size = 0;
-
-      do
+      if (streamerMode == JPEG_ENCODING)
       {
-        offset = part * sizeof(txp.data);
-        size = sizeof(txp.data);
-        if (offset + size > imgSize)
-        {
-          size = imgSize - offset;
-        }
-        memcpy(txp.data, &imgBuff0[offset], sizeof(txp.data));
-        //printf("Copied from %u (size is %u)\n", offset, size);
-        txp.len = size + 2; // + 2 for header
+        //jpeg_encoder_process_async(&jpeg_encoder, &buffer, &jpeg_data, pi_task_callback(&task1, encoding_done_cb, NULL));
+        //xEventGroupWaitBits(evGroup, JPEG_ENCODING_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
+        //jpeg_encoder_process_status(&jpegSize, NULL);
+        start = xTaskGetTickCount();
+        jpeg_encoder_process(&jpeg_encoder, &buffer, &jpeg_data, &jpegSize);
+        end = xTaskGetTickCount();
+        printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
+
+        txp.dst = MAKE_ROUTE(ESP32, WIFI_DATA);
+        txp.src = MAKE_ROUTE(GAP8, WIFI_DATA);
+
+        uint32_t imgSize = headerSize + jpegSize + footerSize;
+
+        // First send information about the image
+        img_header_t *imgHeader = (img_header_t *)txp.data;
+        imgHeader->magic = 0xBC;
+        imgHeader->width = CAM_WIDTH;
+        imgHeader->height = CAM_HEIGHT;
+        imgHeader->depth = 1;
+        imgHeader->type = 1;
+        imgHeader->size = imgSize;
+        txp.len = sizeof(img_header_t) + 2;
         com_write(&txp);
-        part++;
-      } while (size == sizeof(txp.data));
-      //printf("Finished sending image\n");
-      end = xTaskGetTickCount();
-      //printf("Sent in %u\n", end - start);
-      vTaskDelay(10);
+
+        int i = 0;
+        int part = 0;
+        int offset = 0;
+        int size = 0;
+
+        start = xTaskGetTickCount();
+        // First send header
+        memcpy(txp.data, header.data, headerSize);
+        txp.len = headerSize + 2; // + 2 for header
+        com_write(&txp);
+
+        do
+        {
+          offset = part * sizeof(txp.data);
+          size = sizeof(txp.data);
+          if (offset + size > jpegSize)
+          {
+            size = jpegSize - offset;
+          }
+          memcpy(txp.data, &jpeg_data.data[offset], sizeof(txp.data));
+          //printf("Copied from %u (size is %u)\n", offset, size);
+          txp.len = size + 2; // + 2 for header
+          com_write(&txp);
+          part++;
+        } while (size == sizeof(txp.data));
+
+        memcpy(txp.data, footer.data, footerSize);
+        txp.len = footerSize + 2; // + 2 for header
+        com_write(&txp);
+
+        end = xTaskGetTickCount();
+        printf("Sent in %u\n", end - start);
+      }
+      else
+      {
+        start = xTaskGetTickCount();
+
+        txp.dst = MAKE_ROUTE(ESP32, WIFI_DATA);
+        txp.src = MAKE_ROUTE(GAP8, WIFI_DATA);
+
+        // First send information about the image
+        img_header_t *header = (img_header_t *)txp.data;
+        header->magic = 0xBC;
+        header->width = CAM_WIDTH;
+        header->height = CAM_HEIGHT;
+        header->depth = 1;
+        header->type = 0;
+        header->size = imgSize;
+        txp.len = sizeof(img_header_t) + 2;
+        com_write(&txp);
+
+        int i = 0;
+        int part = 0;
+        int offset = 0;
+        int size = 0;
+
+        do
+        {
+          offset = part * sizeof(txp.data);
+          size = sizeof(txp.data);
+          if (offset + size > imgSize)
+          {
+            size = imgSize - offset;
+          }
+          memcpy(txp.data, &imgBuff0[offset], sizeof(txp.data));
+          //printf("Copied from %u (size is %u)\n", offset, size);
+          txp.len = size + 2; // + 2 for header
+          com_write(&txp);
+          part++;
+        } while (size == sizeof(txp.data));
+        //printf("Finished sending image\n");
+        end = xTaskGetTickCount();
+        printf("Sent in %u\n", end - start);
+        vTaskDelay(10);
+      }
     }
     else
     {
