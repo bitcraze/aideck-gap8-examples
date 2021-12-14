@@ -75,10 +75,10 @@ while(1):
     # First get the info
     packetInfoRaw = rx_bytes(4)
     #print(packetInfoRaw)
-    [length, dst, src] = struct.unpack('<HBB', packetInfoRaw)
+    [length, routing, function] = struct.unpack('<HBB', packetInfoRaw)
     #print("Length is {}".format(length))
-    #print("DST is 0x{:02X}".format(dst))
-    #print("SRC is 0x{:02X}".format(src))
+    #print("Route is 0x{:02X}->0x{:02X}".format(routing & 0xF, routing >> 4))
+    #print("Function is 0x{:02X}".format(function))
 
     imgHeader = rx_bytes(length - 2)
     #print(imgHeader)

@@ -5,8 +5,8 @@
 #include "gaplib/jpeg_encoder.h"
 #include "stdio.h"
 
-#include "com.h"
-#include "routing_info.h"
+#include "cpx.h"
+#include "wifi.h"
 
 // This file should be created manually and not committed (part of ignore)
 // It should contain the following:
@@ -64,24 +64,29 @@ static pi_device_t led_gpio_dev;
 static int wifiConnected = 0;
 static int wifiClientConnected = 0;
 
-static routed_packet_t rxp;
+static CPXPacket_t rxp;
 void rx_task(void *parameters)
 {
   while (1)
   {
-    com_read(&rxp);
+    cpxReceivePacketBlocking(&rxp);
 
-    switch (rxp.data[0])
-    {
-    case 0x21:
-      printf("Wifi connected (%u.%u.%u.%u)\n", rxp.data[1], rxp.data[2],
-                                               rxp.data[3], rxp.data[4]);
-      wifiConnected = 1;
-      break;
-    case 0x23:
-      printf("Wifi client connection status: %u\n", rxp.data[1]);
-      wifiClientConnected = rxp.data[1];
-      break;
+    if (rxp.routing.function == WIFI_CTRL) {
+      WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
+
+      switch (wifiCtrl->cmd)
+      {
+        case STATUS_WIFI_CONNECTED:
+          printf("Wifi connected (%u.%u.%u.%u)\n", wifiCtrl->data[0], wifiCtrl->data[1],
+                                                  wifiCtrl->data[2], wifiCtrl->data[3]);
+          wifiConnected = 1;
+          break;
+        case STATUS_CLIENT_CONNECTED:
+          printf("Wifi client connection status: %u\n", wifiCtrl->data[0]);
+          wifiClientConnected = wifiCtrl->data[0];
+          break;
+      }
+
     }
   }
 }
@@ -121,28 +126,29 @@ uint32_t jpegSize;
 
 static StreamerMode_t streamerMode = RAW_ENCODING;
 
-static routed_packet_t txp;
+static CPXPacket_t txp;
 
 void camera_task(void *parameters)
 {
   vTaskDelay(2000);
 
   printf("Sending wifi stuff...\n");
-  txp.len = 2 + sizeof(ssid);
-  txp.dst = MAKE_ROUTE(ESP32, WIFI_CTRL);
-  txp.src = MAKE_ROUTE(GAP8, WIFI_CTRL);
-  txp.data[0] = 0x10; // Set SSID
-  memcpy(&txp.data[1], ssid, sizeof(ssid));
-  com_write(&txp);
+  // Set up the routing for the WiFi CTRL packets
+  txp.routing.destination = ESP32;
+  rxp.routing.source = GAP8;
+  txp.routing.function = WIFI_CTRL;
 
-  txp.len = 2 + sizeof(passwd);
-  txp.data[0] = 0x11; // Set passwd
-  memcpy(&txp.data[1], passwd, sizeof(passwd));
-  com_write(&txp);
+  WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
+  wifiCtrl->cmd = SET_SSID;
+  memcpy(wifiCtrl->data, ssid, sizeof(ssid));
+  cpxSendPacketBlocking(&txp, sizeof(ssid) + 1); // Too large
 
-  txp.len = 3;
-  txp.data[0] = 0x20; // Connect wifi
-  com_write(&txp);
+  wifiCtrl->cmd = SET_KEY;
+  memcpy(wifiCtrl->data, passwd, sizeof(passwd));
+  cpxSendPacketBlocking(&txp, sizeof(passwd) + 1); // Too large  
+
+  wifiCtrl->cmd = WIFI_CONNECT;
+  cpxSendPacketBlocking(&txp, sizeof(WiFiCTRLPacket_t)); // Too large  
 
   printf("Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
@@ -219,8 +225,9 @@ void camera_task(void *parameters)
         end = xTaskGetTickCount();
         printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
 
-        txp.dst = MAKE_ROUTE(ESP32, WIFI_DATA);
-        txp.src = MAKE_ROUTE(GAP8, WIFI_DATA);
+        txp.routing.destination = HOST;
+        txp.routing.source = GAP8;
+        txp.routing.function = 0; // We don't care about this one for now
 
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
@@ -232,8 +239,7 @@ void camera_task(void *parameters)
         imgHeader->depth = 1;
         imgHeader->type = 1;
         imgHeader->size = imgSize;
-        txp.len = sizeof(img_header_t) + 2;
-        com_write(&txp);
+        cpxSendPacketBlocking(&txp, sizeof(img_header_t));
 
         int i = 0;
         int part = 0;
@@ -243,8 +249,7 @@ void camera_task(void *parameters)
         start = xTaskGetTickCount();
         // First send header
         memcpy(txp.data, header.data, headerSize);
-        txp.len = headerSize + 2; // + 2 for header
-        com_write(&txp);
+        cpxSendPacketBlocking(&txp, headerSize);
 
         do
         {
@@ -256,14 +261,12 @@ void camera_task(void *parameters)
           }
           memcpy(txp.data, &jpeg_data.data[offset], sizeof(txp.data));
           //printf("Copied from %u (size is %u)\n", offset, size);
-          txp.len = size + 2; // + 2 for header
-          com_write(&txp);
+          cpxSendPacketBlocking(&txp, size);
           part++;
         } while (size == sizeof(txp.data));
 
         memcpy(txp.data, footer.data, footerSize);
-        txp.len = footerSize + 2; // + 2 for header
-        com_write(&txp);
+        cpxSendPacketBlocking(&txp, footerSize);
 
         end = xTaskGetTickCount();
         printf("Sent in %u\n", end - start);
@@ -272,8 +275,9 @@ void camera_task(void *parameters)
       {
         start = xTaskGetTickCount();
 
-        txp.dst = MAKE_ROUTE(ESP32, WIFI_DATA);
-        txp.src = MAKE_ROUTE(GAP8, WIFI_DATA);
+        txp.routing.destination = HOST;
+        txp.routing.source = GAP8;
+        txp.routing.function = 0; // Not used yet
 
         // First send information about the image
         img_header_t *header = (img_header_t *)txp.data;
@@ -283,8 +287,7 @@ void camera_task(void *parameters)
         header->depth = 1;
         header->type = 0;
         header->size = imgSize;
-        txp.len = sizeof(img_header_t) + 2;
-        com_write(&txp);
+        cpxSendPacketBlocking(&txp, sizeof(img_header_t));
 
         int i = 0;
         int part = 0;
@@ -301,8 +304,7 @@ void camera_task(void *parameters)
           }
           memcpy(txp.data, &imgBuff0[offset], sizeof(txp.data));
           //printf("Copied from %u (size is %u)\n", offset, size);
-          txp.len = size + 2; // + 2 for header
-          com_write(&txp);
+          cpxSendPacketBlocking(&txp, size);
           part++;
         } while (size == sizeof(txp.data));
         //printf("Finished sending image\n");
