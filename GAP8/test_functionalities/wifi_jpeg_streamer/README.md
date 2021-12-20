@@ -64,3 +64,26 @@ git clone -b cf-link-aideck https://github.com/bitcraze/crazyflie-firmware.git
 cd crazyflie-firmware
 make DEBUG=1 all && make cload
 ```
+
+### Viewer on the PC
+
+Once everything is flashed, power cycle the hardware and wait for it to connect to the WiFi. The IP
+can either be found by have a USB<>UART adapter and listening either to the GAP8 (UART1 TX on expansion connector),
+the ESP32 (IO1 on the expansion header) or checking the assigned IP on your router interface.
+
+The viewer needs openCV, it can be started by using the following command in the directory of the GAP8 example
+code.
+
+```text
+python opencv-viewer.py -n <the-ip>
+```
+
+**Note:** The openCV version installed byt the GAP8 SDK is not compatible with this example (you will get and error
+about along the lines of: ```The function is not implemented. Rebuild the library with Windows, GTK+ 2.x or Cocoa support.```), so if you're
+not using a virtual environment for the SDK you will have to do it for the example. Then run the following command
+in the GAP8 example firmware folder.
+
+```text
+virtualenv venv
+venv/bin/activate
+```
