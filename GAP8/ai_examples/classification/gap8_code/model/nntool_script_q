@@ -1,0 +1,25 @@
+set debug true
+#imageformat input_1 rgb888
+#set input_transpose True
+#imageformat input_1 rgb888 offset_int8
+#set adjust_order True
+#set input_width 324
+#set input_height 244
+#set_input_divisor 255
+show
+adjust
+# imageformat input_1 rgb888 offset_int8
+# imageformat input_1 rgb888 shift_int8
+aquant samples/* --scheme SQ8
+# -T -H 61 -W 81 -f 8
+#qshow
+fusions --scale8
+# qshow
+# --- RUN INFERENCE ---
+#set input_norm_func "x: x-128"
+#dump samples/img1639561671.05393.jpeg -S float -P inference_result.npy
+#dump samples/img1639561671.05393.jpeg -S quant -q -d -P inference_result_q.npy
+#tensors -t float quant
+#tensors -t float quant -Q
+qerror samples/*
+save_state
