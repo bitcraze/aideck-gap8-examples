@@ -46,7 +46,7 @@ Collect images from the AI-deck using the WiFi streamer. Place them in the data 
 
 ---
 ## Fine-tune a pre-trained image classification CNN
-From `GAP8/ai_examples/classification/` run `python main.py [--args]`.
+From `GAP8/ai_examples/classification/training` run `python main.py [--args]`.
 
 For possible arguments, review the `parse_args()` function in `main.py`.
 
@@ -64,5 +64,5 @@ make clean all run
 
 ### Docker
 ```
-docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P bitcraze/aideck /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
+docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P bitcraze/aideck:4.8.0 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
 ```
