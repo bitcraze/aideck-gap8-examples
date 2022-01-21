@@ -11,7 +11,8 @@
 // This file should be created manually and not committed (part of ignore)
 // It should contain the following:
 // static const char ssid[] = "YourSSID";
-// static const char passwd[] = "YourWiFiKey";
+// static const char passwd[] = "YourWiFiKey"; // only needed if use_soft_ap==false
+// static const bool use_soft_ap = false;
 #include "wifi_credentials.h"
 
 #define IMG_ORIENTATION 0x0101
@@ -143,9 +144,14 @@ void camera_task(void *parameters)
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
   cpxSendPacketBlocking(&txp, sizeof(ssid) + 1); // Too large
 
-  wifiCtrl->cmd = SET_KEY;
-  memcpy(wifiCtrl->data, passwd, sizeof(passwd));
-  cpxSendPacketBlocking(&txp, sizeof(passwd) + 1); // Too large  
+  if (use_soft_ap) {
+    wifiCtrl->cmd = SET_SOFTAP;
+    cpxSendPacketBlocking(&txp, sizeof(WiFiCTRLPacket_t)); // Too large
+  } else {
+    wifiCtrl->cmd = SET_KEY;
+    memcpy(wifiCtrl->data, passwd, sizeof(passwd));
+    cpxSendPacketBlocking(&txp, sizeof(passwd) + 1); // Too large
+  }
 
   wifiCtrl->cmd = WIFI_CONNECT;
   cpxSendPacketBlocking(&txp, sizeof(WiFiCTRLPacket_t)); // Too large  

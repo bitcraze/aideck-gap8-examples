@@ -5,6 +5,7 @@
 typedef enum {
   SET_SSID = 0x10,
   SET_KEY = 0x11,
+  SET_SOFTAP = 0x12,
 
   WIFI_CONNECT = 0x20,
   
