@@ -66,6 +66,19 @@ static int wifiConnected = 0;
 static int wifiClientConnected = 0;
 
 static CPXPacket_t rxp;
+
+typedef struct
+{
+  uint8_t cmd;
+  uint64_t timestamp; // usec timestamp from STM32
+  int16_t x;  // compressed [mm]
+  int16_t y;  // compressed [mm]
+  int16_t z;  // compressed
+  uint32_t quat; // compressed, see quatcompress.h
+} __attribute__((packed)) StatePacket_t;
+
+static QueueHandle_t stateQueue;
+
 void rx_task(void *parameters)
 {
   while (1)
@@ -88,6 +101,9 @@ void rx_task(void *parameters)
           break;
       }
 
+    } else if (rxp.routing.function == APP) {
+      // put the state in the thread-safe queue
+      xQueueOverwrite(stateQueue, rxp.data);
     }
   }
 }
@@ -105,6 +121,10 @@ typedef struct
   uint8_t depth;
   uint8_t type;
   uint32_t size;
+  int16_t x;     // compressed [mm]
+  int16_t y;     // compressed [mm]
+  int16_t z;     // compressed [mm]
+  uint32_t quat; // compressed, see quatcompress.h
 } __attribute__((packed)) img_header_t;
 
 static uint32_t start;
@@ -209,6 +229,8 @@ void camera_task(void *parameters)
   printf("JPEG footer size is %u\n", footerSize);
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+
+  StatePacket_t cf_state;
   while (1)
   {
     if (wifiClientConnected == 1)
@@ -220,6 +242,8 @@ void camera_task(void *parameters)
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
       end = xTaskGetTickCount();
       printf("Captured in %u ms\n", end - start);
+      // get the current state from the STM
+      xQueuePeek(stateQueue, &cf_state, 0);
 
       if (streamerMode == JPEG_ENCODING)
       {
@@ -245,6 +269,10 @@ void camera_task(void *parameters)
         imgHeader->depth = 1;
         imgHeader->type = 1;
         imgHeader->size = imgSize;
+        imgHeader->x = cf_state.x;
+        imgHeader->y = cf_state.y;
+        imgHeader->z = cf_state.z;
+        imgHeader->quat = cf_state.quat;
         cpxSendPacketBlocking(&txp, sizeof(img_header_t));
 
         int i = 0;
@@ -293,6 +321,10 @@ void camera_task(void *parameters)
         header->depth = 1;
         header->type = 0;
         header->size = imgSize;
+        header->x = cf_state.x;
+        header->y = cf_state.y;
+        header->z = cf_state.z;
+        header->quat = cf_state.quat;
         cpxSendPacketBlocking(&txp, sizeof(img_header_t));
 
         int i = 0;
@@ -366,6 +398,9 @@ void start_bootloader(void)
   printf("Starting up tasks...\n");
 
   evGroup = xEventGroupCreate();
+
+  // Queue that stores the latest state received from the STM
+  stateQueue = xQueueCreate(1, sizeof(StatePacket_t));
 
   BaseType_t xTask;
 
