@@ -45,7 +45,7 @@ docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P 
 Checkout the ESP32 firmware, build in flash it. Note that this firmware requires the ESP IDF 4.3.1.
 
 ```text
-git checkout https://github.com/bitcraze/aideck-esp-firmware.git
+git clone https://github.com/bitcraze/aideck-esp-firmware.git
 cd aideck-esp-firmware
 idf.py app bootloader
 docker run --rm -it -v $PWD:/module/ --device /dev/ttyUSB0 --privileged -P bitcraze/aideck-nina /bin/bash -c "/openocd-esp32/bin/openocd -f interface/ftdi/olimex-arm-usb-tiny-h.cfg -f board/esp-wroom-32.cfg -c 'program_esp32 build/bootloader/bootloader.bin 0x1000 verify' -c 'program_esp32 build/aideck_esp.bin 0x10000 verify reset exit'"
