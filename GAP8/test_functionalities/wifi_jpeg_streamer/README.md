@@ -29,6 +29,7 @@ Edit this file to contain the setup for your local WiFi (note that this file is 
 ```c
 static const char ssid[] = "YourSSID";
 static const char passwd[] = "YourWiFiKey";
+static const bool use_soft_ap = false;
 ```
 
 Build and flash the application. **Note:** Due to a bug in the Makefiles in the SDK you will need to use
