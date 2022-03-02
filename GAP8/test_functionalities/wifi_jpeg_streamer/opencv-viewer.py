@@ -83,14 +83,14 @@ while(1):
     imgHeader = rx_bytes(length - 2)
     #print(imgHeader)
     #print("Length of data is {}".format(len(imgHeader)))
-    [magic, width, height, depth, format, size, x, y, z, quat] = struct.unpack('<BHHBBIhhhI', imgHeader)
+    [magic, width, height, depth, format, size, timestamp, x, y, z, quat] = struct.unpack('<BHHBBIIhhhI', imgHeader)
 
     if magic == 0xBC:
       #print("Magic is good")
       #print("Resolution is {}x{} with depth of {} byte(s)".format(width, height, depth))
       #print("Image format is {}".format(format))
       #print("Image size is {} bytes".format(size))
-      print("CF State {},{},{} m".format(x/1000, y/1000, z/1000))
+      print("CF State {},{},{} m at time {} s".format(x/1000, y/1000, z/1000, timestamp/1000))
 
       # Now we start rx the image, this will be split up in packages of some size
       imgStream = bytearray()
