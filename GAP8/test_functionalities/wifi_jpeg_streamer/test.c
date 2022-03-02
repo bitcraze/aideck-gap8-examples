@@ -107,7 +107,6 @@ void rx_task(void *parameters)
       // put the state in the thread-safe queue
       xQueueOverwrite(stateQueue, rxp.data);
       StatePacket_t* data = (StatePacket_t*)rxp.data;
-      printf("time: %d\n", (int)data->timestamp);
     }
   }
 }
@@ -125,6 +124,7 @@ typedef struct
   uint8_t depth;
   uint8_t type;
   uint32_t size;
+  uint32_t timestamp; // GAP8 clock in ms
   int16_t x;     // compressed [mm]
   int16_t y;     // compressed [mm]
   int16_t z;     // compressed [mm]
@@ -269,6 +269,7 @@ void camera_task(void *parameters)
         imgHeader->depth = 1;
         imgHeader->type = 1;
         imgHeader->size = imgSize;
+        imgHeader->timestamp = end; // unclear if we should take start or end here, but as long as end - start is small, this should be fine
         imgHeader->x = cf_state.x;
         imgHeader->y = cf_state.y;
         imgHeader->z = cf_state.z;
