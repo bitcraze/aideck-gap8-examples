@@ -1,6 +1,10 @@
 io=uart
 PMSIS_OS = freertos
 
+ifeq ($(SETUP_WIFI_AP), 1)
+APP_CFLAGS += -DSETUP_WIFI_AP
+endif
+
 APP = test
 APP_SRCS += test.c com.c cpx.c
 APP_CFLAGS += -O3 -g
