@@ -12,6 +12,7 @@
 // It should contain the following:
 // static const char ssid[] = "YourSSID";
 // static const char passwd[] = "YourWiFiKey";
+// static const bool use_soft_ap = false;
 #include "wifi_credentials.h"
 
 #define IMG_ORIENTATION 0x0101
@@ -76,14 +77,16 @@ void rx_task(void *parameters)
 
       switch (wifiCtrl->cmd)
       {
-        case STATUS_WIFI_CONNECTED:
+        case WIFI_CTRL_STATUS_WIFI_CONNECTED:
           printf("Wifi connected (%u.%u.%u.%u)\n", wifiCtrl->data[0], wifiCtrl->data[1],
                                                   wifiCtrl->data[2], wifiCtrl->data[3]);
           wifiConnected = 1;
           break;
-        case STATUS_CLIENT_CONNECTED:
+        case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
           printf("Wifi client connection status: %u\n", wifiCtrl->data[0]);
           wifiClientConnected = wifiCtrl->data[0];
+          break;
+        default:
           break;
       }
 
@@ -139,16 +142,17 @@ void camera_task(void *parameters)
   txp.routing.function = WIFI_CTRL;
 
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
-  wifiCtrl->cmd = SET_SSID;
+  wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
   cpxSendPacketBlocking(&txp, sizeof(ssid) + 1); // Too large
 
-  wifiCtrl->cmd = SET_KEY;
+  wifiCtrl->cmd = WIFI_CTRL_SET_KEY;
   memcpy(wifiCtrl->data, passwd, sizeof(passwd));
   cpxSendPacketBlocking(&txp, sizeof(passwd) + 1); // Too large  
 
-  wifiCtrl->cmd = WIFI_CONNECT;
-  cpxSendPacketBlocking(&txp, sizeof(WiFiCTRLPacket_t)); // Too large  
+  wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
+  wifiCtrl->data[0] = use_soft_ap;
+  cpxSendPacketBlocking(&txp, 2);
 
   printf("Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
