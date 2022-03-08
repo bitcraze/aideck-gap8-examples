@@ -1,4 +1,31 @@
 
+/**
+ * ,---------,       ____  _ __
+ * |  ,-^-,  |      / __ )(_) /_______________ _____  ___
+ * | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
+ *
+ * AI-deck GAP8 WiFi streamer example
+ *
+ * Copyright (C) 2022 Bitcraze AB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * com.c - SPI interface for ESP32 communication
+ */
+
 #include "pmsis.h"
 #include "com.h"
 
@@ -118,24 +145,21 @@ static void init_spi(pi_device_t *device)
 static uint32_t start;
 static uint32_t end;
 
+static uint8_t rx_buff[sizeof(packet_t)];
+static uint8_t tx_buff[sizeof(packet_t)];
+
 void com_task(void *parameters)
 {
   EventBits_t evBits;
-  uint8_t *rx_buff, *tx_buff;
-
-  rx_buff = (uint8_t *)pmsis_l2_malloc((uint32_t)sizeof(packet_t));
-  tx_buff = (uint8_t *)pmsis_l2_malloc((uint32_t)sizeof(packet_t));
-
-  if (rx_buff == 0) {
-    DEBUG_PRINTF("Could not allocate RX buffer\n");
-  }
-
-  if (tx_buff == 0) {
-    DEBUG_PRINTF("Could not allocate TX buffer\n");
-  }
-
+  uint32_t startupESPRTTValue;
 
   DEBUG_PRINTF("Starting com task\n");
+
+  pi_gpio_pin_read(&nina_rtt_dev, CONFIG_NINA_GPIO_NINA_ACK, &startupESPRTTValue);
+
+  if (startupESPRTTValue > 0) {
+    xEventGroupSetBits(evGroup, NINA_RTT_BIT);
+  }
 
   while (1)
   {
@@ -216,6 +240,15 @@ void com_task(void *parameters)
         sizeLeft += (4-sizeLeft%4); // Pad upwards
       }
 
+      // Protect against the case where the ESP might signal
+      // on the RTT line that it wants to send, but actually has
+      // no length. Calling the SPI transfer function with size = 0
+      // will corrupt the following transaction. Sending random data
+      // is ok, since the length is set to 0 and the ESP will ignore it.
+      if (sizeLeft == 0) {
+        sizeLeft = 4;
+      }
+
       DEBUG_PRINTF("Sending %i bytes\n", sizeLeft);
 
       // Set GAP8 RTT low before we end the transfer
@@ -229,10 +262,6 @@ void com_task(void *parameters)
                       PI_SPI_LINES_SINGLE | PI_SPI_CS_AUTO);
 
       DEBUG_PRINTF("Read %i bytes\n", ((packet_t *)rx_buff)->len);
-
-      end = xTaskGetTickCount();
-      // These seems to take about 1-2 ms and we're sending about 80 pkgs / image
-      //printf("Transaction took %u ms\n", end-start);
 
       if (((packet_t *)rx_buff)->len > 0)
       {
@@ -264,6 +293,7 @@ void com_init()
 
   if (txq == NULL || rxq == NULL)
   {
+    printf("Could not allocate txq and/or rxq in com\n");
     pmsis_exit(1);
   }
 

@@ -23,8 +23,10 @@ typedef enum {
 } __attribute__((packed)) CPXFunction_t;
 
 typedef struct {
-  uint8_t destination : 4;
-  uint8_t source : 4;
+  uint8_t destination : 3;
+  uint8_t source : 3;
+  bool lastPacket : 1;
+  bool reserved : 1;
   uint8_t function;
 } __attribute__((packed)) CPXRouting_t;
 
