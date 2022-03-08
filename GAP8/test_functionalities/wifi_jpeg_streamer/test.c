@@ -354,7 +354,7 @@ void start_bootloader(void)
     pmsis_exit(-1);
   }
 
-  printf("\nStarting up!\n");
+  printf("\n-- WiFi image streamer example --\n");
   printf("FC at %u MHz\n", pi_freq_get(PI_FREQ_DOMAIN_FC) / 1000000);
 
   printf("Starting up tasks...\n");
