@@ -40,6 +40,15 @@ TODO: change this because this is old!
 ### Docker
 * Docker with gap_sdk >= 4.8.0
 
+`docker run --rm -it -v $PWD:/module/data/ bitcraze/aideck:4.8.0 /bin/bash`
+
+Do update the numpy version in the container to 1.21.5 (ignore the warning), and then source gap8_sdk aideck source file
+
+```
+pip3 install numpy==1.21.5
+source /gap_sdk/configs/ai_deck.sh
+```
+
 ---
 ## Generate a custom dataset
 
@@ -65,5 +74,7 @@ make clean all run
 
 ### Docker
 ```
-docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P bitcraze/aideck:4.8.0 /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all run'
-```
+make model build image
+``` 
+
+Then use the ...flash.img file to flash the binary on the aideck. 
