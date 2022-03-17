@@ -41,7 +41,7 @@ def parse_args():
         "--dataset_path",
         metavar="dataset_path",
         help="path to dataset",
-        default="training/data",
+        default="training_data/data",
     )
     args.add_argument("--batch_size", dest="batch_size", type=int, default=8)
     args.add_argument(

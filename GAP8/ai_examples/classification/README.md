@@ -22,7 +22,7 @@ For more information on good deep learning practices, we recommend reviewing [De
 ## File structure
 `training` contains everything required to (re)train a custom MobileNetV2, and export to a TensorFlow Lite model.
 
-`training/data` should contain all training/validation images, the TensorFlow training pipeline expects a file structure as included, with separate folders for each class in both a train and validation directory.
+`training_data/data` should contain all training/validation images, the TensorFlow training pipeline expects a file structure as included, with separate folders for each class in both a train and validation directory.
 
 `gap8_code` contains the project to deploy the generated TensorFlow Lite model on the AI-deck.
 
@@ -46,11 +46,11 @@ Collect images from the AI-deck using the WiFi streamer. Place them in the data 
 
 ---
 ## Fine-tune a pre-trained image classification CNN
-From `GAP8/ai_examples/classification/training` run `python main.py [--args]`.
+From `GAP8/ai_examples/classification/` run `python train_classifier.py [--args]`.
 
 For possible arguments, review the `parse_args()` function in `main.py`.
 
-Automatically generates (overwrites) quantized and non-quantized TensorFlow Lite models.
+Automatically generates quantized and non-quantized TensorFlow Lite models.
 
 ---
 ## Execute the image classification CNN on the AI-deck
