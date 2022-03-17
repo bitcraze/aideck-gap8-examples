@@ -20,6 +20,7 @@ For more information on good deep learning practices, we recommend reviewing [De
 
 ---
 ## File structure
+TODO: change this because this is old!
 `training` contains everything required to (re)train a custom MobileNetV2, and export to a TensorFlow Lite model.
 
 `training_data/data` should contain all training/validation images, the TensorFlow training pipeline expects a file structure as included, with separate folders for each class in both a train and validation directory.
@@ -55,7 +56,7 @@ Automatically generates quantized and non-quantized TensorFlow Lite models.
 ---
 ## Execute the image classification CNN on the AI-deck
 
-From a terminal in `gap8_code`, execute:
+From a terminal in `classifier`, execute:
 
 ### Native
 ```

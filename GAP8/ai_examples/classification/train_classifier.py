@@ -188,7 +188,7 @@ if __name__ == "__main__":
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
 
-    with open(f"{ROOT_PATH}gap8_code/model/classification.tflite", "wb") as f:
+    with open(f"{ROOT_PATH}/model/classification.tflite", "wb") as f:
         f.write(tflite_model)
     # Convert to quantized TensorFlow Lite
     def representative_data_gen():
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     tflite_model = converter.convert()
 
     with open(
-        f"{ROOT_PATH}gap8_code/model/classification_q.tflite", "wb"
+        f"{ROOT_PATH}/model/classification_q.tflite", "wb"
     ) as f:
         f.write(tflite_model)
 
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         return top_1
 
     interpreter = tf.lite.Interpreter(
-        f"{ROOT_PATH}gap8_code/model/classification_q.tflite"
+        f"{ROOT_PATH}/model/classification_q.tflite"
     )
     interpreter.allocate_tensors()
 
