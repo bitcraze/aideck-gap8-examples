@@ -19,6 +19,7 @@
 - title: AI examples
   subs:
       - {page_id: gapflow-model-extern}
+      - {page_id: classification-demo}
 - title: NINA instructions
   subs:
       - {page_id: nina-flash-instructions}
