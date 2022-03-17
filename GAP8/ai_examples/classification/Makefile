@@ -20,7 +20,7 @@ APP_CFLAGS += -DDEMOSAICKING_KERNEL_CLUSTER
 APP_CFLAGS += -DMODEL_QUANTIZED
 
 # load the model pre-quantized by TensorFlow
-# if set to false, will quantize using images from the samples folder
+# if set to false, will quantize using images from the /samples folder
 MODEL_PREQUANTIZED = true
 
 ifeq "$(MODEL_PREQUANTIZED)" "true"
@@ -56,7 +56,7 @@ PULP_APP = classification
 USE_PMSIS_BSP=1
 
 APP = classification
-APP_SRCS += classification.c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB) img_proc.c
+APP_SRCS += classification.c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB)
 
 APP_CFLAGS += -g -O1 -mno-memcpy -fno-tree-loop-distribute-patterns
 APP_CFLAGS += -I. -I$(MODEL_COMMON_INC) -I$(TILER_EMU_INC) -I$(TILER_INC) $(CNN_LIB_INCLUDE) -I$(realpath $(MODEL_BUILD))
