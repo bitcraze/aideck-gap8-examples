@@ -11,8 +11,8 @@ MODEL_PREFIX = classification
 
 
 # Set variables
-io=host
-# io=uart
+#io=host
+io=uart
 
 APP_CFLAGS += -DCOLOR_IMAGE
 APP_CFLAGS += -DDEMOSAIC

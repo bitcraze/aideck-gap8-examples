@@ -21,15 +21,13 @@ For more information on good deep learning practices, we recommend reviewing [De
 ---
 ## File structure
 TODO: change this because this is old!
-`training` contains everything required to (re)train a custom MobileNetV2, and export to a TensorFlow Lite model.
+`root(classification)` contains everything required to (re)train a custom MobileNetV2, and export to a TensorFlow Lite model. It also contains the project to deploy the generated TensorFlow Lite model on the AI-deck.
 
-`training_data/data` should contain all training/validation images, the TensorFlow training pipeline expects a file structure as included, with separate folders for each class in both a train and validation directory.
+`model/` contains the generated TensorFlow Lite models, and `nntool` scripts.
 
-`gap8_code` contains the project to deploy the generated TensorFlow Lite model on the AI-deck.
+`training_data/` should contain all training/validation images, the TensorFlow training pipeline expects a file structure as included, with separate folders for each class in both a train and validation directory.
 
-`gap8_code/model` contains the generated TensorFlow Lite models, and `nntool` scripts.
-
-`gap8_code/samples` should contains sample images used by `nntool` to quantize the imported models (optional, only required if MODEL_PREQUANTIZED = false in Makefile). These can be taken from the dataset.
+`samples/` should contains sample images used by `nntool` to quantize the imported models (optional, only required if MODEL_PREQUANTIZED = false in Makefile). These can be taken from the dataset.
 
 ---
 ## Prerequisites
