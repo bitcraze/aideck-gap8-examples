@@ -112,8 +112,11 @@ while(1):
           bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
           #img2 = np.fromfile("img.raw", dtype=np.uint8)
           bayer_img.shape = (244, 324)
+          color_img = cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA)
           cv2.imshow('Bayer', bayer_img)
-          cv2.imshow('Color', cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA))
+          cv2.imshow('Color', color_img)
+          cv2.imwrite(f"stream_out/raw/img_{count:06d}.png", bayer_img)
+          cv2.imwrite(f"stream_out/debayer/img_{count:06d}.png", color_img)
           cv2.waitKey(1)
       else:
           with open("img.jpeg", "wb") as f:
