@@ -47,6 +47,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Connect to AI-deck JPEG streamer example')
 parser.add_argument("-n",  default="192.168.4.1", metavar="ip", help="AI-deck IP")
 parser.add_argument("-p", type=int, default='5000', metavar="port", help="AI-deck port")
+parser.add_argument('--save', action='store_true', help="Save streamed images")
 args = parser.parse_args()
 
 deck_port = args.p
@@ -115,8 +116,9 @@ while(1):
           color_img = cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA)
           cv2.imshow('Bayer', bayer_img)
           cv2.imshow('Color', color_img)
-          cv2.imwrite(f"stream_out/raw/img_{count:06d}.png", bayer_img)
-          cv2.imwrite(f"stream_out/debayer/img_{count:06d}.png", color_img)
+          if args.save:
+		      cv2.imwrite(f"stream_out/raw/img_{count:06d}.png", bayer_img)
+		      cv2.imwrite(f"stream_out/debayer/img_{count:06d}.png", color_img)
           cv2.waitKey(1)
       else:
           with open("img.jpeg", "wb") as f:
