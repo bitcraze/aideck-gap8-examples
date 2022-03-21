@@ -1,0 +1,6 @@
+Put here the training and validation images like this:
+
+/train/class_1/*.jpeg
+/train/class_2/*.jpeg
+/validation/class_1/*.jpeg
+/validation/class_2/*.jpeg
