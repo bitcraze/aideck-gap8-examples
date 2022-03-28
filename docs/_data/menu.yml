@@ -18,7 +18,6 @@
       - {page_id: face-detection}
 - title: AI examples
   subs:
-      - {page_id: gapflow-model-extern}
       - {page_id: classification-demo}
 - title: NINA instructions
   subs:
