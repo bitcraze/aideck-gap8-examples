@@ -68,7 +68,3 @@ The following docker commands will build and flash the program on the GAP8 (this
 ```
 docker run --rm -it -v $PWD:/module/data/ --device /dev/ttyUSB0 --privileged -P bitcraze/aideck /bin/bash -c 'export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg; source /gap_sdk/configs/ai_deck.sh; cd /module/data/;  make clean all image flash'
 ```
-
-# Versions
-
-Currently this is only available for version **3.8.1** of the [GAP sdk](https://github.com/GreenWaves-Technologies/gap_sdk). If you would like to try out earlier versions, you will need to build the docker image yourselve locally. The docker image for the gap8 can be found in the [docker-aideck repository](https://github.com/bitcraze/docker-aideck). 
