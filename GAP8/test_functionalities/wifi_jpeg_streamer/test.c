@@ -224,7 +224,7 @@ void camera_task(void *parameters)
 
         txp.routing.destination = HOST;
         txp.routing.source = GAP8;
-        txp.routing.function = 0; // We don't care about this one for now
+        txp.routing.function = APP;
 
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
@@ -274,7 +274,7 @@ void camera_task(void *parameters)
 
         txp.routing.destination = HOST;
         txp.routing.source = GAP8;
-        txp.routing.function = 0; // Not used yet
+        txp.routing.function = APP;
 
         // First send information about the image
         img_header_t *header = (img_header_t *)txp.data;
