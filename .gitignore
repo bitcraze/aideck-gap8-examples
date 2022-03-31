@@ -1,9 +1,8 @@
+**/.vscode
+
 # NINA build files
 NINA/firmware/build/*
 NINA/firmware/sdkconfig*
 
 # GAP8 build files
-GAP8/**/BUILD/*
-
-# Image streamer example WiFi credentials
-GAP8/test_functionalities/wifi_jpeg_streamer/wifi_credentials.h
+GAP8/**/BUILD*

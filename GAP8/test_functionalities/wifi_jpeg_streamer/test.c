@@ -8,13 +8,6 @@
 #include "cpx.h"
 #include "wifi.h"
 
-// This file should be created manually and not committed (part of ignore)
-// It should contain the following:
-// static const char ssid[] = "YourSSID";
-// static const char passwd[] = "YourWiFiKey"; // only needed if use_soft_ap==false
-// static const bool use_soft_ap = false;
-#include "wifi_credentials.h"
-
 #define IMG_ORIENTATION 0x0101
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
@@ -157,24 +150,24 @@ void camera_task(void *parameters)
 {
   vTaskDelay(2000);
 
-  printf("Sending wifi stuff...\n");
+#ifdef SETUP_WIFI_AP
+  static char ssid[] = "WiFi streaming example";
+  printf("Setting up WiFi AP\n");
   // Set up the routing for the WiFi CTRL packets
   txp.routing.destination = ESP32;
   rxp.routing.source = GAP8;
   txp.routing.function = WIFI_CTRL;
 
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
+  
   wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
-  cpxSendPacketBlocking(&txp, sizeof(ssid) + 1); // Too large
-
-  wifiCtrl->cmd = WIFI_CTRL_SET_KEY;
-  memcpy(wifiCtrl->data, passwd, sizeof(passwd));
-  cpxSendPacketBlocking(&txp, sizeof(passwd) + 1); // Too large
-
+  cpxSendPacketBlocking(&txp, sizeof(ssid)); // Too large
+  
   wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
-  wifiCtrl->data[0] = use_soft_ap;
+  wifiCtrl->data[0] = 0x01;
   cpxSendPacketBlocking(&txp, 2);
+#endif
 
   printf("Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
@@ -257,7 +250,7 @@ void camera_task(void *parameters)
 
         txp.routing.destination = HOST;
         txp.routing.source = GAP8;
-        txp.routing.function = 0; // We don't care about this one for now
+        txp.routing.function = APP;
 
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
@@ -312,7 +305,7 @@ void camera_task(void *parameters)
 
         txp.routing.destination = HOST;
         txp.routing.source = GAP8;
-        txp.routing.function = 0; // Not used yet
+        txp.routing.function = APP;
 
         // First send information about the image
         img_header_t *header = (img_header_t *)txp.data;
@@ -393,7 +386,7 @@ void start_bootloader(void)
     pmsis_exit(-1);
   }
 
-  printf("\nStarting up!\n");
+  printf("\n-- WiFi image streamer example --\n");
   printf("FC at %u MHz\n", pi_freq_get(PI_FREQ_DOMAIN_FC) / 1000000);
 
   printf("Starting up tasks...\n");

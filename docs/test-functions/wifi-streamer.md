@@ -45,7 +45,7 @@ cd NINA/firmware
 make menuconfig
 ```
 
-Enter the menu "AI deck example Configuration", use as AP and enter the credentials. Now rebuild it and flash.
+Enter the menu "AI deck example Configuration", deselect 'use as access-point' and enter the credentials of the wifi network (make sure that your wifi network allows connections like these). Now rebuild it and flash.
 
 ```shell
 make
