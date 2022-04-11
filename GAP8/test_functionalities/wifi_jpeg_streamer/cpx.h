@@ -72,4 +72,4 @@ uint32_t cpxReceivePacketBlocking(CPXPacket_t * packet);
 
 void cpxSendPacketBlocking(CPXPacket_t * packet, uint32_t size);
 
-bool cpxSendPacket(CPXPacket_t * packet, uint32_t timeoutInMS);
+void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...);

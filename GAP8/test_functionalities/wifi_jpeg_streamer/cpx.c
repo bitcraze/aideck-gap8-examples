@@ -59,6 +59,22 @@ uint32_t cpxReceivePacketBlocking(CPXPacket_t * packet) {
   return size;
 }
 
+static CPXPacket_t consoleTx;
+void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...) {
+  va_list ap;
+  int len;
+
+  va_start(ap, fmt);
+  len = vsnprintf(consoleTx.data, sizeof(consoleTx.data), fmt, ap);
+  va_end(ap);
+
+  consoleTx.route.destination = target;
+  consoleTx.route.source = GAP8;
+  consoleTx.route.function = CONSOLE;
+
+  cpxSendPacketBlocking(&consoleTx, len + 1);
+}
+
 void cpxSendPacketBlocking(CPXPacket_t * packet, uint32_t size) {
   txp.length = size + CPX_HEADER_SIZE;
   txp.cpxDst = packet->route.destination;
@@ -67,8 +83,4 @@ void cpxSendPacketBlocking(CPXPacket_t * packet, uint32_t size) {
   memcpy(txp.data, &packet->data, size);
 
   com_write((packet_t*) &txp);
-}
-
-bool cpxSendPacket(CPXPacket_t * packet, uint32_t timeoutInMS) {
-  // TODO
 }
