@@ -65,7 +65,7 @@ void rx_task(void *parameters)
   {
     cpxReceivePacketBlocking(&rxp);
 
-    if (rxp.routing.function == WIFI_CTRL) {
+    if (rxp.route.function == WIFI_CTRL) {
       WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
 
       switch (wifiCtrl->cmd)
@@ -132,9 +132,9 @@ void camera_task(void *parameters)
   static char ssid[] = "WiFi streaming example";
   printf("Setting up WiFi AP\n");
   // Set up the routing for the WiFi CTRL packets
-  txp.routing.destination = ESP32;
-  rxp.routing.source = GAP8;
-  txp.routing.function = WIFI_CTRL;
+  txp.route.destination = ESP32;
+  rxp.route.source = GAP8;
+  txp.route.function = WIFI_CTRL;
 
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
   
@@ -222,9 +222,9 @@ void camera_task(void *parameters)
         end = xTaskGetTickCount();
         printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
 
-        txp.routing.destination = HOST;
-        txp.routing.source = GAP8;
-        txp.routing.function = APP;
+        txp.route.destination = HOST;
+        txp.route.source = GAP8;
+        txp.route.function = APP;
 
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
@@ -272,9 +272,9 @@ void camera_task(void *parameters)
       {
         start = xTaskGetTickCount();
 
-        txp.routing.destination = HOST;
-        txp.routing.source = GAP8;
-        txp.routing.function = APP;
+        txp.route.destination = HOST;
+        txp.route.source = GAP8;
+        txp.route.function = APP;
 
         // First send information about the image
         img_header_t *header = (img_header_t *)txp.data;

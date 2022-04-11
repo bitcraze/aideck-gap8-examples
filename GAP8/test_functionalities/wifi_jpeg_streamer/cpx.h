@@ -1,3 +1,30 @@
+/**
+ * ,---------,       ____  _ __
+ * |  ,-^-,  |      / __ )(_) /_______________ _____  ___
+ * | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
+ *
+ * AI-deck GAP8 second stage bootloader
+ *
+ * Copyright (C) 2022 Bitcraze AB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * cpx.h - Interface for CPX stack
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -5,12 +32,14 @@
 
 #include "com.h"
 
+#define CPX_HEADER_SIZE           (2)
+
 typedef enum {
   STM32 = 1,
   ESP32 = 2,
   HOST = 3,
   GAP8 = 4
-} __attribute__((packed)) CPXTarget_t; // Rename to Destination
+} CPXTarget_t; // Rename to Destination
 
 typedef enum {
   SYSTEM = 1,
@@ -20,20 +49,23 @@ typedef enum {
   APP = 5,
   TEST = 0x0E,
   BOOTLOADER = 0x0F,
-} __attribute__((packed)) CPXFunction_t;
+} CPXFunction_t;
+
+typedef enum {
+  LOG_TO_WIFI = HOST,
+  LOG_TO_CRTP = STM32
+} CPXConsoleTarget_t;
 
 typedef struct {
-  uint8_t destination : 3;
-  uint8_t source : 3;
-  bool lastPacket : 1;
-  bool reserved : 1;
-  uint8_t function;
-} __attribute__((packed)) CPXRouting_t;
+  CPXTarget_t destination;
+  CPXTarget_t source;
+  CPXFunction_t function;
+} CPXRouting_t;
 
 typedef struct {
-    CPXRouting_t routing;
+    CPXRouting_t route;
     uint8_t data[MTU-2];
-} __attribute__((packed)) CPXPacket_t;
+} CPXPacket_t;
 
 // Return length of packet
 uint32_t cpxReceivePacketBlocking(CPXPacket_t * packet);
