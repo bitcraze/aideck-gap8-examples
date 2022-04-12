@@ -147,23 +147,23 @@ void camera_task(void *parameters)
   cpxSendPacketBlocking(&txp, 2);
 #endif
 
-  printf("Starting camera task...\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
   uint32_t imgSize = resolution * sizeof(unsigned char);
   imgBuff0 = (unsigned char *)pmsis_l2_malloc(imgSize);
   if (imgBuff0 == NULL)
   {
-    printf("Failed to allocate Memory for Image \n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
     return 1;
   }
-  printf("Allocated memory for image: %u bytes\n", imgSize);
+  cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for image: %u bytes\n", imgSize);
 
   if (open_pi_camera_himax(&camera))
   {
-    printf("Failed to open camera\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
     return -1;
   }
-  printf("Camera is open\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Camera is open\n");
 
   struct jpeg_encoder_conf enc_conf;
   jpeg_encoder_conf_init(&enc_conf);
@@ -173,11 +173,11 @@ void camera_task(void *parameters)
 
   if (jpeg_encoder_open(&jpeg_encoder, &enc_conf))
   {
-    printf("Failed initialize JPEG encoder\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed initialize JPEG encoder\n");
     return -1;
   }
 
-  printf("JPEG encoder initialized\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "JPEG encoder initialized\n");
 
   pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
@@ -195,9 +195,9 @@ void camera_task(void *parameters)
   // Check malloc!
 
   jpeg_encoder_header(&jpeg_encoder, &header, &headerSize);
-  printf("JPEG header size is %u\n", headerSize);
+  cpxPrintToConsole(LOG_TO_CRTP, "JPEG header size is %u\n", headerSize);
   jpeg_encoder_footer(&jpeg_encoder, &footer, &footerSize);
-  printf("JPEG footer size is %u\n", footerSize);
+  cpxPrintToConsole(LOG_TO_CRTP, "JPEG footer size is %u\n", footerSize);
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   while (1)
@@ -210,7 +210,7 @@ void camera_task(void *parameters)
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
       end = xTaskGetTickCount();
-      printf("Captured in %u ms\n", end - start);
+      //printf("Captured in %u ms\n", end - start);
 
       if (streamerMode == JPEG_ENCODING)
       {
@@ -220,7 +220,7 @@ void camera_task(void *parameters)
         start = xTaskGetTickCount();
         jpeg_encoder_process(&jpeg_encoder, &buffer, &jpeg_data, &jpegSize);
         end = xTaskGetTickCount();
-        printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
+        //printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
 
         txp.route.destination = HOST;
         txp.route.source = GAP8;
@@ -266,7 +266,7 @@ void camera_task(void *parameters)
         cpxSendPacketBlocking(&txp, footerSize);
 
         end = xTaskGetTickCount();
-        printf("Sent in %u\n", end - start);
+        //printf("Sent in %u\n", end - start);
       }
       else
       {
@@ -306,7 +306,7 @@ void camera_task(void *parameters)
         } while (size == sizeof(txp.data));
         //printf("Finished sending image\n");
         end = xTaskGetTickCount();
-        printf("Sent in %u\n", end - start);
+        //printf("Sent in %u\n", end - start);
         vTaskDelay(10);
       }
     }
