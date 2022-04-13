@@ -1,5 +1,5 @@
 **/.vscode
 
 # GAP8 build files
-GAP8/**/BUILD*
+examples/**/BUILD*
 BUILD
