@@ -1,0 +1,30 @@
+# CI jobs
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: build
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build"
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2.1.4
+      with:
+        name: ${{ github.sha }}
+        path: BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img
