@@ -24,10 +24,10 @@ jobs:
       run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build"
 
     - name: rename bin file
-      run: cp BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img BUILD/GAP8_V2/GCC_RISCV_FREERTOS/aideck_gap8.bin
+      run: cp BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img aideck_gap8.bin
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2.1.4
       with:
         name: ${{ github.sha }}
-        path: BUILD/GAP8_V2/GCC_RISCV_FREERTOS/aideck_gap8.bin
+        path: aideck_gap8.bin
