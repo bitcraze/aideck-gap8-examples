@@ -62,6 +62,12 @@ typedef struct {
 } CPXPacket_t;
 
 /**
+ * @brief Initialize the CPX module
+ *
+ */
+void cpxInit(void);
+
+/**
  * @brief Receive a CPX packet from the ESP32
  *
  * This function will block until a packet is availale from CPX. The

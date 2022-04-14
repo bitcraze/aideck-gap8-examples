@@ -24,12 +24,13 @@
  *
  *
  * main.c - Default test application
- * 
+ *
  * This application is used for testing in the CI/stab-lab, for more
  * useful things look in the examples folder.
  */
 #include "pmsis.h"
 #include "stdio.h"
+#include "bsp/bsp.h"
 
 #include "cpx.h"
 
