@@ -145,8 +145,8 @@ static void init_spi(pi_device_t *device)
 static uint32_t start;
 static uint32_t end;
 
-static uint8_t rx_buff[sizeof(packet_t)];
-static uint8_t tx_buff[sizeof(packet_t)];
+static packet_t rx_buff;
+static packet_t tx_buff;
 
 void com_task(void *parameters)
 {
@@ -189,16 +189,16 @@ void com_task(void *parameters)
 
     if (uxQueueMessagesWaiting(txq) > 0)
     {
-      xQueueReceive(txq, tx_buff, 0);
-      DEBUG_PRINTF("Should send packet of size %i\n", ((packet_t *)tx_buff)->len);
+      xQueueReceive(txq, &tx_buff, 0);
+      DEBUG_PRINTF("Should send packet of size %i\n", tx_buff.len);
     }
-    else 
+    else
     {
-      memset(tx_buff, 0, sizeof(packet_t));
+      memset(&tx_buff, 0, sizeof(packet_t));
     }
 
     // Check if we have a package to send (all 0 otherwise)
-    if (((packet_t *)tx_buff)->len > 0)
+    if (tx_buff.len > 0)
     {
       set_gap8_rtt_pin(&gap8_rtt_dev, GPIO_HIGH);
       // Check if Nina RTT was set at the same time, if not wait
@@ -214,17 +214,17 @@ void com_task(void *parameters)
     // There's a risk that we've been emptying the queue while another package has been
     // pushed and set the event bit again, which will trigger this loop again.
     // To avoid one extra read (that's not needed) double check here.
-    if ((evBits & NINA_RTT_BIT) == NINA_RTT_BIT || ((packet_t *)tx_buff)->len > 0) {
+    if ((evBits & NINA_RTT_BIT) == NINA_RTT_BIT || tx_buff.len > 0) {
       DEBUG_PRINTF("Initiating SPI tansfer\n");
 
-      pi_spi_transfer(&spi_dev, 
-                      tx_buff,
-                      rx_buff,
+      pi_spi_transfer(&spi_dev,
+                      &tx_buff,
+                      &rx_buff,
                       INITIAL_TRANSFER_SIZE * 8,
                       PI_SPI_LINES_SINGLE | PI_SPI_CS_KEEP);
 
-      int tx_len = ((packet_t *)tx_buff)->len;
-      int rx_len = ((packet_t *)rx_buff)->len;
+      int tx_len = tx_buff.len;
+      int rx_len = rx_buff.len;
 
       DEBUG_PRINTF("Should read %i bytes\n", rx_len);
 
@@ -256,16 +256,16 @@ void com_task(void *parameters)
 
       // Transfer the remaining bytes
       pi_spi_transfer(&spi_dev,
-                      &tx_buff[INITIAL_TRANSFER_SIZE],
-                      &rx_buff[INITIAL_TRANSFER_SIZE],
+                      ((uint8_t*)&tx_buff) + INITIAL_TRANSFER_SIZE,
+                      ((uint8_t*)&rx_buff) + INITIAL_TRANSFER_SIZE,
                       sizeLeft * 8,
                       PI_SPI_LINES_SINGLE | PI_SPI_CS_AUTO);
 
-      DEBUG_PRINTF("Read %i bytes\n", ((packet_t *)rx_buff)->len);
+      DEBUG_PRINTF("Read %i bytes\n", rx_buff.len);
 
-      if (((packet_t *)rx_buff)->len > 0)
+      if (rx_buff.len > 0)
       {
-        if (xQueueSend(rxq, ((packet_t *)rx_buff), (TickType_t)portMAX_DELAY) != pdPASS)
+        if (xQueueSend(rxq, &rx_buff, (TickType_t)portMAX_DELAY) != pdPASS)
         {
           DEBUG_PRINTF("RX Queue full!\n");
         } else {

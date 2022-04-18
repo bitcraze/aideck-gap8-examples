@@ -49,10 +49,10 @@ static CPXPacketPacked_t rxpPacked;
 static CPXPacketPacked_t txpPacked;
 
 
-static cpx_rx_task(void *parameters) {
+static void cpx_rx_task(void *parameters) {
   while (1) {
-    com_read(&rxpPacked);
-    
+    com_read((packet_t*)&rxpPacked);
+
     rxp.dataLength = rxpPacked.wireLength - CPX_HEADER_SIZE;
     rxp.route.destination = rxpPacked.route.destination;
     rxp.route.source = rxpPacked.route.source;
@@ -84,7 +84,7 @@ void cpxSendPacketBlocking(const CPXPacket_t * packet) {
   txpPacked.route.function = packet->route.function;
   txpPacked.route.lastPacket = packet->route.lastPacket;
   memcpy(txpPacked.data, packet->data, packet->dataLength);
-  com_write(&txpPacked);
+  com_write((packet_t*)&txpPacked);
 }
 
 bool cpxSendPacket(const CPXPacket_t * packet, uint32_t timeout) {
@@ -92,7 +92,7 @@ bool cpxSendPacket(const CPXPacket_t * packet, uint32_t timeout) {
 }
 
 void cpxInit(void) {
-  
+
   com_init();
 
   memset(queues, CPX_F_LAST, sizeof(xQueueHandle));
