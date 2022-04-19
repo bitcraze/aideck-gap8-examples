@@ -4,7 +4,10 @@ set -e
 scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 example_path=$1
-full_path=${scriptDir}/../../${example_path}
+make_args="${@: 2}"
 
-echo "Removing ${example_path}"
-rm -r ${full_path}/BUILD
+full_path=${scriptDir}/../../${example_path}
+cd ${full_path}
+
+source /gap_sdk/configs/ai_deck.sh
+make ${make_args}

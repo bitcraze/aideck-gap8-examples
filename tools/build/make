@@ -3,4 +3,5 @@ set -e
 
 scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-rm -r ${scriptDir}/../../BUILD
+source /gap_sdk/configs/ai_deck.sh
+make "${@}"

@@ -33,10 +33,10 @@ jobs:
         path: aideck_gap8.bin
 
     - name: build test_camera example
-      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/test_camera"
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/make-example examples/other/test_functionalities/test_camera all"
 
     - name: build uart_send_char example
-      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/uart_send_char"
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/make-example examples/other/test_functionalities/uart_send_char all"
 
     - name: build wifi_jpeg_streamer example
-      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/wifi_jpeg_streamer"
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/make-example examples/other/test_functionalities/wifi_jpeg_streamer all"
