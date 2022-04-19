@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+example_path=$1
+make_args="${@: 2}"
+
+full_path=${scriptDir}/../../${example_path}
+cd ${full_path}
+
+source /gap_sdk/configs/ai_deck.sh
+make ${make_args}
