@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+example_path=$1
+full_path=${scriptDir}/../../${example_path}
+cd ${full_path}
+
+source /gap_sdk/configs/ai_deck.sh
+make all image
+
+echo "Binary written to ${example_path}/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img"

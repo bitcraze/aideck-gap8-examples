@@ -3,4 +3,4 @@ set -e
 
 scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-rm -rf ${scriptDir}/../../BUILD
+rm -r ${scriptDir}/../../BUILD

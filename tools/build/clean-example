@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+example_path=$1
+full_path=${scriptDir}/../../${example_path}
+
+echo "Removing ${example_path}"
+rm -r ${full_path}/BUILD

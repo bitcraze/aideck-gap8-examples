@@ -31,3 +31,12 @@ jobs:
       with:
         name: ${{ github.sha }}
         path: aideck_gap8.bin
+
+    - name: build test_camera example
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/test_camera"
+
+    - name: build uart_send_char example
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/uart_send_char"
+
+    - name: build wifi_jpeg_streamer example
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build-example examples/other/test_functionalities/wifi_jpeg_streamer"
