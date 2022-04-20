@@ -31,8 +31,8 @@ To build and flash the example run the following:
 
 ```shell
 $ cd aideck-gap8-examples
-$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/test_functionalities/wifi_jpeg_streamer image
-$ cfloader flash examples/other/test_functionalities/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/80/2M
+$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer image
+$ cfloader flash examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/80/2M
 ```
 
 ## Starting the viewer
@@ -41,6 +41,6 @@ In order to view the images from the GAP8 connect to the WiFi access point on th
 run the following:
 
 ```shell
-$ cd aideck-gap8-examples/examples/other/test_functionalities/wifi_jpeg_streamer
+$ cd aideck-gap8-examples/examples/other/wifi-img-streamer
 $ python opencv-viewer.py -n 192.168.4.1
 ```
