@@ -1,14 +1,13 @@
 - page_id: home
-- title: Getting Started
+- title: Infrastructure
   subs:
-      - {page_id: getting-started}
-      - {page_id: tryout}
-      - {page_id: docker-gap8}
-      - {page_id: jtag-programming}
+      - {page_id: flashing}
+      - {page_id: sdk}
+      - {page_id: cpx}
 - title: Guides
   subs:
       - {page_id: replace-ai-deck-camera}
-- title: Test functions
+- title: Other examples
   subs:
       - {page_id: test-camera}
       - {page_id: uart-send-char}
@@ -19,7 +18,3 @@
 - title: AI examples
   subs:
       - {page_id: classification-demo}
-- title: NINA instructions
-  subs:
-      - {page_id: nina-flash-instructions}
-      - {page_id: docker-nina}
