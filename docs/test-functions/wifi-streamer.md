@@ -8,7 +8,7 @@ colorized.
 
 ## Prerequisites
 
-* Completed the [Getting started with the AI deck tutorial](/documentation/tutorials/getting-started-with-aideck/)
+* Completed the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/)
 * opencv-python installed on host
 
 ## Configuration
