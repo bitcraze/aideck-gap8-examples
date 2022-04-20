@@ -52,10 +52,6 @@ static int open_pi_camera_himax(struct pi_device *device)
   return 0;
 }
 
-#define LED_PIN 2
-
-static pi_device_t led_gpio_dev;
-
 static int wifiConnected = 0;
 static int wifiClientConnected = 0;
 
@@ -321,6 +317,8 @@ void camera_task(void *parameters)
   }
 }
 
+#define LED_PIN 2
+static pi_device_t led_gpio_dev;
 void hb_task(void *parameters)
 {
   (void)parameters;
