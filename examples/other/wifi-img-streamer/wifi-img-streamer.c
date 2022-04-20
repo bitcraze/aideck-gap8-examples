@@ -67,12 +67,13 @@ void rx_task(void *parameters)
     switch (wifiCtrl->cmd)
     {
       case WIFI_CTRL_STATUS_WIFI_CONNECTED:
-        printf("Wifi connected (%u.%u.%u.%u)\n", wifiCtrl->data[0], wifiCtrl->data[1],
-                                                wifiCtrl->data[2], wifiCtrl->data[3]);
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
+                          wifiCtrl->data[0], wifiCtrl->data[1],
+                          wifiCtrl->data[2], wifiCtrl->data[3]);
         wifiConnected = 1;
         break;
       case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
-        printf("Wifi client connection status: %u\n", wifiCtrl->data[0]);
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n", wifiCtrl->data[0]);
         wifiClientConnected = wifiCtrl->data[0];
         break;
       default:
@@ -103,8 +104,8 @@ static jpeg_encoder_t jpeg_encoder;
 
 typedef enum
 {
-  RAW_ENCODING = 1,
-  JPEG_ENCODING = 2
+  RAW_ENCODING = 0,
+  JPEG_ENCODING = 1
 } __attribute__((packed)) StreamerMode_t;
 
 pi_buffer_t header;
@@ -118,13 +119,37 @@ static StreamerMode_t streamerMode = RAW_ENCODING;
 
 static CPXPacket_t txp;
 
-void camera_task(void *parameters)
-{
-  vTaskDelay(2000);
+void createImageHeaderPacket(CPXPacket_t * packet, uint32_t imgSize, StreamerMode_t imgType) {
+  img_header_t *imgHeader = (img_header_t *) packet->data;
+  imgHeader->magic = 0xBC;
+  imgHeader->width = CAM_WIDTH;
+  imgHeader->height = CAM_HEIGHT;
+  imgHeader->depth = 1;
+  imgHeader->type = imgType;
+  imgHeader->size = imgSize;
+  packet->dataLength = sizeof(img_header_t);
+}
+
+void sendBufferViaCPX(CPXPacket_t * packet, uint8_t * buffer, uint32_t bufferSize) {
+  uint32_t offset = 0;
+  uint32_t size = 0;
+  do {
+    size = sizeof(packet->data);
+    if (offset + size > bufferSize)
+    {
+      size = bufferSize - offset;
+    }
+    memcpy(packet->data, &buffer[offset], sizeof(packet->data));
+    packet->dataLength = size;
+    cpxSendPacketBlocking(packet);
+    offset += size;
+  } while (size == sizeof(packet->data));
+}
 
 #ifdef SETUP_WIFI_AP
+void setupWiFi(void) {
   static char ssid[] = "WiFi streaming example";
-  printf("Setting up WiFi AP\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Setting up WiFi AP\n");
   // Set up the routing for the WiFi CTRL packets
   txp.route.destination = CPX_T_ESP32;
   rxp.route.source = CPX_T_GAP8;
@@ -140,6 +165,15 @@ void camera_task(void *parameters)
   wifiCtrl->data[0] = 0x01;
   txp.dataLength = 2;
   cpxSendPacketBlocking(&txp);
+}
+#endif
+
+void camera_task(void *parameters)
+{
+  vTaskDelay(2000);
+
+#ifdef SETUP_WIFI_AP
+  setupWiFi();
 #endif
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
@@ -193,6 +227,9 @@ void camera_task(void *parameters)
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
+  // We're reusing the same packet, so initialize the route once
+  cpxInitRoute(CPX_T_GAP8, CPX_T_HOST, CPX_F_APP, &txp.route);
+
   while (1)
   {
     if (wifiClientConnected == 1)
@@ -215,49 +252,22 @@ void camera_task(void *parameters)
         end = xTaskGetTickCount();
         //printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
 
-        txp.route.destination = CPX_T_HOST;
-        txp.route.source = CPX_T_GAP8;
-        txp.route.function = CPX_F_APP;
-
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
         // First send information about the image
-        img_header_t *imgHeader = (img_header_t *)txp.data;
-        imgHeader->magic = 0xBC;
-        imgHeader->width = CAM_WIDTH;
-        imgHeader->height = CAM_HEIGHT;
-        imgHeader->depth = 1;
-        imgHeader->type = 1;
-        imgHeader->size = imgSize;
-        txp.dataLength = sizeof(img_header_t);
+        createImageHeaderPacket(&txp, imgSize, JPEG_ENCODING);
         cpxSendPacketBlocking(&txp);
-
-        uint32_t i = 0;
-        uint32_t part = 0;
-        uint32_t offset = 0;
-        uint32_t size = 0;
 
         start = xTaskGetTickCount();
         // First send header
         memcpy(txp.data, header.data, headerSize);
         txp.dataLength = headerSize;
         cpxSendPacketBlocking(&txp);
+        
+        // Send image data
+        sendBufferViaCPX(&txp, (uint8_t*) jpeg_data.data, jpegSize);
 
-        do
-        {
-          offset = part * sizeof(txp.data);
-          size = sizeof(txp.data);
-          if (offset + size > jpegSize)
-          {
-            size = jpegSize - offset;
-          }
-          memcpy(txp.data, &((uint8_t*)jpeg_data.data)[offset], sizeof(txp.data));
-          //printf("Copied from %u (size is %u)\n", offset, size);
-          txp.dataLength = size;
-          cpxSendPacketBlocking(&txp);
-          part++;
-        } while (size == sizeof(txp.data));
-
+        // Send footer
         memcpy(txp.data, footer.data, footerSize);
         txp.dataLength = footerSize;
         cpxSendPacketBlocking(&txp);
@@ -269,40 +279,13 @@ void camera_task(void *parameters)
       {
         start = xTaskGetTickCount();
 
-        txp.route.destination = CPX_T_HOST;
-        txp.route.source = CPX_T_GAP8;
-        txp.route.function = CPX_F_APP;
-
         // First send information about the image
-        img_header_t *header = (img_header_t *)txp.data;
-        header->magic = 0xBC;
-        header->width = CAM_WIDTH;
-        header->height = CAM_HEIGHT;
-        header->depth = 1;
-        header->type = 0;
-        header->size = imgSize;
-        txp.dataLength = sizeof(img_header_t);
+        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING);
         cpxSendPacketBlocking(&txp);
 
-        uint32_t i = 0;
-        uint32_t part = 0;
-        uint32_t offset = 0;
-        uint32_t size = 0;
+        // Send image
+        sendBufferViaCPX(&txp, imgBuff, imgSize);
 
-        do
-        {
-          offset = part * sizeof(txp.data);
-          size = sizeof(txp.data);
-          if (offset + size > imgSize)
-          {
-            size = imgSize - offset;
-          }
-          memcpy(txp.data, &imgBuff[offset], sizeof(txp.data));
-          //printf("Copied from %u (size is %u)\n", offset, size);
-          txp.dataLength = size;
-          cpxSendPacketBlocking(&txp);
-          part++;
-        } while (size == sizeof(txp.data));
         //printf("Finished sending image\n");
         end = xTaskGetTickCount();
         //printf("Sent in %u\n", end - start);
@@ -311,7 +294,6 @@ void camera_task(void *parameters)
     }
     else
     {
-      //printf("Client is not connected, hold off\n");
       vTaskDelay(10);
     }
   }
