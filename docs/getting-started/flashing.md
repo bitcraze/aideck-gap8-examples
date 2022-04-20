@@ -3,8 +3,6 @@ title: Flashing
 page_id: flashing
 ---
 
-# Flashing the GAP8
-
 There's two different ways to flash firmware on the GAP8, via JTAG or via cfloader (Crazyflie PA).
 
 ## cfloader
@@ -27,3 +25,5 @@ docker run --rm -v ${PWD}:/module --device /dev/ttyUSB0 --privileged -P bitcraze
 ```
 
 **Note:** This will overwrite the booloader!
+
+**Note:** USB in docker is only supported on Linux

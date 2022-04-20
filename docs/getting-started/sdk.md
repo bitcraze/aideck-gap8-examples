@@ -3,8 +3,6 @@ title: SDK
 page_id: sdk
 ---
 
-# Working with the GAP8 SDK
-
 Due to some changes made in the GAP8 SDK it's not easy to use a local installation of the official
 SDK yet, so use our dockerized version instead. If you would like to understand the changes we've made,
 have a look in the [aideck-docker repository](https://github.com/bitcraze/docker-aideck) and the

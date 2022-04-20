@@ -3,9 +3,6 @@ title: WiFi Video Streamer
 page_id: wifi-streamer
 ---
 
-
-# Wifi video streamer
-
 This example streams JPEG or raw images from the GAP8 to the host where they are displayed and
 colorized.
 

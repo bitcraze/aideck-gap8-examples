@@ -3,8 +3,6 @@ title: Using CPX
 page_id: cpx
 ---
 
-# Crazyflie Packet eXchange
-
 The Creazyflie Packet eXchange protocol is used to send data to/from the GAP8 from/to other target systems,
 like the STM32, ESP32 or the host computer. For more information on the inner workings of CPX, have a look
 at the [CPX documentation](/documentation/repository/crazyflie-firmware/master/functional-areas/cpx/).
