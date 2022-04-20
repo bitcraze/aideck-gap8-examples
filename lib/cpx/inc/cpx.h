@@ -61,6 +61,11 @@ typedef struct {
   uint8_t data[MTU-CPX_HEADER_SIZE];
 } CPXPacket_t;
 
+typedef enum {
+  LOG_TO_WIFI = CPX_T_HOST,
+  LOG_TO_CRTP = CPX_T_STM32
+} CPXConsoleTarget_t;
+
 /**
  * @brief Initialize the CPX module
  *
@@ -121,3 +126,15 @@ bool cpxSendPacket(const CPXPacket_t * packet, uint32_t timeout);
  * @param route Pointer to the route data to initialize
  */
 void cpxInitRoute(const CPXTarget_t source, const CPXTarget_t destination, const CPXFunction_t function, CPXRouting_t* route);
+
+/**
+ * @brief Print debug data though CPX
+ *
+ * This will print debug data though CPX to the Crazyflie client console.
+ * The function doesn't add a newline, so this will have to be supplied.
+ *
+ * @param target The target where the printout should go
+ * @param fmt Standard C format string
+ * @param variable Data for format string
+ */
+void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...);
