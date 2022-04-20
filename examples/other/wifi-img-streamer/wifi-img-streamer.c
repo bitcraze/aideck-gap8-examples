@@ -14,7 +14,7 @@
 #define CAM_HEIGHT 244
 
 static pi_task_t task1;
-static unsigned char *imgBuff0;
+static unsigned char *imgBuff;
 static struct pi_device camera;
 static pi_buffer_t buffer;
 
@@ -149,20 +149,18 @@ void camera_task(void *parameters)
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
   uint32_t imgSize = resolution * sizeof(unsigned char);
-  imgBuff0 = (unsigned char *)pmsis_l2_malloc(imgSize);
-  if (imgBuff0 == NULL)
+  imgBuff = (unsigned char *)pmsis_l2_malloc(imgSize);
+  if (imgBuff == NULL)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
     return;
   }
-  cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for image: %u bytes\n", imgSize);
 
   if (open_pi_camera_himax(&camera))
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
     return;
   }
-  cpxPrintToConsole(LOG_TO_CRTP, "Camera is open\n");
 
   struct jpeg_encoder_conf enc_conf;
   jpeg_encoder_conf_init(&enc_conf);
@@ -176,9 +174,7 @@ void camera_task(void *parameters)
     return;
   }
 
-  cpxPrintToConsole(LOG_TO_CRTP, "JPEG encoder initialized\n");
-
-  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
+  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff);
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
   header.size = 1024;
@@ -191,20 +187,22 @@ void camera_task(void *parameters)
   jpeg_data.size = 1024 * 15;
   jpeg_data.data = pmsis_l2_malloc(1024 * 15);
 
-  // Check malloc!
+  if (header.data == 0 || footer.data == 0 || jpeg_data.data == 0) {
+    cpxPrintToConsole(LOG_TO_CRTP, "Could not allocate memory for JPEG image\n");
+    return;
+  }
 
   jpeg_encoder_header(&jpeg_encoder, &header, &headerSize);
-  cpxPrintToConsole(LOG_TO_CRTP, "JPEG header size is %u\n", headerSize);
   jpeg_encoder_footer(&jpeg_encoder, &footer, &footerSize);
-  cpxPrintToConsole(LOG_TO_CRTP, "JPEG footer size is %u\n", footerSize);
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+
   while (1)
   {
     if (wifiClientConnected == 1)
     {
       start = xTaskGetTickCount();
-      pi_camera_capture_async(&camera, imgBuff0, resolution, pi_task_callback(&task1, capture_done_cb, NULL));
+      pi_camera_capture_async(&camera, imgBuff, resolution, pi_task_callback(&task1, capture_done_cb, NULL));
       pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
@@ -303,7 +301,7 @@ void camera_task(void *parameters)
           {
             size = imgSize - offset;
           }
-          memcpy(txp.data, &imgBuff0[offset], sizeof(txp.data));
+          memcpy(txp.data, &imgBuff[offset], sizeof(txp.data));
           //printf("Copied from %u (size is %u)\n", offset, size);
           txp.dataLength = size;
           cpxSendPacketBlocking(&txp);
@@ -360,9 +358,6 @@ void start_example(void)
   cpxEnableFunction(CPX_F_WIFI_CTRL);
 
   cpxPrintToConsole(LOG_TO_CRTP, "-- WiFi image streamer example --\n");
-  cpxPrintToConsole(LOG_TO_CRTP, "FC at %u MHz\n", pi_freq_get(PI_FREQ_DOMAIN_FC) / 1000000);
-
-  cpxPrintToConsole(LOG_TO_CRTP, "Starting up tasks...\n");
 
   evGroup = xEventGroupCreate();
 
