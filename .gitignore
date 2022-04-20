@@ -2,4 +2,5 @@
 
 # GAP8 build files
 examples/**/BUILD*
+examples/**/lib*
 BUILD
