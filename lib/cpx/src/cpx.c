@@ -108,6 +108,13 @@ void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...) {
   cpxSendPacketBlocking(&consoleTx);
 }
 
+void cpxInitRoute(const CPXTarget_t source, const CPXTarget_t destination, const CPXFunction_t function, CPXRouting_t* route) {
+    route->source = source;
+    route->destination = destination;
+    route->function = function;
+    route->lastPacket = true;
+}
+
 void cpxInit(void) {
 
   com_init();
