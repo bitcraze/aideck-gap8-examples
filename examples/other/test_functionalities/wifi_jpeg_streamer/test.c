@@ -1,5 +1,6 @@
 #include "pmsis.h"
 
+#include "bsp/bsp.h"
 #include "bsp/camera/himax.h"
 #include "bsp/buffer.h"
 #include "gaplib/jpeg_encoder.h"
@@ -63,26 +64,23 @@ void rx_task(void *parameters)
 {
   while (1)
   {
-    cpxReceivePacketBlocking(&rxp);
+    cpxReceivePacketBlocking(CPX_F_WIFI_CTRL, &rxp);
 
-    if (rxp.route.function == WIFI_CTRL) {
-      WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
+    WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
 
-      switch (wifiCtrl->cmd)
-      {
-        case WIFI_CTRL_STATUS_WIFI_CONNECTED:
-          printf("Wifi connected (%u.%u.%u.%u)\n", wifiCtrl->data[0], wifiCtrl->data[1],
-                                                  wifiCtrl->data[2], wifiCtrl->data[3]);
-          wifiConnected = 1;
-          break;
-        case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
-          printf("Wifi client connection status: %u\n", wifiCtrl->data[0]);
-          wifiClientConnected = wifiCtrl->data[0];
-          break;
-        default:
-          break;
-      }
-
+    switch (wifiCtrl->cmd)
+    {
+      case WIFI_CTRL_STATUS_WIFI_CONNECTED:
+        printf("Wifi connected (%u.%u.%u.%u)\n", wifiCtrl->data[0], wifiCtrl->data[1],
+                                                wifiCtrl->data[2], wifiCtrl->data[3]);
+        wifiConnected = 1;
+        break;
+      case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
+        printf("Wifi client connection status: %u\n", wifiCtrl->data[0]);
+        wifiClientConnected = wifiCtrl->data[0];
+        break;
+      default:
+        break;
     }
   }
 }
@@ -114,9 +112,9 @@ typedef enum
 } __attribute__((packed)) StreamerMode_t;
 
 pi_buffer_t header;
-int headerSize;
+uint32_t headerSize;
 pi_buffer_t footer;
-int footerSize;
+uint32_t footerSize;
 pi_buffer_t jpeg_data;
 uint32_t jpegSize;
 
@@ -132,19 +130,20 @@ void camera_task(void *parameters)
   static char ssid[] = "WiFi streaming example";
   printf("Setting up WiFi AP\n");
   // Set up the routing for the WiFi CTRL packets
-  txp.route.destination = ESP32;
-  rxp.route.source = GAP8;
-  txp.route.function = WIFI_CTRL;
-
+  txp.route.destination = CPX_T_ESP32;
+  rxp.route.source = CPX_T_GAP8;
+  txp.route.function = CPX_F_WIFI_CTRL;
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
   
   wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
-  cpxSendPacketBlocking(&txp, sizeof(ssid)); // Too large
+  txp.dataLength = sizeof(ssid);
+  cpxSendPacketBlocking(&txp);
   
   wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
   wifiCtrl->data[0] = 0x01;
-  cpxSendPacketBlocking(&txp, 2);
+  txp.dataLength = 2;
+  cpxSendPacketBlocking(&txp);
 #endif
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
@@ -154,14 +153,14 @@ void camera_task(void *parameters)
   if (imgBuff0 == NULL)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
-    return 1;
+    return;
   }
   cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for image: %u bytes\n", imgSize);
 
   if (open_pi_camera_himax(&camera))
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
-    return -1;
+    return;
   }
   cpxPrintToConsole(LOG_TO_CRTP, "Camera is open\n");
 
@@ -174,7 +173,7 @@ void camera_task(void *parameters)
   if (jpeg_encoder_open(&jpeg_encoder, &enc_conf))
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed initialize JPEG encoder\n");
-    return -1;
+    return;
   }
 
   cpxPrintToConsole(LOG_TO_CRTP, "JPEG encoder initialized\n");
@@ -222,9 +221,9 @@ void camera_task(void *parameters)
         end = xTaskGetTickCount();
         //printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
 
-        txp.route.destination = HOST;
-        txp.route.source = GAP8;
-        txp.route.function = APP;
+        txp.route.destination = CPX_T_HOST;
+        txp.route.source = CPX_T_GAP8;
+        txp.route.function = CPX_F_APP;
 
         uint32_t imgSize = headerSize + jpegSize + footerSize;
 
@@ -236,17 +235,19 @@ void camera_task(void *parameters)
         imgHeader->depth = 1;
         imgHeader->type = 1;
         imgHeader->size = imgSize;
-        cpxSendPacketBlocking(&txp, sizeof(img_header_t));
+        txp.dataLength = sizeof(img_header_t);
+        cpxSendPacketBlocking(&txp);
 
-        int i = 0;
-        int part = 0;
-        int offset = 0;
-        int size = 0;
+        uint32_t i = 0;
+        uint32_t part = 0;
+        uint32_t offset = 0;
+        uint32_t size = 0;
 
         start = xTaskGetTickCount();
         // First send header
         memcpy(txp.data, header.data, headerSize);
-        cpxSendPacketBlocking(&txp, headerSize);
+        txp.dataLength = headerSize;
+        cpxSendPacketBlocking(&txp);
 
         do
         {
@@ -256,14 +257,16 @@ void camera_task(void *parameters)
           {
             size = jpegSize - offset;
           }
-          memcpy(txp.data, &jpeg_data.data[offset], sizeof(txp.data));
+          memcpy(txp.data, &((uint8_t*)jpeg_data.data)[offset], sizeof(txp.data));
           //printf("Copied from %u (size is %u)\n", offset, size);
-          cpxSendPacketBlocking(&txp, size);
+          txp.dataLength = size;
+          cpxSendPacketBlocking(&txp);
           part++;
         } while (size == sizeof(txp.data));
 
         memcpy(txp.data, footer.data, footerSize);
-        cpxSendPacketBlocking(&txp, footerSize);
+        txp.dataLength = footerSize;
+        cpxSendPacketBlocking(&txp);
 
         end = xTaskGetTickCount();
         //printf("Sent in %u\n", end - start);
@@ -272,9 +275,9 @@ void camera_task(void *parameters)
       {
         start = xTaskGetTickCount();
 
-        txp.route.destination = HOST;
-        txp.route.source = GAP8;
-        txp.route.function = APP;
+        txp.route.destination = CPX_T_HOST;
+        txp.route.source = CPX_T_GAP8;
+        txp.route.function = CPX_F_APP;
 
         // First send information about the image
         img_header_t *header = (img_header_t *)txp.data;
@@ -284,12 +287,13 @@ void camera_task(void *parameters)
         header->depth = 1;
         header->type = 0;
         header->size = imgSize;
-        cpxSendPacketBlocking(&txp, sizeof(img_header_t));
+        txp.dataLength = sizeof(img_header_t);
+        cpxSendPacketBlocking(&txp);
 
-        int i = 0;
-        int part = 0;
-        int offset = 0;
-        int size = 0;
+        uint32_t i = 0;
+        uint32_t part = 0;
+        uint32_t offset = 0;
+        uint32_t size = 0;
 
         do
         {
@@ -301,7 +305,8 @@ void camera_task(void *parameters)
           }
           memcpy(txp.data, &imgBuff0[offset], sizeof(txp.data));
           //printf("Copied from %u (size is %u)\n", offset, size);
-          cpxSendPacketBlocking(&txp, size);
+          txp.dataLength = size;
+          cpxSendPacketBlocking(&txp);
           part++;
         } while (size == sizeof(txp.data));
         //printf("Finished sending image\n");
@@ -337,7 +342,7 @@ void hb_task(void *parameters)
   }
 }
 
-void start_bootloader(void)
+void start_example(void)
 {
   struct pi_uart_conf conf;
   struct pi_device device;
@@ -351,10 +356,13 @@ void start_bootloader(void)
     pmsis_exit(-1);
   }
 
-  printf("\n-- WiFi image streamer example --\n");
-  printf("FC at %u MHz\n", pi_freq_get(PI_FREQ_DOMAIN_FC) / 1000000);
+  cpxInit();
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
 
-  printf("Starting up tasks...\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "-- WiFi image streamer example --\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "FC at %u MHz\n", pi_freq_get(PI_FREQ_DOMAIN_FC) / 1000000);
+
+  cpxPrintToConsole(LOG_TO_CRTP, "Starting up tasks...\n");
 
   evGroup = xEventGroupCreate();
 
@@ -364,18 +372,16 @@ void start_bootloader(void)
                       NULL, tskIDLE_PRIORITY + 1, NULL);
   if (xTask != pdPASS)
   {
-    printf("HB task did not start !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "HB task did not start !\n");
     pmsis_exit(-1);
   }
-
-  com_init();
 
   xTask = xTaskCreate(camera_task, "camera_task", configMINIMAL_STACK_SIZE * 4,
                       NULL, tskIDLE_PRIORITY + 1, NULL);
 
   if (xTask != pdPASS)
   {
-    printf("Camera task did not start !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Camera task did not start !\n");
     pmsis_exit(-1);
   }
 
@@ -384,7 +390,7 @@ void start_bootloader(void)
 
   if (xTask != pdPASS)
   {
-    printf("RX task did not start !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "RX task did not start !\n");
     pmsis_exit(-1);
   }
 
@@ -402,5 +408,5 @@ int main(void)
   pi_freq_set(PI_FREQ_DOMAIN_FC, 250000000);
   pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
 
-  return pmsis_kickoff((void *)start_bootloader);
+  return pmsis_kickoff((void *)start_example);
 }
