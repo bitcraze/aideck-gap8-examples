@@ -42,7 +42,7 @@ static int open_pi_camera_himax(struct pi_device *device)
   pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
   if (set_value != reg_value)
   {
-    printf("Failed to rotate camera image\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to rotate camera image\n");
     return -1;
   }
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
