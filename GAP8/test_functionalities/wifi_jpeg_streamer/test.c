@@ -66,7 +66,7 @@ typedef struct
   uint64_t timestamp; // usec timestamp from STM32
   int16_t x;  // compressed [mm]
   int16_t y;  // compressed [mm]
-  int16_t z;  // compressed
+  int16_t z;  // compressed [mm]
   uint32_t quat; // compressed, see quatcompress.h
 } __attribute__((packed)) StatePacket_t;
 
@@ -99,7 +99,6 @@ void rx_task(void *parameters)
     } else if (rxp.routing.function == APP) {
       // put the state in the thread-safe queue
       xQueueOverwrite(stateQueue, rxp.data);
-      StatePacket_t* data = (StatePacket_t*)rxp.data;
     }
   }
 }
@@ -315,6 +314,7 @@ void camera_task(void *parameters)
         header->depth = 1;
         header->type = 0;
         header->size = imgSize;
+        header->timestamp = end; // unclear if we should take start or end here, but as long as end - start is small, this should be fine
         header->x = cf_state.x;
         header->y = cf_state.y;
         header->z = cf_state.z;
