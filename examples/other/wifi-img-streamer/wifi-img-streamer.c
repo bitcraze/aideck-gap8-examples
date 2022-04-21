@@ -1,3 +1,28 @@
+/**
+ * ,---------,       ____  _ __
+ * |  ,-^-,  |      / __ )(_) /_______________ _____  ___
+ * | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * | / ,--´  |    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
+ *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
+ *
+ * AI-deck GAP8
+ *
+ * Copyright (C) 2022 Bitcraze AB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * WiFi image streamer example
+ */
 #include "pmsis.h"
 
 #include "bsp/bsp.h"
@@ -20,6 +45,13 @@ static pi_buffer_t buffer;
 
 static EventGroupHandle_t evGroup;
 #define CAPTURE_DONE_BIT (1 << 0)
+
+// Performance menasuring variables
+static uint32_t start = 0;
+static uint32_t captureTime = 0;
+static uint32_t transferTime = 0;
+static uint32_t encodingTime = 0;
+#define OUTPUT_PROFILING_DATA
 
 static int open_pi_camera_himax(struct pi_device *device)
 {
@@ -96,9 +128,6 @@ typedef struct
   uint8_t type;
   uint32_t size;
 } __attribute__((packed)) img_header_t;
-
-static uint32_t start;
-static uint32_t end;
 
 static jpeg_encoder_t jpeg_encoder;
 
@@ -178,8 +207,8 @@ void camera_task(void *parameters)
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
-  uint32_t imgSize = resolution * sizeof(unsigned char);
-  imgBuff = (unsigned char *)pmsis_l2_malloc(imgSize);
+  uint32_t captureSize = resolution * sizeof(unsigned char);
+  imgBuff = (unsigned char *)pmsis_l2_malloc(captureSize);
   if (imgBuff == NULL)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
@@ -230,6 +259,8 @@ void camera_task(void *parameters)
   // We're reusing the same packet, so initialize the route once
   cpxInitRoute(CPX_T_GAP8, CPX_T_HOST, CPX_F_APP, &txp.route);
 
+  uint32_t imgSize = 0;
+
   while (1)
   {
     if (wifiClientConnected == 1)
@@ -239,8 +270,7 @@ void camera_task(void *parameters)
       pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-      end = xTaskGetTickCount();
-      //printf("Captured in %u ms\n", end - start);
+      captureTime = xTaskGetTickCount() - start;
 
       if (streamerMode == JPEG_ENCODING)
       {
@@ -249,10 +279,9 @@ void camera_task(void *parameters)
         //jpeg_encoder_process_status(&jpegSize, NULL);
         start = xTaskGetTickCount();
         jpeg_encoder_process(&jpeg_encoder, &buffer, &jpeg_data, &jpegSize);
-        end = xTaskGetTickCount();
-        //printf("Encoded in %u ms (size is %u)\n", end - start, jpegSize);
+        encodingTime = xTaskGetTickCount() - start;
 
-        uint32_t imgSize = headerSize + jpegSize + footerSize;
+        imgSize = headerSize + jpegSize + footerSize;
 
         // First send information about the image
         createImageHeaderPacket(&txp, imgSize, JPEG_ENCODING);
@@ -272,25 +301,27 @@ void camera_task(void *parameters)
         txp.dataLength = footerSize;
         cpxSendPacketBlocking(&txp);
 
-        end = xTaskGetTickCount();
-        //printf("Sent in %u\n", end - start);
+        transferTime = xTaskGetTickCount() - start;
       }
       else
       {
+        imgSize = captureSize;
         start = xTaskGetTickCount();
 
         // First send information about the image
         createImageHeaderPacket(&txp, imgSize, RAW_ENCODING);
         cpxSendPacketBlocking(&txp);
 
+        start = xTaskGetTickCount();
         // Send image
         sendBufferViaCPX(&txp, imgBuff, imgSize);
 
-        //printf("Finished sending image\n");
-        end = xTaskGetTickCount();
-        //printf("Sent in %u\n", end - start);
-        vTaskDelay(10);
+        transferTime = xTaskGetTickCount() - start;
       }
+#ifdef OUTPUT_PROFILING_DATA
+      cpxPrintToConsole(LOG_TO_CRTP, "capture=%dms, encoding=%d ms (%d bytes), transfer=%d ms\n",
+                        captureTime, encodingTime, imgSize, transferTime);
+#endif
     }
     else
     {
