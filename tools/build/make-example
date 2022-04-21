@@ -9,5 +9,6 @@ make_args="${@: 2}"
 full_path=${scriptDir}/../../${example_path}
 cd ${full_path}
 
+export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg
 source /gap_sdk/configs/ai_deck.sh
 make ${make_args}

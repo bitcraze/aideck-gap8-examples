@@ -39,4 +39,4 @@ jobs:
       run: docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/test_functionalities/uart_send_char all
 
     - name: build wifi_jpeg_streamer example
-      run: docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/test_functionalities/wifi_jpeg_streamer all
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer all
