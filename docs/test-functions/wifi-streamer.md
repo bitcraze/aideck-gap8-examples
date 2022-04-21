@@ -13,13 +13,13 @@ colorized.
 
 ## Configuration
 
-To select which mode (RAW or JPEG) change the code below in the ```test.c``` file.
+To select which mode (RAW or JPEG) change the code below in the ```wifi-img-streamer.c``` file.
 
 ```c
 typedef enum
 {
-  RAW_ENCODING = 1,
-  JPEG_ENCODING = 2
+  RAW_ENCODING = 0,
+  JPEG_ENCODING = 1
 } __attribute__((packed)) StreamerMode_t;
 
 static StreamerMode_t streamerMode = RAW_ENCODING;
