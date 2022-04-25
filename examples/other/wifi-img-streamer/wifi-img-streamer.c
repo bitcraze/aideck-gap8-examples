@@ -36,7 +36,8 @@
 
 #define IMG_ORIENTATION 0x0101
 #define CAM_WIDTH 324
-#define CAM_HEIGHT 244
+// #define CAM_HEIGHT 244
+#define CAM_HEIGHT 324
 
 static pi_task_t task1;
 static unsigned char *imgBuff;
@@ -67,7 +68,7 @@ static int open_pi_camera_himax(struct pi_device *device)
 
   // rotate image
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-  uint8_t set_value = 3;
+  uint8_t set_value = 0;//3;
   uint8_t reg_value;
   pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
   pi_time_wait_us(1000000);
@@ -297,6 +298,7 @@ void camera_task(void *parameters)
   uint32_t imgSize = 0;
 
   StatePacket_t cf_state;
+  cpxPrintToConsole(LOG_TO_CRTP, "Camera ready!\n");
   while (1)
   {
     if (wifiClientConnected == 1)

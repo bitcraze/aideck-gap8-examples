@@ -87,10 +87,10 @@ while(1):
     [magic, width, height, depth, format, size, timestamp, x, y, z, quat] = struct.unpack('<BHHBBIIhhhI', imgHeader)
 
     if magic == 0xBC:
-      #print("Magic is good")
-      #print("Resolution is {}x{} with depth of {} byte(s)".format(width, height, depth))
-      #print("Image format is {}".format(format))
-      #print("Image size is {} bytes".format(size))
+      # print("Magic is good")
+      print("Resolution is {}x{} with depth of {} byte(s)".format(width, height, depth))
+      print("Image format is {}".format(format))
+      print("Image size is {} bytes".format(size))
       print("CF State {},{},{} m at time {} s".format(x/1000, y/1000, z/1000, timestamp/1000))
 
       # Now we start rx the image, this will be split up in packages of some size
@@ -110,7 +110,7 @@ while(1):
 
       if format == 0:
           bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
-          bayer_img.shape = (244, 324)
+          bayer_img.shape = (height, width)
           color_img = cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA)
           cv2.imshow('Bayer', bayer_img)
           cv2.imshow('Color', color_img)
