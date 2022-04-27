@@ -40,16 +40,21 @@
 #define CAM_HEIGHT 324
 
 static pi_task_t task1;
-static unsigned char *imgBuff;
+static unsigned char *imgBuff1;
+static pi_buffer_t buffer1;
+static pi_task_t task2;
+static unsigned char *imgBuff2;
+static pi_buffer_t buffer2;
+
 static struct pi_device camera;
-static pi_buffer_t buffer;
 
 static EventGroupHandle_t evGroup;
 #define CAPTURE_DONE_BIT (1 << 0)
 
 // Performance menasuring variables
 static uint32_t start = 0;
-static uint32_t captureTime = 0;
+static uint32_t captureTime1 = 0;
+static uint32_t captureTime2 = 0;
 static uint32_t transferTime = 0;
 static uint32_t encodingTime = 0;
 #define OUTPUT_PROFILING_DATA
@@ -78,6 +83,12 @@ static int open_pi_camera_himax(struct pi_device *device)
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to rotate camera image\n");
     return -1;
   }
+
+  // SDK uses 0x0B by default, i.e., vt_reg_div=1 and vt_sys_div=1
+  //set_value = 
+  //pi_camera_reg_set(&camera, /*HIMAX_OSC_CLK_DIV*/0x3060, &set_value);
+
+
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
@@ -141,7 +152,13 @@ void rx_task_app(void *parameters)
 
 static void capture_done_cb(void *arg)
 {
-  xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
+  if (arg == &task1) {
+    captureTime1 = xTaskGetTickCount();
+  }
+  if (arg == &task2) {
+    captureTime2 = xTaskGetTickCount();
+    xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
+  }
 }
 
 typedef struct
@@ -244,8 +261,15 @@ void camera_task(void *parameters)
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
   uint32_t captureSize = resolution * sizeof(unsigned char);
-  imgBuff = (unsigned char *)pmsis_l2_malloc(captureSize);
-  if (imgBuff == NULL)
+  imgBuff1 = (unsigned char *)pmsis_l2_malloc(captureSize);
+  if (imgBuff1 == NULL)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
+    return;
+  }
+
+  imgBuff2 = (unsigned char *)pmsis_l2_malloc(captureSize);
+  if (imgBuff2 == NULL)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
     return;
@@ -269,8 +293,11 @@ void camera_task(void *parameters)
     return;
   }
 
-  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff);
-  pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+  pi_buffer_init(&buffer1, PI_BUFFER_TYPE_L2, imgBuff1);
+  pi_buffer_set_format(&buffer1, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+
+  pi_buffer_init(&buffer2, PI_BUFFER_TYPE_L2, imgBuff2);
+  pi_buffer_set_format(&buffer2, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
   header.size = 1024;
   header.data = pmsis_l2_malloc(1024);
@@ -303,12 +330,21 @@ void camera_task(void *parameters)
   {
     if (wifiClientConnected == 1)
     {
+      // Note about the frame rate. From the datasheet we have
+      // frame rate = vt_pix_clk (MHz) x 1 x 10 6 / ( frame_length_lines x line_length_pck )
+      // vt_pix_clk seems to be 3 MHz for us (divisors are all set to 1)
+      // frame_length_lines = 0x0216 (himax.c SDK) and line_length_pck = 0x0178 (himax.c SDK)
+      // This results in 15 fps (66ms)
+      // For full resulution, we have min_line_length_pck=0x0178 and min_frame_length_lines=0x0158
+      // This would result in 23 fps
+
+
       start = xTaskGetTickCount();
-      pi_camera_capture_async(&camera, imgBuff, resolution, pi_task_callback(&task1, capture_done_cb, NULL));
+      pi_camera_capture_async(&camera, imgBuff1, resolution, pi_task_callback(&task1, capture_done_cb, &task1));
+      pi_camera_capture_async(&camera, imgBuff2, resolution, pi_task_callback(&task2, capture_done_cb, &task2));
       pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-      captureTime = xTaskGetTickCount() - start;
 
       // get the current state from the STM
       xQueuePeek(stateQueue, &cf_state, 0);
@@ -319,13 +355,13 @@ void camera_task(void *parameters)
         //xEventGroupWaitBits(evGroup, JPEG_ENCODING_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
         //jpeg_encoder_process_status(&jpegSize, NULL);
         start = xTaskGetTickCount();
-        jpeg_encoder_process(&jpeg_encoder, &buffer, &jpeg_data, &jpegSize);
+        jpeg_encoder_process(&jpeg_encoder, &buffer1, &jpeg_data, &jpegSize);
         encodingTime = xTaskGetTickCount() - start;
 
         imgSize = headerSize + jpegSize + footerSize;
 
         // First send information about the image
-        createImageHeaderPacket(&txp, imgSize, JPEG_ENCODING, &cf_state, captureTime);
+        createImageHeaderPacket(&txp, imgSize, JPEG_ENCODING, &cf_state, captureTime1);
         cpxSendPacketBlocking(&txp);
 
         start = xTaskGetTickCount();
@@ -350,18 +386,28 @@ void camera_task(void *parameters)
         start = xTaskGetTickCount();
 
         // First send information about the image
-        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING, &cf_state, captureTime);
+        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING, &cf_state, captureTime1);
         cpxSendPacketBlocking(&txp);
 
-        start = xTaskGetTickCount();
         // Send image
-        sendBufferViaCPX(&txp, imgBuff, imgSize);
+        sendBufferViaCPX(&txp, imgBuff1, imgSize);
+
+        transferTime = xTaskGetTickCount() - start;
+
+        // second buffer
+
+        // First send information about the image
+        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING, &cf_state, captureTime2);
+        cpxSendPacketBlocking(&txp);
+
+        // Send image
+        sendBufferViaCPX(&txp, imgBuff2, imgSize);
 
         transferTime = xTaskGetTickCount() - start;
       }
 #ifdef OUTPUT_PROFILING_DATA
       cpxPrintToConsole(LOG_TO_CRTP, "capture=%dms, encoding=%d ms (%d bytes), transfer=%d ms\n",
-                        captureTime, encodingTime, imgSize, transferTime);
+                        captureTime2-start, encodingTime, imgSize, transferTime);
 #endif
     }
     else
