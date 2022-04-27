@@ -53,6 +53,7 @@ static EventGroupHandle_t evGroup;
 
 // Performance menasuring variables
 static uint32_t start = 0;
+static uint32_t stmStart = 0;
 static uint32_t captureTime1 = 0;
 static uint32_t captureTime2 = 0;
 static uint32_t transferTime = 0;
@@ -142,21 +143,33 @@ void rx_task(void *parameters)
 
 void rx_task_app(void *parameters)
 {
+  uint64_t last_timestamp = 0;
+
   while (1)
   {
     cpxReceivePacketBlocking(CPX_F_APP, &rxp_app);
     // put the state in the thread-safe queue
     xQueueOverwrite(stateQueue, rxp_app.data);
+
+    // Detect a clock synchronization event:
+    // The clock on the STM was synchronized (== reset to 0) using a broadcast
+    // if the current timestamp is smaller than the previous timestamp, since
+    // timestamps can only increment otherwise.
+    const StatePacket_t* cf_state = (const StatePacket_t*)rxp_app.data;
+    if (last_timestamp == 0 || cf_state->timestamp < last_timestamp) {
+      stmStart = xTaskGetTickCount();
+    }
+    last_timestamp = cf_state->timestamp;
   }
 }
 
 static void capture_done_cb(void *arg)
 {
   if (arg == &task1) {
-    captureTime1 = xTaskGetTickCount();
+    captureTime1 = xTaskGetTickCount() - stmStart;
   }
   if (arg == &task2) {
-    captureTime2 = xTaskGetTickCount();
+    captureTime2 = xTaskGetTickCount() - stmStart;
     xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
   }
 }
