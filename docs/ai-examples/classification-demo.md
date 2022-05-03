@@ -29,7 +29,7 @@ For more information on good deep learning practices, we recommend reviewing [De
 ### Build Environments
 
 #### Tensor Flow
-* A seperate Python environment with Python requirements installed. We recommend using a virtual environment manager such as Miniconda or Penv. Install requirements using pip: `pip install -r requirements.txt`
+* A seperate Python environment with Python requirements installed. We recommend using a virtual environment manager such as Miniconda or Penv. Use python version 3.10 and install requirements using pip: `pip install -r requirements.txt`
 
 ### GAP8
 There are two approaches for this:
