@@ -24,6 +24,10 @@ docker run --rm -v ${PWD}:/module --device /dev/ttyUSB0 --privileged -P bitcraze
 
 ```
 
-**Note:** This will overwrite the booloader!
+**Note:** This will overwrite the bootloader!
 
 **Note:** USB in docker is only supported on Linux
+
+### jtag lint cable connection
+
+![jtag lint cable](/docs/images/ai-deck-jtag-connecting.png)
