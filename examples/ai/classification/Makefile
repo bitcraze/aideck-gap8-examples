@@ -13,10 +13,8 @@ MODEL_PREFIX = classification
 # Set variables
 #io=host
 io=uart
+PMSIS_OS = freertos
 
-APP_CFLAGS += -DCOLOR_IMAGE
-APP_CFLAGS += -DDEMOSAIC
-APP_CFLAGS += -DDEMOSAICKING_KERNEL_CLUSTER
 APP_CFLAGS += -DMODEL_QUANTIZED
 
 # load the model pre-quantized by TensorFlow
@@ -51,17 +49,15 @@ MODEL_L3_MEMORY=8000000
 MODEL_L3_EXEC=hram
 MODEL_L3_CONST=hflash
 
-pulpChip = GAP
-PULP_APP = classification
-USE_PMSIS_BSP=1
-
 APP = classification
-APP_SRCS += classification.c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB)
+APP_SRCS += classification.c ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB) 
 
-APP_CFLAGS += -g -O1 -mno-memcpy -fno-tree-loop-distribute-patterns
+APP_CFLAGS += -g -O3 -mno-memcpy -fno-tree-loop-distribute-patterns
 APP_CFLAGS += -I. -I$(MODEL_COMMON_INC) -I$(TILER_EMU_INC) -I$(TILER_INC) $(CNN_LIB_INCLUDE) -I$(realpath $(MODEL_BUILD))
 APP_CFLAGS += -DPERF -DAT_MODEL_PREFIX=$(MODEL_PREFIX) $(MODEL_SIZE_CFLAGS)
 APP_CFLAGS += -DSTACK_SIZE=$(CLUSTER_STACK_SIZE) -DSLAVE_STACK_SIZE=$(CLUSTER_SLAVE_STACK_SIZE)
+APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
+APP_INC = ../../../lib/cpx/inc
 
 READFS_FILES=$(abspath $(MODEL_TENSORS))
 
@@ -73,6 +69,5 @@ include model_rules.mk
 $(info APP_SRCS... $(APP_SRCS))
 $(info APP_CFLAGS... $(APP_CFLAGS))
 RUNNER_CONFIG = $(CURDIR)/config.ini
-#override config_args += --config-opt=camera/image-stream=$(CURDIR)/Lena.pgm
 include $(RULES_DIR)/pmsis_rules.mk
 
