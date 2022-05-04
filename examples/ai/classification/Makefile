@@ -49,14 +49,18 @@ MODEL_L3_MEMORY=8000000
 MODEL_L3_EXEC=hram
 MODEL_L3_CONST=hflash
 
+pulpChip = GAP
+PULP_APP = classification
+USE_PMSIS_BSP=1
+
 APP = classification
 APP_SRCS += classification.c ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c $(MODEL_GEN_C) $(MODEL_COMMON_SRCS) $(CNN_LIB) 
 
-APP_CFLAGS += -g -O3 -mno-memcpy -fno-tree-loop-distribute-patterns
+APP_CFLAGS += -g -O1 -mno-memcpy -fno-tree-loop-distribute-patterns
 APP_CFLAGS += -I. -I$(MODEL_COMMON_INC) -I$(TILER_EMU_INC) -I$(TILER_INC) $(CNN_LIB_INCLUDE) -I$(realpath $(MODEL_BUILD))
 APP_CFLAGS += -DPERF -DAT_MODEL_PREFIX=$(MODEL_PREFIX) $(MODEL_SIZE_CFLAGS)
 APP_CFLAGS += -DSTACK_SIZE=$(CLUSTER_STACK_SIZE) -DSLAVE_STACK_SIZE=$(CLUSTER_SLAVE_STACK_SIZE)
-APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
+APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1 -DFS_PARTITIONTABLE_OFFSET=0x40000
 APP_INC = ../../../lib/cpx/inc
 
 READFS_FILES=$(abspath $(MODEL_TENSORS))

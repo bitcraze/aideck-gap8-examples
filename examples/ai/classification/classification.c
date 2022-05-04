@@ -70,6 +70,7 @@ static void RunNetwork()
 
 static void cam_handler(void *arg)
 {
+
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   /* Run inference */
@@ -77,11 +78,11 @@ static void cam_handler(void *arg)
 
   if (Output_1[0] > Output_1[1])
   {
-    cpxPrintToConsole(LOG_TO_CRTP,"Packet,     confidence: %hd\n", Output_1[0] - Output_1[1]);
+    printf("Packet,     confidence: %hd\n", Output_1[0] - Output_1[1]);
   }
   else
   {
-    cpxPrintToConsole(LOG_TO_CRTP,"Background, confidence: %hd\n", Output_1[1] - Output_1[0]);
+    printf("Background, confidence: %hd\n", Output_1[1] - Output_1[0]);
   }
 
   pi_camera_capture_async(&camera, cameraBuffer, CAM_WIDTH * CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));
@@ -100,28 +101,43 @@ static int open_camera(struct pi_device *device)
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
-      
+
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
   uint8_t set_value = 3;
   uint8_t reg_value;
   pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
   pi_time_wait_us(1000000);
   pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+
   if (set_value != reg_value)
   {
     cpxPrintToConsole(LOG_TO_CRTP,"Failed to rotate camera image\n");
     return -1;
   }
+              
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
-
   return 0;
 }
 
 int classification()
 {
+  // For debugging
+  struct pi_uart_conf conf;
+  struct pi_device device;
+  pi_uart_conf_init(&conf);
+  conf.baudrate_bps = 115200;
+
+  pi_open_from_conf(&device, &conf);
+  if (pi_uart_open(&device))
+  {
+    printf("[UART] open failed !\n");
+    pmsis_exit(-1);
+  }
+
   cpxInit();
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
 
   cpxPrintToConsole(LOG_TO_CRTP, "*** Classification ***\n");
 
@@ -137,7 +153,7 @@ int classification()
   cameraBuffer = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
   if (cameraBuffer == NULL)
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed Allocated memory\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed Allocated memory for camera buffer\n");
     return 1;
   }
   cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for camera buffer\n");
