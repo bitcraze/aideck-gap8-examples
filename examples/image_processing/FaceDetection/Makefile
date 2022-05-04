@@ -15,6 +15,7 @@
 RM = rm -f
 
 APP = face_detection
+io=uart
 
 NB_FRAMES ?= -1
 
@@ -30,13 +31,10 @@ APP_CFLAGS += -O3 -g -D__PMSIS__  -DNB_FRAMES=$(NB_FRAMES)
 # APP_CFLAGS += -DUSE_CAMERA
 # APP_CFLAGS += -DUSE_STREAMER 
 
-BOARD_NAME ?= ai_deck
-PMSIS_OS ?= pulp_os
+PMSIS_OS = freertos
 USE_PMSIS_BSP = 1
-APP_LDFLAGS += -lgaptools -lgaplib 
 
 export GAP_USE_OPENOCD=1
-io=host
 
 # This needs to be defined or else some other IO functionalities or cluster things will break...
 APP_CFLAGS += -DHIMAX

@@ -24,9 +24,8 @@
 /* PMSIS BSP includes */
 #include "bsp/ai_deck.h"
 #include "bsp/camera/himax.h"
-
+#include "bsp/bsp.h"
 /* Gaplib includes */
-#include "gaplib/ImgIO.h"
 
 #if defined(USE_STREAMER)
 #include "bsp/transport/nina_w10.h"
@@ -39,6 +38,7 @@
 #include "ImageDraw.h"
 #include "setup.h"
 
+#define IMG_ORIENTATION 0x0101
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
 
@@ -64,7 +64,6 @@ struct pi_cluster_task *task;
 struct pi_cluster_conf conf;
 ArgCluster_T ClusterCall;
 
-#if defined(USE_CAMERA)
 // Open himax camera funciton
 static int open_camera_himax(struct pi_device *device)
 {
@@ -95,21 +94,13 @@ static int open_camera_himax(struct pi_device *device)
 
   return 0;
 }
-#endif /* USE_CAMERA */
 
 static int open_camera(struct pi_device *device)
 {
-#if defined(USE_CAMERA)
-  return open_camera_himax(device);
-#else
-  return 0;
-#endif /* USE_CAMERA */
+return open_camera_himax(device);
 }
 
-//UART init param
-L2_MEM struct pi_uart_conf uart_conf;
-L2_MEM struct pi_device uart;
-L2_MEM uint8_t rec_digit = -1;
+
 
 #if defined(USE_STREAMER)
 //  Initialize structs and function for streamer through wifi
@@ -178,6 +169,21 @@ static void led_handle(void *arg)
 void test_facedetection(void)
 {
 
+
+    //  UART init with Crazyflie and configure
+  struct pi_uart_conf conf;
+  struct pi_device device;
+  pi_uart_conf_init(&conf);
+  conf.baudrate_bps = 115200;
+
+  pi_open_from_conf(&device, &conf);
+  if (pi_uart_open(&device))
+  {
+    printf("[UART] open failed !\n");
+    pmsis_exit(-1);
+  }
+  printf("[UART] open !\n");
+
   printf("Entering main controller...\n");
 
   unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
@@ -210,13 +216,11 @@ void test_facedetection(void)
   }
   printf("malloc done\n");
 
-#if defined(USE_CAMERA)
   if (open_camera(&cam))
   {
     printf("Failed to open camera\n");
     pmsis_exit(-5);
   }
-#endif
 
 #if defined(USE_STREAMER)
 
@@ -234,17 +238,6 @@ void test_facedetection(void)
 
 #endif
 
-  //  UART init with Crazyflie and configure
-  pi_uart_conf_init(&uart_conf);
-  uart_conf.enable_tx = 1;
-  uart_conf.enable_rx = 0;
-  pi_open_from_conf(&uart, &uart_conf);
-  if (pi_uart_open(&uart))
-  {
-    printf("[UART] open failed !\n");
-    pmsis_exit(-1);
-  }
-  printf("[UART] Open\n");
 
   // Setup buffer for images
   buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
@@ -295,24 +288,11 @@ void test_facedetection(void)
   int nb_frames = 0;
   while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
   {
-#if defined(USE_CAMERA)
     // Capture image
     pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
     pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
     pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-#else
-    // Read in image to check if NN is still working
-    // TODO: this breaks after the second read....
-    char imageName[64];
-	  sprintf(imageName, "../../../imgTest%d.pgm", nb_frames);
-    printf("Loading %s ...\n", imageName);
-    if (ReadImageFromFile(imageName, CAM_WIDTH, CAM_HEIGHT, 1, imgBuff0, CAM_WIDTH * CAM_HEIGHT * sizeof(char), IMGIO_OUTPUT_CHAR, 0))
-    {
-      printf("Failed to load image %s\n", imageName);
-      return 1;
-    }
-#endif /* USE_CAMERA */
- 
+
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
     printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
@@ -323,7 +303,6 @@ void test_facedetection(void)
     frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
 #endif
     // Send result through the uart to the crazyflie as single characters
-    pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
 
     nb_frames++;
   }
