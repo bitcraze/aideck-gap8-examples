@@ -28,8 +28,8 @@
 /* Gaplib includes */
 
 #if defined(USE_STREAMER)
-#include "bsp/transport/nina_w10.h"
-#include "tools/frame_streamer.h"
+#include "cpx.h"
+#include "wifi.h"
 #endif /* USE_STREAMER */
 
 // All includes for facedetector application
@@ -103,53 +103,80 @@ return open_camera_himax(device);
 
 
 #if defined(USE_STREAMER)
-//  Initialize structs and function for streamer through wifi
-static pi_task_t task1;
-static struct pi_device wifi;
-static frame_streamer_t *streamer1;
-static volatile int stream1_done;
-
-static void streamer_handler(void *arg)
+typedef enum
 {
-  *(int *)arg = 1;
-  if (stream1_done) 
+  RAW_ENCODING = 0,
+  JPEG_ENCODING = 1
+} __attribute__((packed)) StreamerMode_t;
+static StreamerMode_t streamerMode = RAW_ENCODING;
+
+static int wifiConnected = 0;
+static int wifiClientConnected = 0;
+static CPXPacket_t rxp;
+static CPXPacket_t txp;
+
+typedef struct
+{
+  uint8_t magic;
+  uint16_t width;
+  uint16_t height;
+  uint8_t depth;
+  uint8_t type;
+  uint32_t size;
+} __attribute__((packed)) img_header_t;
+
+void rx_task(void *parameters)
+{
+  while (1)
   {
+    cpxReceivePacketBlocking(CPX_F_WIFI_CTRL, &rxp);
+
+    WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
+
+    switch (wifiCtrl->cmd)
+    {
+      case WIFI_CTRL_STATUS_WIFI_CONNECTED:
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
+                          wifiCtrl->data[0], wifiCtrl->data[1],
+                          wifiCtrl->data[2], wifiCtrl->data[3]);
+        wifiConnected = 1;
+        break;
+      case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n", wifiCtrl->data[0]);
+        wifiClientConnected = wifiCtrl->data[0];
+        break;
+      default:
+        break;
+    }
   }
 }
 
-static int open_wifi(struct pi_device *device)
-{
-  struct pi_nina_w10_conf nina_conf;
-
-  pi_nina_w10_conf_init(&nina_conf);
-
-  nina_conf.ssid = "";
-  nina_conf.passwd = "";
-  nina_conf.ip_addr = "192.168.0.0";
-  nina_conf.port = 5555;
-  pi_open_from_conf(device, &nina_conf);
-  if (pi_transport_open(device))
-    return -1;
-
-  return 0;
+void createImageHeaderPacket(CPXPacket_t * packet, uint32_t imgSize, StreamerMode_t imgType) {
+  img_header_t *imgHeader = (img_header_t *) packet->data;
+  imgHeader->magic = 0xBC;
+  imgHeader->width = CAM_WIDTH;
+  imgHeader->height = CAM_HEIGHT;
+  imgHeader->depth = 1;
+  imgHeader->type = imgType;
+  imgHeader->size = imgSize;
+  packet->dataLength = sizeof(img_header_t);
 }
 
-static frame_streamer_t *open_streamer(char *name)
-{
-  struct frame_streamer_conf frame_streamer_conf;
-
-  frame_streamer_conf_init(&frame_streamer_conf);
-
-  frame_streamer_conf.transport = &wifi;
-  frame_streamer_conf.format = FRAME_STREAMER_FORMAT_JPEG;
-  frame_streamer_conf.width = CAM_WIDTH;
-  frame_streamer_conf.height = CAM_HEIGHT;
-  frame_streamer_conf.depth = 1;
-  frame_streamer_conf.name = name;
-
-  return frame_streamer_open(&frame_streamer_conf);
-} /* USE_STREAMER */
-
+void sendBufferViaCPX(CPXPacket_t * packet, uint8_t * buffer, uint32_t bufferSize) {
+  uint32_t offset = 0;
+  uint32_t size = 0;
+  do {
+    size = sizeof(packet->data);
+    if (offset + size > bufferSize)
+    {
+      size = bufferSize - offset;
+    }
+    memcpy(packet->data, &buffer[offset], sizeof(packet->data));
+    packet->dataLength = size;
+    cpxSendPacketBlocking(packet);
+    offset += size;
+  } while (size == sizeof(packet->data));
+}
 #endif
 
 
@@ -170,7 +197,7 @@ void test_facedetection(void)
 {
 
 
-    //  UART init with Crazyflie and configure
+  //  UART init with Crazyflie and configure
   struct pi_uart_conf conf;
   struct pi_device device;
   pi_uart_conf_init(&conf);
@@ -193,6 +220,8 @@ void test_facedetection(void)
   // Start LED toggle
   pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
+
+
   imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
   if (imgBuff0 == NULL)
   {
@@ -221,31 +250,35 @@ void test_facedetection(void)
     printf("Failed to open camera\n");
     pmsis_exit(-5);
   }
+  cpxInit();
 
 #if defined(USE_STREAMER)
 
-  if (open_wifi(&wifi))
-  {
-    printf("Failed to open wifi\n");
-    return -1;
-  }
-  printf("WIFI connected\n"); // check this with NINA printout
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
+  BaseType_t xTask;
 
-  streamer1 = open_streamer("cam");
-  if (streamer1 == NULL)
-    return -1;
-  printf("Streamer set up\n");
+  xTask = xTaskCreate(rx_task, "rx_task", configMINIMAL_STACK_SIZE * 2,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
+
+  if (xTask != pdPASS)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "RX task did not start !\n");
+    pmsis_exit(-1);
+  }
+
+
+  cpxInitRoute(CPX_T_GAP8, CPX_T_HOST, CPX_F_APP, &txp.route);
+
 
 #endif
 
+  cpxPrintToConsole(LOG_TO_CRTP, "--Face detection example --\n");
 
   // Setup buffer for images
   buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
   buffer.stride = 4;
 
-  // WIth Himax, propertly configure the buffer to skip boarder pixels
-  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0 + CAM_WIDTH * 2 + 2);
-  pi_buffer_set_stride(&buffer, 4);
+  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
   pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
   buffer_out.data = ImageOut;
@@ -296,11 +329,17 @@ void test_facedetection(void)
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
     printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
-    //WriteImageToFile("../../../img_out.ppm", IMAGE_OUT_WIDTH, IMAGE_OUT_HEIGHT, 1, ImageOut, GRAY_SCALE_IO);
-
+    
 #if defined(USE_STREAMER)
-    // Send image to the streamer to see the result
-    frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
+   if (wifiClientConnected == 1)
+    {
+        // First send information about the image
+    createImageHeaderPacket(&txp, ImgSize, RAW_ENCODING);
+    cpxSendPacketBlocking(&txp);
+
+    // Send image
+    sendBufferViaCPX(&txp, imgBuff0, ImgSize);
+    }
 #endif
     // Send result through the uart to the crazyflie as single characters
 

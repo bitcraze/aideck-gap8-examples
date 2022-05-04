@@ -25,12 +25,14 @@ FACE_DET_MODEL_GEN_C = $(addsuffix .c, $(FACE_DET_MODEL_GEN))
 FACE_DET_MODEL_GEN_CLEAN = $(FACE_DET_MODEL_GEN_C) $(addsuffix .h, $(FACE_DET_MODEL_GEN))
 FACE_DET_SRCS +=  main.c faceDet.c FaceDetBasicKernels.c ImageDraw.c $(FACE_DET_MODEL_GEN_C)
 
-APP_SRCS += $(FACE_DET_SRCS)
+APP_SRCS += $(FACE_DET_SRCS) ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c
 APP_INC  += $(TILER_INC)
+APP_INC +=../../../lib/cpx/inc
+
 APP_CFLAGS += -O3 -g -D__PMSIS__  -DNB_FRAMES=$(NB_FRAMES)
 # APP_CFLAGS += -DUSE_CAMERA
-# APP_CFLAGS += -DUSE_STREAMER 
-
+APP_CFLAGS += -DUSE_STREAMER 
+APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1 -DFS_PARTITIONTABLE_OFFSET=0x40000
 PMSIS_OS = freertos
 USE_PMSIS_BSP = 1
 
