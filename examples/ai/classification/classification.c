@@ -90,7 +90,6 @@ static void cam_handler(void *arg)
 
 static int open_camera(struct pi_device *device)
 {
-        cpxPrintToConsole(LOG_TO_CRTP, "1\n");
 
   struct pi_himax_conf cam_conf;
 
@@ -102,8 +101,6 @@ static int open_camera(struct pi_device *device)
   if (pi_camera_open(device))
     return -1;
       
-      cpxPrintToConsole(LOG_TO_CRTP, "1\n");
-
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
   uint8_t set_value = 3;
   uint8_t reg_value;
@@ -115,12 +112,9 @@ static int open_camera(struct pi_device *device)
     cpxPrintToConsole(LOG_TO_CRTP,"Failed to rotate camera image\n");
     return -1;
   }
-      cpxPrintToConsole(LOG_TO_CRTP, "1\n");
-
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
-    cpxPrintToConsole(LOG_TO_CRTP, "1\n");
 
   return 0;
 }
