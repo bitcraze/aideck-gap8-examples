@@ -46,17 +46,13 @@
 #define IMAGE_OUT_HEIGHT 48
 
 // Intializing buffers for camera images
-static unsigned char *imgBuff0;
-static struct pi_device ili;
-static pi_buffer_t buffer;
-static struct pi_device cam;
+static unsigned char *imgBuff;
+static struct pi_device cameraDevice;
 
 // Initialize buffers for images handled in the cluster
-static pi_buffer_t buffer_out;
 L2_MEM unsigned char *ImageOut;
 L2_MEM unsigned int *ImageIntegral;
 L2_MEM unsigned int *SquaredImageIntegral;
-L2_MEM char str_to_lcd[100];
 
 // Intialize structures for clusters
 struct pi_device cluster_dev;
@@ -89,6 +85,8 @@ static int open_camera_himax(struct pi_device *device)
     printf("Failed to rotate camera image\n");
     return -1;
   }
+  pi_camera_control(device, PI_CAMERA_CMD_STOP, 0);
+
 
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
@@ -136,13 +134,13 @@ void rx_task(void *parameters)
     switch (wifiCtrl->cmd)
     {
       case WIFI_CTRL_STATUS_WIFI_CONNECTED:
-        cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
+        printf( "Wifi connected (%u.%u.%u.%u)\n",
                           wifiCtrl->data[0], wifiCtrl->data[1],
                           wifiCtrl->data[2], wifiCtrl->data[3]);
         wifiConnected = 1;
         break;
       case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
-        cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n", wifiCtrl->data[0]);
+        printf( "Wifi client connection status: %u\n", wifiCtrl->data[0]);
         wifiClientConnected = wifiCtrl->data[0];
         break;
       default:
@@ -154,8 +152,8 @@ void rx_task(void *parameters)
 void createImageHeaderPacket(CPXPacket_t * packet, uint32_t imgSize, StreamerMode_t imgType) {
   img_header_t *imgHeader = (img_header_t *) packet->data;
   imgHeader->magic = 0xBC;
-  imgHeader->width = CAM_WIDTH;
-  imgHeader->height = CAM_HEIGHT;
+  imgHeader->width = IMAGE_OUT_WIDTH;
+  imgHeader->height = IMAGE_OUT_HEIGHT;
   imgHeader->depth = 1;
   imgHeader->type = imgType;
   imgHeader->size = imgSize;
@@ -214,16 +212,18 @@ void test_facedetection(void)
   printf("Entering main controller...\n");
 
   unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
-  unsigned int Wout = 64, Hout = 48;
-  unsigned int ImgSize = W * H;
+  unsigned int Wout = IMAGE_OUT_WIDTH, Hout = IMAGE_OUT_HEIGHT;
+  unsigned int imgSize = W * H;
+  unsigned int imgSizeOut = Wout * Hout;
+
 
   // Start LED toggle
   pi_gpio_pin_configure(&gpio_device, 2, PI_GPIO_OUTPUT);
   pi_task_push_delayed_us(pi_task_callback(&led_task, led_handle, NULL), 500000);
 
 
-  imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
-  if (imgBuff0 == NULL)
+  imgBuff = (unsigned char *)pmsis_l2_malloc(imgSize * sizeof(unsigned char));
+  if (imgBuff == NULL)
   {
     printf("Failed to allocate Memory for Image \n");
     pmsis_exit(-1);
@@ -233,19 +233,14 @@ void test_facedetection(void)
   ImageOut = (unsigned char *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned char));
   ImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
   SquaredImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
-  if (ImageOut == 0)
+  if ((ImageOut == 0) || (ImageIntegral == 0) || (SquaredImageIntegral == 0))
   {
-    printf("Failed to allocate Memory for Image (%d bytes)\n", ImgSize * sizeof(unsigned char));
-    pmsis_exit(-2);
-  }
-  if ((ImageIntegral == 0) || (SquaredImageIntegral == 0))
-  {
-    printf("Failed to allocate Memory for one or both Integral Images (%d bytes)\n", ImgSize * sizeof(unsigned int));
+    printf("Failed to allocate Memory for images for the cluster (%d bytes)\n");
     pmsis_exit(-3);
   }
   printf("malloc done\n");
 
-  if (open_camera(&cam))
+  if (open_camera(&cameraDevice))
   {
     printf("Failed to open camera\n");
     pmsis_exit(-5);
@@ -274,21 +269,8 @@ void test_facedetection(void)
 
   cpxPrintToConsole(LOG_TO_CRTP, "--Face detection example --\n");
 
-  // Setup buffer for images
-  buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
-  buffer.stride = 4;
-
-  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff0);
-  pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
-
-  buffer_out.data = ImageOut;
-  buffer_out.stride = 0;
-  pi_buffer_init(&buffer_out, PI_BUFFER_TYPE_L2, ImageOut);
-  pi_buffer_set_format(&buffer_out, IMAGE_OUT_WIDTH, IMAGE_OUT_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
-  pi_buffer_set_stride(&buffer_out, 0);
-
   // Assign pointers for cluster structure
-  ClusterCall.ImageIn = imgBuff0;
+  ClusterCall.ImageIn = imgBuff;
   ClusterCall.Win = W;
   ClusterCall.Hin = H;
   ClusterCall.Wout = Wout;
@@ -315,35 +297,33 @@ void test_facedetection(void)
   task->entry = (void *)faceDet_cluster_main;
   task->arg = &ClusterCall;
 
-  printf("main loop start\n");
 
-  // Start looping through images
-  int nb_frames = 0;
-  while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
+  while (1)
   {
     // Capture image
-    pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
-    pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
-    pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
+    pi_camera_control(&cameraDevice, PI_CAMERA_CMD_START, 0);
+    pi_camera_capture(&cameraDevice, imgBuff, CAM_WIDTH * CAM_HEIGHT);
+    pi_camera_control(&cameraDevice, PI_CAMERA_CMD_STOP, 0);
 
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
-    printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
+    cpxPrintToConsole(LOG_TO_CRTP, "end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
     
 #if defined(USE_STREAMER)
-   if (wifiClientConnected == 1)
-    {
+  if (wifiClientConnected == 1)
+  {
+
+    uint32_t captureSize = imgSize * sizeof(unsigned char);
         // First send information about the image
-    createImageHeaderPacket(&txp, ImgSize, RAW_ENCODING);
+    createImageHeaderPacket(&txp, captureSize, RAW_ENCODING);
     cpxSendPacketBlocking(&txp);
 
     // Send image
-    sendBufferViaCPX(&txp, imgBuff0, ImgSize);
-    }
+    sendBufferViaCPX(&txp, imgBuff, captureSize);
+  }
 #endif
-    // Send result through the uart to the crazyflie as single characters
+    vTaskDelay(20);
 
-    nb_frames++;
   }
   printf("Test face detection done.\n");
   pmsis_exit(0);

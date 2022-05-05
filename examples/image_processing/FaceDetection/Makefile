@@ -17,8 +17,6 @@ RM = rm -f
 APP = face_detection
 io=uart
 
-NB_FRAMES ?= -1
-
 FACE_DET_MODEL_SRC = FaceDetGenerator.c FaceDetModel.c
 FACE_DET_MODEL_GEN = FaceDetKernels
 FACE_DET_MODEL_GEN_C = $(addsuffix .c, $(FACE_DET_MODEL_GEN))
