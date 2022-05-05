@@ -374,12 +374,12 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			if(result!=0){
 				reponses[reponse_idx].x       = (j*Win)/Wout;
 				reponses[reponse_idx].y       = (i*Hin)/Hout;
-				reponses[reponse_idx].w = (24*Win)/Wout;
-				reponses[reponse_idx].h = (24*Hin)/Hout;
+				reponses[reponse_idx].w       = ((j+24)*Win+Wout-1)/Wout - reponses[reponse_idx].x + 1;
+				reponses[reponse_idx].h       = ((i+24)*Hin+Hout-1)/Hout - reponses[reponse_idx].y + 1;
 				reponses[reponse_idx].score   = result;
 				reponse_idx++;
-					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
-			}
+				if (reponse_idx >= MAX_NUM_OUT_WINS)
+					goto end;			}
 	}
 #endif
 
@@ -399,12 +399,12 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			if(result!=0){
 				reponses[reponse_idx].x     = (j*Win)/Wout;
 				reponses[reponse_idx].y     = (i*Hin)/Hout;
-				reponses[reponse_idx].w 	= (24*Win)/Wout;
-				reponses[reponse_idx].h 	= (24*Hin)/Hout;
+				reponses[reponse_idx].w     = ((j+24)*Win+Wout-1)/Wout - reponses[reponse_idx].x + 1;
+				reponses[reponse_idx].h     = ((i+24)*Hin+Hout-1)/Hout - reponses[reponse_idx].y + 1;
 				reponses[reponse_idx].score = result;
 				reponse_idx++;
-					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
-			}
+				if (reponse_idx >= MAX_NUM_OUT_WINS)
+					goto end;			}
 	}
 #endif
 
@@ -423,16 +423,17 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			if(result!=0){
 				reponses[reponse_idx].x     = (j*Win)/Wout;
 				reponses[reponse_idx].y     = (i*Hin)/Hout;
-				reponses[reponse_idx].w 	= (24*Win)/Wout;
-				reponses[reponse_idx].h 	= (24*Hin)/Hout;
+				reponses[reponse_idx].w     = ((j+24)*Win+Wout-1)/Wout - reponses[reponse_idx].x + 1;
+				reponses[reponse_idx].h     = ((i+24)*Hin+Hout-1)/Hout - reponses[reponse_idx].y + 1;
 				reponses[reponse_idx].score = result;
 				reponse_idx++;
-					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
-			}
+				if (reponse_idx >= MAX_NUM_OUT_WINS)
+					goto end;			}
 	}
 
 #endif
 
+end:
 	non_max_suppress(reponses,reponse_idx);
 
     // TODO: reset when perf api done
