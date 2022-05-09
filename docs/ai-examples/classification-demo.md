@@ -36,25 +36,14 @@ There are two approaches for this:
 * Install gap_sdk natively on your machine (>= 4.8.0)
 * Build inside Docker container with gap_sdk >= 4.8.0
 
-#### For docker container
 
-Go to the root of aideck-gap8-examples and run the docker container
+We will show the instructions for building the example the docker container later.
 
-```
-docker run --rm -it -v $PWD:/module/ aideck-with-autotiler /bin/bash`
-```
-
-Do update the numpy version in the container (ignore the warning), and then source gap8_sdk aideck source file
-
-```
-pip3 install numpy==1.22.3
-source /gap_sdk/configs/ai_deck.sh
-```
 
 ---
 ## Generate a custom dataset
 
-Collect images from the AI-deck using the WiFi streamer. Place them in the training_data folder, according to the instructions inside. The captured data must be split into a train and validation set by hand (a good starting point is a 75% train - 25 % validation split). The existing classes can be renamed as desired. For more than two classes, increase the number of units in the final (dense) layer of the model.
+Collect images from the AI-deck using the WiFi streamer example with the opencv-viewer script (use the --save flag). Place them in the training_data folder, according to the instructions inside. The captured data must be split into a train and validation set by hand (a good starting point is a 75% train - 25 % validation split). The existing classes can be renamed as desired. For more than two classes, increase the number of units in the final (dense) layer of the model.
 
 This is the folder structure you should follow:
 Put here the training and validation images like this:
@@ -79,10 +68,14 @@ Automatically generates quantized and non-quantized TensorFlow Lite models.
 From a terminal with the docker container, or gap_sdk dev environment, in `examples/ai/classifier` example folder, execute:
 
 ```
-make model build image
+$ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example examples/ai/classification clean model build image
 ``` 
 
 Then from another terminal (outside of the container), use the cfloader to flash the example if you have the gap8 bootloader flashed AIdeck. Change the [CRAZYFLIE URI] with your crazyflie URI like radio://0/40/2M/E7E7E7E703
 ```
 cfloader flash examples/ai/classification/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w [CRAZYFLIE URI]
 ```
+
+When the example is flashing, you should see the GAP8 LED blink fast, which is the bootloader. The example itself can be noticed by a slow blinking LED.
+
+Note: There are still some issues with classification example with the new CPX framework. Please check [the status of the ticket](https://github.com/bitcraze/aideck-gap8-examples/issues/91) open for this. 
