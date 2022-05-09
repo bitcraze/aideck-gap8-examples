@@ -33,6 +33,8 @@
 #include "gaplib/ImgIO.h"
 #include "pmsis.h"
 #include "stdio.h"
+#include "bsp/bsp.h"
+#include "cpx.h"
 
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
@@ -57,6 +59,9 @@ static struct pi_cluster_conf conf;
 
 AT_HYPERFLASH_FS_EXT_ADDR_TYPE __PREFIX(_L3_Flash) = 0;
 
+#define IMG_ORIENTATION 0x0101
+
+
 static void RunNetwork()
 {
   __PREFIX(CNN)
@@ -65,6 +70,7 @@ static void RunNetwork()
 
 static void cam_handler(void *arg)
 {
+
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   /* Run inference */
@@ -85,6 +91,7 @@ static void cam_handler(void *arg)
 
 static int open_camera(struct pi_device *device)
 {
+
   struct pi_himax_conf cam_conf;
 
   pi_himax_conf_init(&cam_conf);
@@ -94,48 +101,101 @@ static int open_camera(struct pi_device *device)
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
+
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
   uint8_t set_value = 3;
   uint8_t reg_value;
   pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
   pi_time_wait_us(1000000);
   pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+
   if (set_value != reg_value)
   {
-    printf("Failed to rotate camera image\n");
+    cpxPrintToConsole(LOG_TO_CRTP,"Failed to rotate camera image\n");
     return -1;
   }
-  pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
+              
+  pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
+  pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
   return 0;
+}
+
+// Functions and init for LED toggle
+#define LED_PIN 2
+static pi_device_t led_gpio_dev;
+void hb_task(void *parameters)
+{
+  (void)parameters;
+  char *taskname = pcTaskGetName(NULL);
+
+  // Initialize the LED pin
+  pi_gpio_pin_configure(&led_gpio_dev, LED_PIN, PI_GPIO_OUTPUT);
+
+  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+  while (1)
+  {
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
+    vTaskDelay(xDelay);
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
+    vTaskDelay(xDelay);
+  }
 }
 
 int classification()
 {
-  printf("\n\t *** Classification ***\n\n");
+  pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC*1000*1000);
+  //pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL*1000*1000);
+  pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
+
+  // For debugging
+  struct pi_uart_conf conf;
+  struct pi_device device;
+  pi_uart_conf_init(&conf);
+  conf.baudrate_bps = 115200;
+
+    // Start LED toggle
+  BaseType_t xTask;
+  xTask = xTaskCreate(hb_task, "hb_task", configMINIMAL_STACK_SIZE * 2,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
+
+  pi_open_from_conf(&device, &conf);
+  if (pi_uart_open(&device))
+  {
+    printf("[UART] open failed !\n");
+    pmsis_exit(-1);
+  }
+
+  cpxInit();
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
+
+  cpxPrintToConsole(LOG_TO_CRTP, "*** Classification ***\n");
+
+  cpxPrintToConsole(LOG_TO_CRTP, "Starting to open camera\n");
 
   if (open_camera(&camera))
   {
-    printf("Failed to open camera\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
     return -1;
   }
-  printf("Opened Camera\n");
+  cpxPrintToConsole(LOG_TO_CRTP,"Opened Camera\n");
 
   cameraBuffer = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
   if (cameraBuffer == NULL)
   {
-    printf("Failed to allocate memory for camera buffer\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed Allocated memory for camera buffer\n");
     return 1;
   }
-  printf("Allocated memory for camera buffer\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for camera buffer\n");
 
   Output_1 = (signed short *)pmsis_l2_malloc(2 * sizeof(signed short));
   if (Output_1 == NULL)
   {
-    printf("Failed to allocate memory for output\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate memory for output\n");
     pmsis_exit(-1);
   }
-  printf("Allocated memory for output\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for output\n");
 
   /* Configure CNN task */
   pi_cluster_conf_init(&conf);
@@ -143,10 +203,10 @@ int classification()
   pi_cluster_open(&cluster_dev);
   task = pmsis_l2_malloc(sizeof(struct pi_cluster_task));
   if (!task)
-  {
-    printf("failed to allocate memory for task\n");
+  {  
+    cpxPrintToConsole(LOG_TO_CRTP, "failed to allocate memory for task\n");
   }
-  printf("Allocated memory for task\n");
+  cpxPrintToConsole(LOG_TO_CRTP,"Allocated memory for task\n");
 
   memset(task, 0, sizeof(struct pi_cluster_task));
   task->entry = &RunNetwork;
@@ -157,10 +217,10 @@ int classification()
   /* Construct CNN */
   if (__PREFIX(CNN_Construct)())
   {
-    printf("Failed to construct CNN\n");
+    cpxPrintToConsole(LOG_TO_CRTP,"Failed to construct CNN\n");
     pmsis_exit(-5);
   }
-  printf("Constructed CNN\n");
+  cpxPrintToConsole(LOG_TO_CRTP,"Constructed CNN\n");
 
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   pi_camera_capture_async(&camera, cameraBuffer, CAM_WIDTH * CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));

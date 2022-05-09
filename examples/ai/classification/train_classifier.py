@@ -25,7 +25,8 @@ import os
 
 import numpy as np
 import tensorflow as tf
-
+import PIL.Image
+import scipy
 
 def parse_args():
     args = argparse.ArgumentParser(

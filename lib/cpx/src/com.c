@@ -67,8 +67,13 @@ static QueueHandle_t txq = NULL;
 static QueueHandle_t rxq = NULL;
 
 // To optimize sending the queue should fit at least one image
+#ifndef TXQ_SIZE
 #define TXQ_SIZE (80)
+#endif
+
+#ifndef RXQ_SIZE
 #define RXQ_SIZE (5)
+#endif
 
 static EventGroupHandle_t evGroup;
 #define NINA_RTT_BIT (1 << 0)

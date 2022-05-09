@@ -1,5 +1,0 @@
-Add here a couple of images from your /training_data folder. This is used for NNtools quantification process, so you can use any sample image without labels.
-
-like this:
-/sample/img1.jpeg
-/sample/img432.jpeg
