@@ -121,13 +121,44 @@ static int open_camera(struct pi_device *device)
   return 0;
 }
 
+// Functions and init for LED toggle
+#define LED_PIN 2
+static pi_device_t led_gpio_dev;
+void hb_task(void *parameters)
+{
+  (void)parameters;
+  char *taskname = pcTaskGetName(NULL);
+
+  // Initialize the LED pin
+  pi_gpio_pin_configure(&led_gpio_dev, LED_PIN, PI_GPIO_OUTPUT);
+
+  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+  while (1)
+  {
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
+    vTaskDelay(xDelay);
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
+    vTaskDelay(xDelay);
+  }
+}
+
 int classification()
 {
+	// Voltage-Frequency settings
+	pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC*1000*1000);
+	pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL*1000*1000);
+
   // For debugging
   struct pi_uart_conf conf;
   struct pi_device device;
   pi_uart_conf_init(&conf);
   conf.baudrate_bps = 115200;
+
+    // Start LED toggle
+  BaseType_t xTask;
+  xTask = xTaskCreate(hb_task, "hb_task", configMINIMAL_STACK_SIZE * 2,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
 
   pi_open_from_conf(&device, &conf);
   if (pi_uart_open(&device))
