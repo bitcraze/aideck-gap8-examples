@@ -145,9 +145,8 @@ void hb_task(void *parameters)
 
 int classification()
 {
-	// Voltage-Frequency settings
-	pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC*1000*1000);
-	pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL*1000*1000);
+	//pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC*1000*1000);
+	//pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL*1000*1000);
 
   // For debugging
   struct pi_uart_conf conf;
