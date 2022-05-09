@@ -67,7 +67,7 @@ static QueueHandle_t txq = NULL;
 static QueueHandle_t rxq = NULL;
 
 // To optimize sending the queue should fit at least one image
-#ifndef TXQ_size
+#ifndef TXQ_SIZE
 #define TXQ_SIZE (80)
 #endif
 
