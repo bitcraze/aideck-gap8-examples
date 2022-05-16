@@ -333,7 +333,7 @@ void camera_task(void *parameters)
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
 
   // We're reusing the same packet, so initialize the route once
-  cpxInitRoute(CPX_T_GAP8, CPX_T_HOST, CPX_F_APP, &txp.route);
+  cpxInitRoute(CPX_T_GAP8, CPX_T_WIFI_HOST, CPX_F_APP, &txp.route);
 
   uint32_t imgSize = 0;
 

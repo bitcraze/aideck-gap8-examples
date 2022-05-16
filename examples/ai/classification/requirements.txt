@@ -33,7 +33,7 @@ six==1.16.0
 tensorboard==2.7.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.0
-tensorflow==2.7.0
+tensorflow==2.8.0
 tensorflow-estimator==2.7.0
 tensorflow-io-gcs-filesystem==0.23.1
 termcolor==1.1.0
@@ -43,3 +43,4 @@ Werkzeug==2.0.2
 wrapt==1.13.3
 yarg==0.1.9
 zipp==3.6.0
+scipi==1.22.3
