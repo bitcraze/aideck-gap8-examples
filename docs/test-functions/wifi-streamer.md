@@ -9,9 +9,36 @@ colorized.
 ## Prerequisites
 
 * Completed the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/)
-* opencv-python installed on host
 
-## Configuration
+## Setup the WiFi via the Crazyflie firmware
+The WiFi on the aideck can be set up in a number of ways,
+but to keep things simple for this tutorial we will be setting it up
+via the Crazyflie firmware as an access point, which means you will be
+connecting to the AI deck's WiFi to run the examples. 
+
+First see the [crazyflie-firmware repository documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/) for more details on how to build and flash and checkout how to setup [kbuild's menuconfig](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/).
+
+Clone and configure the Crazyflie firmware by running the following commands:
+
+```
+$ git clone https://github.com/bitcraze/crazyflie-firmware.git
+$ cd crazyflie-firmware
+$ make menuconfig
+```
+Note: for 
+Go to the menu *Expansion deck configuration* and make sure *Support AI deck*
+is enabled. In the *Support AI deck* sub menu select *WiFi setup at startup* and the option *Act as Access Point*. Now go to the *Credentials for access-point*
+menu and set the SSID and KEY as you wish.
+
+Now it's time to flash the firmware. Build and flash over air with the following command, replacing [CRAZYFLIE_URI] with your crazyflie's URI with your own:
+
+```
+$ make
+$ cfloader flash cf2.bin stm32-fw -w [CRAZYFLIE_URI]
+```
+
+
+## Configuration Wifi example
 
 To select which mode (RAW or JPEG) change the code below in the ```wifi-img-streamer.c``` file.
 
@@ -35,14 +62,14 @@ $ docker run --rm -v ${PWD}:/module aideck-with-container tools/build/make-examp
 $ cfloader flash examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/80/2M
 ```
 
-**Note**: if you get `Unable to find image 'aideck-with-autotiler:latest' locally`, make sure that you have done [this step of the getting started guide](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/#setup-the-autotiler-in-docker) properly. Or replace it with the autotiler-less docker image bitcraze/aideck
+**Note**: if you get `Unable to find image 'aideck-with-autotiler:latest' locally`, make sure that you have done [the getting started guide](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) of the 'Setting up development environment' properly. Or replace it with the autotiler-less docker image bitcraze/aideck
 
 
 ## Starting the viewer
 
-In order to start the viewer, you will need to the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45). Since this has a conflict with the [opencv-python-headless](https://pypi.org/project/opencv-python-headless/) that is a requirement for the [CFclient](https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/), it is important to make a python virtual environment like [venv](https://docs.python.org/3/library/venv.html) or an alternative. 
+In order to start the viewer, you will need to the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45). Do check [this issue](https://github.com/bitcraze/crazyflie-clients-python/issues/611) if you also use the cfclient.
 
-Install opencv python in that python environment as:
+Install opencv python
 
 ```shell
 $ pip install opencv-python
