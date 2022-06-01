@@ -45,6 +45,9 @@ static pi_buffer_t buffer1;
 static pi_task_t task2;
 static unsigned char *imgBuff2;
 static pi_buffer_t buffer2;
+static pi_task_t task3;
+static unsigned char *imgBuff3;
+static pi_buffer_t buffer3;
 
 static struct pi_device camera;
 
@@ -56,6 +59,7 @@ static uint32_t start = 0;
 static uint32_t stmStart = 0;
 static uint32_t captureTime1 = 0;
 static uint32_t captureTime2 = 0;
+static uint32_t captureTime3 = 0;
 static uint32_t transferTime = 0;
 static uint32_t encodingTime = 0;
 #define OUTPUT_PROFILING_DATA
@@ -74,7 +78,7 @@ static int open_pi_camera_himax(struct pi_device *device)
 
   // rotate image
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-  uint8_t set_value = 0;//3;
+  uint8_t set_value = 3; 
   uint8_t reg_value;
   pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
   pi_time_wait_us(1000000);
@@ -170,6 +174,9 @@ static void capture_done_cb(void *arg)
   }
   if (arg == &task2) {
     captureTime2 = xTaskGetTickCount() - stmStart;
+  }
+  if (arg == &task3) {
+    captureTime3 = xTaskGetTickCount() - stmStart;
     xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
   }
 }
@@ -274,6 +281,7 @@ void camera_task(void *parameters)
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
   uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
   uint32_t captureSize = resolution * sizeof(unsigned char);
+
   imgBuff1 = (unsigned char *)pmsis_l2_malloc(captureSize);
   if (imgBuff1 == NULL)
   {
@@ -288,6 +296,12 @@ void camera_task(void *parameters)
     return;
   }
 
+  imgBuff3 = (unsigned char *)pmsis_l2_malloc(captureSize);
+  if (imgBuff3 == NULL)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
+    return;
+  }
   if (open_pi_camera_himax(&camera))
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
@@ -311,6 +325,9 @@ void camera_task(void *parameters)
 
   pi_buffer_init(&buffer2, PI_BUFFER_TYPE_L2, imgBuff2);
   pi_buffer_set_format(&buffer2, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
+
+  pi_buffer_init(&buffer3, PI_BUFFER_TYPE_L2, imgBuff3);
+  pi_buffer_set_format(&buffer3, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
 
   header.size = 1024;
   header.data = pmsis_l2_malloc(1024);
@@ -355,6 +372,8 @@ void camera_task(void *parameters)
       start = xTaskGetTickCount();
       pi_camera_capture_async(&camera, imgBuff1, resolution, pi_task_callback(&task1, capture_done_cb, &task1));
       pi_camera_capture_async(&camera, imgBuff2, resolution, pi_task_callback(&task2, capture_done_cb, &task2));
+      pi_camera_capture_async(&camera, imgBuff3, resolution, pi_task_callback(&task3, capture_done_cb, &task3));
+
       pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
       xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
       pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
@@ -404,7 +423,6 @@ void camera_task(void *parameters)
 
         // Send image
         sendBufferViaCPX(&txp, imgBuff1, imgSize);
-
         transferTime = xTaskGetTickCount() - start;
 
         // second buffer
@@ -415,12 +433,21 @@ void camera_task(void *parameters)
 
         // Send image
         sendBufferViaCPX(&txp, imgBuff2, imgSize);
+        transferTime = xTaskGetTickCount() - start;
 
+        // third buffer 
+
+        // First send information about the image
+        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING, &cf_state, captureTime3);
+        cpxSendPacketBlocking(&txp);
+
+        // Send image
+        sendBufferViaCPX(&txp, imgBuff3, imgSize);
         transferTime = xTaskGetTickCount() - start;
       }
 #ifdef OUTPUT_PROFILING_DATA
       cpxPrintToConsole(LOG_TO_CRTP, "capture=%dms, encoding=%d ms (%d bytes), transfer=%d ms\n",
-                        captureTime2-start, encodingTime, imgSize, transferTime);
+                        captureTime3-start, encodingTime, imgSize, transferTime);
 #endif
     }
     else
