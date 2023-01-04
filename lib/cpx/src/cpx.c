@@ -93,19 +93,20 @@ bool cpxSendPacket(const CPXPacket_t * packet, uint32_t timeout) {
 
 static CPXPacket_t consoleTx;
 void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...) {
-  va_list ap;
-  int len;
+  printf(fmt);
+  // va_list ap;
+  // int len;
 
-  va_start(ap, fmt);
-  len = vsnprintf((char*)consoleTx.data, sizeof(consoleTx.data), fmt, ap);
-  va_end(ap);
+  // va_start(ap, fmt);
+  // len = vsnprintf((char*)consoleTx.data, sizeof(consoleTx.data), fmt, ap);
+  // va_end(ap);
 
-  consoleTx.route.destination = target;
-  consoleTx.route.source = CPX_T_GAP8;
-  consoleTx.route.function = CPX_F_CONSOLE;
-  consoleTx.dataLength = len + 1;
+  // consoleTx.route.destination = target;
+  // consoleTx.route.source = CPX_T_GAP8;
+  // consoleTx.route.function = CPX_F_CONSOLE;
+  // consoleTx.dataLength = len + 1;
 
-  cpxSendPacketBlocking(&consoleTx);
+  // cpxSendPacketBlocking(&consoleTx);
 }
 
 void cpxInitRoute(const CPXTarget_t source, const CPXTarget_t destination, const CPXFunction_t function, CPXRouting_t* route) {

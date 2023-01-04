@@ -96,7 +96,7 @@ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example
 Then you need to write the weights and run the CNN:
 
 ```
-docker run --rm -v ${PWD}:/module --privileged aideck-with-autotiler tools/build/make-example examples/ai/classification run
+docker run --rm -v ${PWD}:/module --privileged aideck-with-autotiler tools/build/make-example examples/ai/classification all run
 ``` 
 
 You should now see the same output as in the gif in the beginning. 

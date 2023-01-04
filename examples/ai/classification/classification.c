@@ -55,7 +55,7 @@ static signed short *Output_1;
 static struct pi_device camera;
 static struct pi_device cluster_dev;
 static struct pi_cluster_task *task;
-static struct pi_cluster_conf conf;
+static struct pi_cluster_conf cluster_conf;
 
 AT_HYPERFLASH_FS_EXT_ADDR_TYPE __PREFIX(_L3_Flash) = 0;
 
@@ -150,25 +150,25 @@ int classification()
   pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
 
   // For debugging
-  struct pi_uart_conf conf;
+  struct pi_uart_conf uart_conf;
   struct pi_device device;
-  pi_uart_conf_init(&conf);
-  conf.baudrate_bps = 115200;
+  pi_uart_conf_init(&uart_conf);
+  uart_conf.baudrate_bps = 115200;
 
     // Start LED toggle
   BaseType_t xTask;
   xTask = xTaskCreate(hb_task, "hb_task", configMINIMAL_STACK_SIZE * 2,
                       NULL, tskIDLE_PRIORITY + 1, NULL);
 
-  pi_open_from_conf(&device, &conf);
+  pi_open_from_conf(&device, &uart_conf);
   if (pi_uart_open(&device))
   {
     printf("[UART] open failed !\n");
     pmsis_exit(-1);
   }
 
-  cpxInit();
-  cpxEnableFunction(CPX_F_WIFI_CTRL);
+  //cpxInit();
+  //cpxEnableFunction(CPX_F_WIFI_CTRL);
 
   cpxPrintToConsole(LOG_TO_CRTP, "*** Classification ***\n");
 
@@ -198,8 +198,8 @@ int classification()
   cpxPrintToConsole(LOG_TO_CRTP, "Allocated memory for output\n");
 
   /* Configure CNN task */
-  pi_cluster_conf_init(&conf);
-  pi_open_from_conf(&cluster_dev, (void *)&conf);
+  pi_cluster_conf_init(&cluster_conf);
+  pi_open_from_conf(&cluster_dev, (void *)&cluster_conf);
   pi_cluster_open(&cluster_dev);
   task = pmsis_l2_malloc(sizeof(struct pi_cluster_task));
   if (!task)
@@ -215,9 +215,10 @@ int classification()
   task->arg = NULL;
 
   /* Construct CNN */
-  if (__PREFIX(CNN_Construct)())
+  int ret = __PREFIX(CNN_Construct)();
+  if (ret)
   {
-    cpxPrintToConsole(LOG_TO_CRTP,"Failed to construct CNN\n");
+    cpxPrintToConsole(LOG_TO_CRTP,"Failed to construct CNN with %d\n", ret);
     pmsis_exit(-5);
   }
   cpxPrintToConsole(LOG_TO_CRTP,"Constructed CNN\n");
