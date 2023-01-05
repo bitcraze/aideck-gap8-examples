@@ -318,10 +318,10 @@ void camera_task(void *parameters)
 
         transferTime = xTaskGetTickCount() - start;
       }
-#ifdef OUTPUT_PROFILING_DATA
+// #ifdef OUTPUT_PROFILING_DATA
       cpxPrintToConsole(LOG_TO_CRTP, "capture=%dms, encoding=%d ms (%d bytes), transfer=%d ms\n",
                         captureTime, encodingTime, imgSize, transferTime);
-#endif
+// #endif
     }
     else
     {

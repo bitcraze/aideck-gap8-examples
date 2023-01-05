@@ -78,11 +78,11 @@ static void cam_handler(void *arg)
 
   if (Output_1[0] > Output_1[1])
   {
-    printf("Packet,     confidence: %hd\n", Output_1[0] - Output_1[1]);
+    cpxPrintToConsole(LOG_TO_CRTP, "Packet,     confidence: %hd\n", Output_1[0] - Output_1[1]);
   }
   else
   {
-    printf("Background, confidence: %hd\n", Output_1[1] - Output_1[0]);
+    cpxPrintToConsole(LOG_TO_CRTP, "Background, confidence: %hd\n", Output_1[1] - Output_1[0]);
   }
 
   pi_camera_capture_async(&camera, cameraBuffer, CAM_WIDTH * CAM_HEIGHT, pi_task_callback(&task1, cam_handler, NULL));
@@ -167,8 +167,8 @@ int classification()
     pmsis_exit(-1);
   }
 
-  //cpxInit();
-  //cpxEnableFunction(CPX_F_WIFI_CTRL);
+  cpxInit();
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
 
   cpxPrintToConsole(LOG_TO_CRTP, "*** Classification ***\n");
 
@@ -241,5 +241,6 @@ int classification()
 
 int main(void)
 {
+  pi_bsp_init();
   return pmsis_kickoff((void *)classification);
 }
