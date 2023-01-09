@@ -56,7 +56,7 @@ Put here the training and validation images like this:
 ```
 ---
 ## Fine-tune a pre-trained image classification CNN
-From `GAP8/ai_examples/classification/` run `python train_classifier.py [--args]`.
+From `aideck-gap8-examples/examples/ai/classification/` run `python train_classifier.py [--args]`.
 
 For possible arguments, review the `parse_args()` function in `main.py`.
 
@@ -65,7 +65,7 @@ Automatically generates quantized and non-quantized TensorFlow Lite models.
 ---
 ## Execute the image classification CNN on the AI-deck
 
-From a terminal with the docker container, or gap_sdk dev environment, in `examples/ai/classifier` example folder, execute:
+After successfully completing all previous steps, you can now run the classification CNN on the AI-deck. From a terminal with the docker container, or gap_sdk dev environment, in the `aideck-gap8-examples/` folder, execute:
 
 ```
 $ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example examples/ai/classification clean model build image
@@ -77,5 +77,27 @@ cfloader flash examples/ai/classification/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/targe
 ```
 
 When the example is flashing, you should see the GAP8 LED blink fast, which is the bootloader. The example itself can be noticed by a slow blinking LED.
+You should also receive the classification output in the cfclient console.
 
-Note: There are still some issues with classification example with the new CPX framework. Please check [the status of the ticket](https://github.com/bitcraze/aideck-gap8-examples/issues/91) open for this. 
+
+## Run the image classification CNN on the AI-deck over JTAG (not recommended)
+
+After successfully completing all previous steps, you can now run the classification CNN on the AI-deck. However, as you want to run it with the debugger connected, you need to adapt the following parts of the code:
+- if you want the output in the terminal and not over UART, uncomment io=host and comment io=uart in the Makefile.
+- instead of via CPX you want to write with printf, which will then be forwarded either to the terminal or UART (e.g. in cpxPrintToConsole add printf(fmt);)
+- note that you might not be able to properly communicate with the NINA module if you don't restart it as well
+
+From a terminal with the docker container, or gap_sdk dev environment, in the `aideck-gap8-examples/` folder, execute:
+
+```
+docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example examples/ai/classification clean model build image
+``` 
+
+Then you need to write the weights and run the CNN:
+
+```
+docker run --rm -v ${PWD}:/module --privileged aideck-with-autotiler tools/build/make-example examples/ai/classification all run
+``` 
+
+You should now see the same output as in the gif in the beginning. 
+

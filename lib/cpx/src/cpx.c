@@ -48,6 +48,8 @@ static CPXPacket_t txp;
 static CPXPacketPacked_t rxpPacked;
 static CPXPacketPacked_t txpPacked;
 
+SemaphoreHandle_t xSemaphore = NULL;
+
 
 static void cpx_rx_task(void *parameters) {
   while (1) {
@@ -93,19 +95,23 @@ bool cpxSendPacket(const CPXPacket_t * packet, uint32_t timeout) {
 
 static CPXPacket_t consoleTx;
 void cpxPrintToConsole(CPXConsoleTarget_t target, const char * fmt, ...) {
-  va_list ap;
-  int len;
+  if( xSemaphoreTake( xSemaphore, ( TickType_t )portMAX_DELAY) == pdTRUE )
+  {
+    va_list ap;
+    int len;
 
-  va_start(ap, fmt);
-  len = vsnprintf((char*)consoleTx.data, sizeof(consoleTx.data), fmt, ap);
-  va_end(ap);
+    va_start(ap, fmt);
+    len = vsnprintf((char*)consoleTx.data, sizeof(consoleTx.data), fmt, ap);
+    va_end(ap);
 
-  consoleTx.route.destination = target;
-  consoleTx.route.source = CPX_T_GAP8;
-  consoleTx.route.function = CPX_F_CONSOLE;
-  consoleTx.dataLength = len + 1;
+    consoleTx.route.destination = target;
+    consoleTx.route.source = CPX_T_GAP8;
+    consoleTx.route.function = CPX_F_CONSOLE;
+    consoleTx.dataLength = len + 1;
 
-  cpxSendPacketBlocking(&consoleTx);
+    cpxSendPacketBlocking(&consoleTx);
+    xSemaphoreGive( xSemaphore );
+  }
 }
 
 void cpxInitRoute(const CPXTarget_t source, const CPXTarget_t destination, const CPXFunction_t function, CPXRouting_t* route) {
@@ -128,4 +134,6 @@ void cpxInit(void) {
     printf("Could not start router rx tasks!\n");
     pmsis_exit(-1);
   }
+  xSemaphore = xSemaphoreCreateBinary();
+  xSemaphoreGive( xSemaphore );
 }
