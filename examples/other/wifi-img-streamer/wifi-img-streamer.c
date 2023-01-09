@@ -51,7 +51,7 @@ static uint32_t start = 0;
 static uint32_t captureTime = 0;
 static uint32_t transferTime = 0;
 static uint32_t encodingTime = 0;
-#define OUTPUT_PROFILING_DATA
+// #define OUTPUT_PROFILING_DATA
 
 static int open_pi_camera_himax(struct pi_device *device)
 {
