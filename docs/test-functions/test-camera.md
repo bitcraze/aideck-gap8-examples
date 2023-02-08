@@ -14,7 +14,7 @@ To test out the code, first, source the AIdeck config (configs/ai_deck.sh) in yo
 
     make clean all run io=host
 
-for onram flashing with your programmer.
+for directly running the code from L2 (second level internal memory) with your programmer.
 
 ## Run in Docker
 To build and execute in the docker we need to place the `demosaicking`-files in the `common`-folder inside the docker.
