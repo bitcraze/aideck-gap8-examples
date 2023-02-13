@@ -4,8 +4,10 @@ page_id: flashing
 ---
 
 There are two different ways to flash firmware on the GAP8, via JTAG or via cfloader (Crazyflie PA).
-If you only want to know how to flash your own code to the Crazyflie, just skip ahead to the 'cfloader' section. TODO link
-If you are interested in more details about how the flashing works, you found the right place, so read on :)
+If you only want to know how to flash your own code to the Crazyflie, just skip ahead to the *cfloader* section.
+If you are interested in more details about how the two ways for flashing work, just read on, the *System Architecture* paragraph will explain it to you.
+
+## System Architecture
 
 GAP8 always executes code from L2 (second-level RAM), as it has no internal flash. However, it can load code into L2 over a HyperBus interface from external flash memory on startup (which it does if a fuse is blown, however this is already done on your AIdeck and out of scope here). As GAP8 has only volatile memory, it must always load code from exactly the same flash address. To make it possible to update applications easily, we implemented a bootloader, a minimal program which is the first thing to run on startup. The bootloader can either update the application code in flash or copy it into L2, and, if the code is valid, run it. 
 Why is this easier? First, you don't need to connect a programmer, as the bootloader can read data over other peripherals (in our case SPI from the NINA module). Second, it is safer - if the update fails (and you, for some reason, end up with random code where your application should be) the firmware code will not be valid (the hash computation will fail) and GAP8 will not jump to the corrupt application code but instead safely stay in the bootloader.
@@ -42,6 +44,6 @@ docker run --rm -v ${PWD}:/module --device /dev/ttyUSB0 --privileged -P bitcraze
 
 **Note:** USB in docker is only supported on Linux
 
-### jtag link cable connection
+### JTAG link cable connection
 
 ![jtag link cable](/docs/images/ai-deck-jtag-connecting.png)
