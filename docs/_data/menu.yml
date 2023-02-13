@@ -1,20 +1,20 @@
 - page_id: home
 - title: Infrastructure
   subs:
+      - {page_id: gap8}
       - {page_id: flashing}
-      - {page_id: sdk}
       - {page_id: cpx}
 - title: Guides
   subs:
       - {page_id: replace-ai-deck-camera}
-- title: Other examples
-  subs:
-      - {page_id: test-camera}
-      - {page_id: uart-send-char}
-      - {page_id: wifi-streamer}
 - title: Image Processing examples
   subs:
       - {page_id: face-detection}
 - title: AI examples
   subs:
       - {page_id: classification-demo}
+- title: Other examples
+  subs:
+      - {page_id: test-camera}
+      - {page_id: uart-send-char}
+      - {page_id: wifi-streamer}
