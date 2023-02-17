@@ -22,15 +22,17 @@
 #include "bsp/buffer.h"
 
 /* PMSIS BSP includes */
+#include "bsp/bsp.h"
+#include "bsp/buffer.h"
 #include "bsp/ai_deck.h"
 #include "bsp/camera/himax.h"
 
 /* Gaplib includes */
-#include "gaplib/ImgIO.h"
+// #include "gaplib/ImgIO.h"
 
 #if defined(USE_STREAMER)
-#include "bsp/transport/nina_w10.h"
-#include "tools/frame_streamer.h"
+#include "cpx.h"
+#include "wifi.h"
 #endif /* USE_STREAMER */
 
 // All includes for facedetector application
@@ -41,9 +43,134 @@
 
 #define CAM_WIDTH 324
 #define CAM_HEIGHT 244
+#define IMG_ORIENTATION 0x0101
 
 #define IMAGE_OUT_WIDTH 64
 #define IMAGE_OUT_HEIGHT 48
+
+static EventGroupHandle_t evGroup;
+#define CAPTURE_DONE_BIT (1 << 0)
+
+// Performance menasuring variables
+static uint32_t start = 0;
+static uint32_t captureTime = 0;
+static uint32_t transferTime = 0;
+static uint32_t encodingTime = 0;
+// #define OUTPUT_PROFILING_DATA
+
+static int wifiConnected = 0;
+static int wifiClientConnected = 0;
+
+static pi_task_t task1;
+
+static CPXPacket_t rxp;
+void rx_task(void *parameters)
+{
+  while (1)
+  {
+    cpxReceivePacketBlocking(CPX_F_WIFI_CTRL, &rxp);
+
+    WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
+
+    switch (wifiCtrl->cmd)
+    {
+      case WIFI_CTRL_STATUS_WIFI_CONNECTED:
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
+                          wifiCtrl->data[0], wifiCtrl->data[1],
+                          wifiCtrl->data[2], wifiCtrl->data[3]);
+        wifiConnected = 1;
+        break;
+      case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
+        cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n", wifiCtrl->data[0]);
+        wifiClientConnected = wifiCtrl->data[0];
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+static void capture_done_cb(void *arg)
+{
+  xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
+}
+
+typedef struct
+{
+  uint8_t magic;
+  uint16_t width;
+  uint16_t height;
+  uint8_t depth;
+  uint8_t type;
+  uint32_t size;
+} __attribute__((packed)) img_header_t;
+
+
+typedef enum
+{
+  RAW_ENCODING = 0,
+  JPEG_ENCODING = 1
+} __attribute__((packed)) StreamerMode_t;
+
+pi_buffer_t header;
+uint32_t headerSize;
+pi_buffer_t footer;
+uint32_t footerSize;
+pi_buffer_t jpeg_data;
+uint32_t jpegSize;
+
+static StreamerMode_t streamerMode = RAW_ENCODING;
+
+static CPXPacket_t txp;
+
+void createImageHeaderPacket(CPXPacket_t * packet, uint32_t imgSize, StreamerMode_t imgType) {
+  img_header_t *imgHeader = (img_header_t *) packet->data;
+  imgHeader->magic = 0xBC;
+  imgHeader->width = CAM_WIDTH;
+  imgHeader->height = CAM_HEIGHT;
+  imgHeader->depth = 1;
+  imgHeader->type = imgType;
+  imgHeader->size = imgSize;
+  packet->dataLength = sizeof(img_header_t);
+}
+
+void sendBufferViaCPX(CPXPacket_t * packet, uint8_t * buffer, uint32_t bufferSize) {
+  uint32_t offset = 0;
+  uint32_t size = 0;
+  do {
+    size = sizeof(packet->data);
+    if (offset + size > bufferSize)
+    {
+      size = bufferSize - offset;
+    }
+    memcpy(packet->data, &buffer[offset], sizeof(packet->data));
+    packet->dataLength = size;
+    cpxSendPacketBlocking(packet);
+    offset += size;
+  } while (size == sizeof(packet->data));
+}
+
+#ifdef SETUP_WIFI_AP
+void setupWiFi(void) {
+  static char ssid[] = "WiFi streaming example";
+  cpxPrintToConsole(LOG_TO_CRTP, "Setting up WiFi AP\n");
+  // Set up the routing for the WiFi CTRL packets
+  txp.route.destination = CPX_T_ESP32;
+  rxp.route.source = CPX_T_GAP8;
+  txp.route.function = CPX_F_WIFI_CTRL;
+  WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
+  
+  wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
+  memcpy(wifiCtrl->data, ssid, sizeof(ssid));
+  txp.dataLength = sizeof(ssid);
+  cpxSendPacketBlocking(&txp);
+  
+  wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
+  wifiCtrl->data[0] = 0x01;
+  txp.dataLength = 2;
+  cpxSendPacketBlocking(&txp);
+}
+#endif
 
 // Intializing buffers for camera images
 static unsigned char *imgBuff0;
@@ -64,7 +191,6 @@ struct pi_cluster_task *task;
 struct pi_cluster_conf conf;
 ArgCluster_T ClusterCall;
 
-#if defined(USE_CAMERA)
 // Open himax camera funciton
 static int open_camera_himax(struct pi_device *device)
 {
@@ -87,79 +213,25 @@ static int open_camera_himax(struct pi_device *device)
   pi_camera_reg_get(device, IMG_ORIENTATION, &reg_value);
   if (set_value!=reg_value)
   {
-    printf("Failed to rotate camera image\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to rotate camera image\n");
     return -1;
   }
-
+  pi_camera_control(device, PI_CAMERA_CMD_STOP, 0);
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
   return 0;
 }
-#endif /* USE_CAMERA */
+
 
 static int open_camera(struct pi_device *device)
 {
-#if defined(USE_CAMERA)
   return open_camera_himax(device);
-#else
-  return 0;
-#endif /* USE_CAMERA */
 }
 
 //UART init param
 L2_MEM struct pi_uart_conf uart_conf;
 L2_MEM struct pi_device uart;
 L2_MEM uint8_t rec_digit = -1;
-
-#if defined(USE_STREAMER)
-//  Initialize structs and function for streamer through wifi
-static pi_task_t task1;
-static struct pi_device wifi;
-static frame_streamer_t *streamer1;
-static volatile int stream1_done;
-
-static void streamer_handler(void *arg)
-{
-  *(int *)arg = 1;
-  if (stream1_done) 
-  {
-  }
-}
-
-static int open_wifi(struct pi_device *device)
-{
-  struct pi_nina_w10_conf nina_conf;
-
-  pi_nina_w10_conf_init(&nina_conf);
-
-  nina_conf.ssid = "";
-  nina_conf.passwd = "";
-  nina_conf.ip_addr = "192.168.0.0";
-  nina_conf.port = 5555;
-  pi_open_from_conf(device, &nina_conf);
-  if (pi_transport_open(device))
-    return -1;
-
-  return 0;
-}
-
-static frame_streamer_t *open_streamer(char *name)
-{
-  struct frame_streamer_conf frame_streamer_conf;
-
-  frame_streamer_conf_init(&frame_streamer_conf);
-
-  frame_streamer_conf.transport = &wifi;
-  frame_streamer_conf.format = FRAME_STREAMER_FORMAT_JPEG;
-  frame_streamer_conf.width = CAM_WIDTH;
-  frame_streamer_conf.height = CAM_HEIGHT;
-  frame_streamer_conf.depth = 1;
-  frame_streamer_conf.name = name;
-
-  return frame_streamer_open(&frame_streamer_conf);
-} /* USE_STREAMER */
-
-#endif
 
 
 // Functions and init for LED toggle
@@ -175,11 +247,17 @@ static void led_handle(void *arg)
 
 
 
-void test_facedetection(void)
+void facedetection_task(void)
 {
+    vTaskDelay(2000);
+    cpxInitRoute(CPX_T_GAP8, CPX_T_WIFI_HOST, CPX_F_APP, &txp.route);
+    cpxPrintToConsole(LOG_TO_CRTP, "Starting face detection task...\n");
 
-  printf("Entering main controller...\n");
 
+#ifdef SETUP_WIFI_AP
+  setupWiFi();
+#endif
+  
   unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
   unsigned int Wout = 64, Hout = 48;
   unsigned int ImgSize = W * H;
@@ -190,7 +268,7 @@ void test_facedetection(void)
   imgBuff0 = (unsigned char *)pmsis_l2_malloc((CAM_WIDTH * CAM_HEIGHT) * sizeof(unsigned char));
   if (imgBuff0 == NULL)
   {
-    printf("Failed to allocate Memory for Image \n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
     pmsis_exit(-1);
   }
 
@@ -200,39 +278,21 @@ void test_facedetection(void)
   SquaredImageIntegral = (unsigned int *)pmsis_l2_malloc((Wout * Hout) * sizeof(unsigned int));
   if (ImageOut == 0)
   {
-    printf("Failed to allocate Memory for Image (%d bytes)\n", ImgSize * sizeof(unsigned char));
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image (%d bytes)\n", ImgSize * sizeof(unsigned char));
     pmsis_exit(-2);
   }
   if ((ImageIntegral == 0) || (SquaredImageIntegral == 0))
   {
-    printf("Failed to allocate Memory for one or both Integral Images (%d bytes)\n", ImgSize * sizeof(unsigned int));
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for one or both Integral Images (%d bytes)\n", ImgSize * sizeof(unsigned int));
     pmsis_exit(-3);
   }
-  printf("malloc done\n");
+  // printf("malloc done\n");
 
-#if defined(USE_CAMERA)
   if (open_camera(&cam))
   {
-    printf("Failed to open camera\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
     pmsis_exit(-5);
   }
-#endif
-
-#if defined(USE_STREAMER)
-
-  if (open_wifi(&wifi))
-  {
-    printf("Failed to open wifi\n");
-    return -1;
-  }
-  printf("WIFI connected\n"); // check this with NINA printout
-
-  streamer1 = open_streamer("cam");
-  if (streamer1 == NULL)
-    return -1;
-  printf("Streamer set up\n");
-
-#endif
 
   //  UART init with Crazyflie and configure
   pi_uart_conf_init(&uart_conf);
@@ -241,10 +301,10 @@ void test_facedetection(void)
   pi_open_from_conf(&uart, &uart_conf);
   if (pi_uart_open(&uart))
   {
-    printf("[UART] open failed !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "[UART] open failed !\n");
     pmsis_exit(-1);
   }
-  printf("[UART] Open\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "[UART] Open\n");
 
   // Setup buffer for images
   buffer.data = imgBuff0 + CAM_WIDTH * 2 + 2;
@@ -275,8 +335,8 @@ void test_facedetection(void)
   pi_open_from_conf(&cluster_dev, (void *)&conf);
   pi_cluster_open(&cluster_dev);
 
-  //Set Cluster Frequency to max
-  pi_freq_set(PI_FREQ_DOMAIN_CL, 175000000);
+  //Set Cluster Frequency to 75MHz - max (175000000) leads to more camera failures (unknown why)
+  pi_freq_set(PI_FREQ_DOMAIN_CL, 75000000);
 
   // Send intializer function to cluster
   task = (struct pi_cluster_task *)pmsis_l2_malloc(sizeof(struct pi_cluster_task));
@@ -289,50 +349,123 @@ void test_facedetection(void)
   task->entry = (void *)faceDet_cluster_main;
   task->arg = &ClusterCall;
 
-  printf("main loop start\n");
+  // printf("main loop start\n");
 
   // Start looping through images
   int nb_frames = 0;
+  EventBits_t evBits;
+  pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
+
   while (1 && (NB_FRAMES == -1 || nb_frames < NB_FRAMES))
   {
-#if defined(USE_CAMERA)
     // Capture image
+    pi_camera_capture_async(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT, pi_task_callback(&task1, capture_done_cb, NULL));
     pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
-    pi_camera_capture(&cam, imgBuff0, CAM_WIDTH * CAM_HEIGHT);
+    // it should really not take longer than 500ms to acquire an image, maybe we could even time out earlier
+    evBits = xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)(500/portTICK_PERIOD_MS));
     pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
-#else
-    // Read in image to check if NN is still working
-    // TODO: this breaks after the second read....
-    char imageName[64];
-	  sprintf(imageName, "../../../imgTest%d.pgm", nb_frames);
-    printf("Loading %s ...\n", imageName);
-    if (ReadImageFromFile(imageName, CAM_WIDTH, CAM_HEIGHT, 1, imgBuff0, CAM_WIDTH * CAM_HEIGHT * sizeof(char), IMGIO_OUTPUT_CHAR, 0))
+    // if we didn't succeed in capturing the image (which, especially with high cluster frequencies and dark images can happen) we want to retry
+    while((evBits & CAPTURE_DONE_BIT) != CAPTURE_DONE_BIT)
     {
-      printf("Failed to load image %s\n", imageName);
-      return 1;
+      cpxPrintToConsole(LOG_TO_CRTP, "Failed camera acquisition\n");
+      pi_camera_control(&cam, PI_CAMERA_CMD_START, 0);
+      evBits = xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)(500/portTICK_PERIOD_MS));
+      pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
     }
-#endif /* USE_CAMERA */
  
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
-    printf("end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
-    //WriteImageToFile("../../../img_out.ppm", IMAGE_OUT_WIDTH, IMAGE_OUT_HEIGHT, 1, ImageOut, GRAY_SCALE_IO);
+    // cpxPrintToConsole(LOG_TO_CRTP, "end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
 
 #if defined(USE_STREAMER)
-    // Send image to the streamer to see the result
-    frame_streamer_send_async(streamer1, &buffer, pi_task_callback(&task1, streamer_handler, (void *)&stream1_done));
+    if (wifiClientConnected == 1)
+    {
+      // First send information about the image
+      createImageHeaderPacket(&txp, STREAM_W*STREAM_H, RAW_ENCODING);
+      cpxSendPacketBlocking(&txp);
+      // Send image
+      sendBufferViaCPX(&txp, ImageOut, STREAM_W*STREAM_H);
+    }
 #endif
     // Send result through the uart to the crazyflie as single characters
     pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
 
     nb_frames++;
   }
-  printf("Test face detection done.\n");
+  cpxPrintToConsole(LOG_TO_CRTP, "Test face detection done.\n");
   pmsis_exit(0);
+}
+
+#define LED_PIN 2
+static pi_device_t led_gpio_dev;
+void hb_task(void *parameters)
+{
+  (void)parameters;
+  char *taskname = pcTaskGetName(NULL);
+
+  // Initialize the LED pin
+  pi_gpio_pin_configure(&led_gpio_dev, LED_PIN, PI_GPIO_OUTPUT);
+
+  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+  while (1)
+  {
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
+    vTaskDelay(xDelay);
+    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
+    vTaskDelay(xDelay);
+  }
+}
+
+void start_example(void)
+{
+  cpxInit();
+  cpxEnableFunction(CPX_F_WIFI_CTRL);
+
+  cpxPrintToConsole(LOG_TO_CRTP, "-- WiFi image streamer example --\n");
+
+  evGroup = xEventGroupCreate();
+
+  BaseType_t xTask;
+
+  xTask = xTaskCreate(hb_task, "hb_task", configMINIMAL_STACK_SIZE * 2,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
+  if (xTask != pdPASS)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "HB task did not start !\n");
+    pmsis_exit(-1);
+  }
+
+  xTask = xTaskCreate(facedetection_task, "facedetection_task", configMINIMAL_STACK_SIZE * 4,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
+
+  if (xTask != pdPASS)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "Camera task did not start !\n");
+    pmsis_exit(-1);
+  }
+
+  xTask = xTaskCreate(rx_task, "rx_task", configMINIMAL_STACK_SIZE * 2,
+                      NULL, tskIDLE_PRIORITY + 1, NULL);
+
+  if (xTask != pdPASS)
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "RX task did not start !\n");
+    pmsis_exit(-1);
+  }
+
+  while (1)
+  {
+    pi_yield();
+  }
 }
 
 int main(void)
 {
-  printf("\n\t*** PMSIS FaceDetection Test ***\n\n");
-  return pmsis_kickoff((void *)test_facedetection);
+  pi_bsp_init();
+
+  // Increase the FC freq to 250 MHz
+  pi_freq_set(PI_FREQ_DOMAIN_FC, 250000000);
+  pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
+  return pmsis_kickoff((void *)start_example);
 }

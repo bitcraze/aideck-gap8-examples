@@ -18,6 +18,9 @@ APP = face_detection
 
 NB_FRAMES ?= -1
 
+STREAM_W = 160
+STREAM_H = 120
+
 FACE_DET_MODEL_SRC = FaceDetGenerator.c FaceDetModel.c
 FACE_DET_MODEL_GEN = FaceDetKernels
 FACE_DET_MODEL_GEN_C = $(addsuffix .c, $(FACE_DET_MODEL_GEN))
@@ -25,18 +28,22 @@ FACE_DET_MODEL_GEN_CLEAN = $(FACE_DET_MODEL_GEN_C) $(addsuffix .h, $(FACE_DET_MO
 FACE_DET_SRCS +=  main.c faceDet.c FaceDetBasicKernels.c ImageDraw.c $(FACE_DET_MODEL_GEN_C)
 
 APP_SRCS += $(FACE_DET_SRCS)
+APP_SRCS +=  ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c
 APP_INC  += $(TILER_INC)
 APP_CFLAGS += -O3 -g -D__PMSIS__  -DNB_FRAMES=$(NB_FRAMES)
-# APP_CFLAGS += -DUSE_CAMERA
-# APP_CFLAGS += -DUSE_STREAMER 
+APP_CFLAGS += -DUSE_STREAMER
+APP_CFLAGS += -DSTREAM_W=$(STREAM_W)
+APP_CFLAGS += -DSTREAM_H=$(STREAM_H)
+APP_INC += ../../../lib/cpx/inc
+APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
 
 BOARD_NAME ?= ai_deck
-PMSIS_OS ?= pulp_os
 USE_PMSIS_BSP = 1
-APP_LDFLAGS += -lgaptools -lgaplib 
 
 export GAP_USE_OPENOCD=1
 io=host
+# io=uart
+PMSIS_OS = freertos
 
 # This needs to be defined or else some other IO functionalities or cluster things will break...
 APP_CFLAGS += -DHIMAX

@@ -168,6 +168,6 @@ int test_camera()
 
 int main(void)
 {
-    printf("\n\t*** PMSIS Camera with LCD Example ***\n\n");
+    printf("\n\t*** PMSIS Camera ***\n\n");
     return pmsis_kickoff((void *) test_camera);
 }
