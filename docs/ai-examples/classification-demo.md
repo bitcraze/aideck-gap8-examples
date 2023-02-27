@@ -3,8 +3,6 @@ title: Classification Demo
 page_id: classification-demo
 ---
 
-# Image classification on the AI-deck
-
 In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very particular domain (a table in the Bitcraze arena, with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results on your own domain, the example can be trained on a custom dataset captured by the AI-deck camera, and fitted to detect multiple custom classes of your choosing. The training can currently only be done on a native installation. Execution on / flashing the AI-deck can be done with a native installation or with the GAP8 docker.
 
 ![classification](/docs/images/classification.gif)
@@ -69,7 +67,7 @@ After successfully completing all previous steps, you can now run the classifica
 
 ```
 $ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example examples/ai/classification clean model build image
-``` 
+```
 
 Then from another terminal (outside of the container), use the cfloader to flash the example if you have the gap8 bootloader flashed AIdeck. Change the [CRAZYFLIE URI] with your crazyflie URI like radio://0/40/2M/E7E7E7E703
 ```
@@ -91,13 +89,12 @@ From a terminal with the docker container, or gap_sdk dev environment, in the `a
 
 ```
 docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-example examples/ai/classification clean model build image
-``` 
+```
 
 Then you need to write the weights and run the CNN:
 
 ```
 docker run --rm -v ${PWD}:/module --privileged aideck-with-autotiler tools/build/make-example examples/ai/classification all run
-``` 
+```
 
-You should now see the same output as in the gif in the beginning. 
-
+You should now see the same output as in the gif in the beginning.
