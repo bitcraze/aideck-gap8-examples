@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 	GenerateCascadeClassifier("Cascade_3",Wout,Hout,24,24);
 
 
-	GenerateResize("final_resize", W, H, 160, 120);
+	GenerateResize("final_resize", W, H, STREAM_W, STREAM_H);
 
 	// Now that we are done with model parsing we generate the code
 	GenerateTilingCode();

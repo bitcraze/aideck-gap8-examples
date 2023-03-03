@@ -66,19 +66,18 @@ static int open_pi_camera_himax(struct pi_device *device)
     return -1;
 
   // rotate image
-  pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+  pi_camera_control(device, PI_CAMERA_CMD_START, 0);
   uint8_t set_value = 3;
   uint8_t reg_value;
-  pi_camera_reg_set(&camera, IMG_ORIENTATION, &set_value);
+  pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
   pi_time_wait_us(1000000);
-  pi_camera_reg_get(&camera, IMG_ORIENTATION, &reg_value);
+  pi_camera_reg_get(device, IMG_ORIENTATION, &reg_value);
   if (set_value != reg_value)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to rotate camera image\n");
     return -1;
   }
-  pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-
+  pi_camera_control(device, PI_CAMERA_CMD_STOP, 0);
   pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
   return 0;
