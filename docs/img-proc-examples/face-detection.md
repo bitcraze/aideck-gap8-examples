@@ -7,7 +7,7 @@ This is the face detection application based on the example as developed by Gree
 
 This was tested on **GAP_SDK version 4.8.0.2**, which at the moment of writing was the newest we had a docker container for.
 
-# Docker GAP-SDK
+## Building with Docker GAP-SDK
 
 Make sure to follow the [getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) before continuing.
 
