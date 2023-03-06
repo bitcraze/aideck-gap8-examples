@@ -4,9 +4,10 @@
       - {page_id: gap8}
       - {page_id: flashing}
       - {page_id: cpx}
-- title: Guides
+- title: Simple Examples
   subs:
-      - {page_id: replace-ai-deck-camera}
+      - {page_id: helloworld}
+      - {page_id: wifi-streamer}
 - title: Image Processing examples
   subs:
       - {page_id: face-detection}
@@ -17,4 +18,6 @@
   subs:
       - {page_id: test-camera}
       - {page_id: uart-send-char}
-      - {page_id: wifi-streamer}
+- title: Guides
+  subs:
+      - {page_id: replace-ai-deck-camera}
