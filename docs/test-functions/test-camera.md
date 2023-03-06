@@ -3,7 +3,7 @@ title: Testing the Himax Camera
 page_id: test-camera
 ---
 
-# Testing the Himax camera on the AIdeck
+## Testing the Himax camera on the AIdeck
 
 
 This concerns the example in folder *AIdeck_examples/GAP8/test_functionalities/test_camera/*. This was tested on **GAP_SDK version 4.8.0.2**, which at the moment of writing was the newest we had a docker container for.
