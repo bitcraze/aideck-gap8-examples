@@ -24,7 +24,7 @@ $ cfloader flash examples/image_processing/FaceDetection/BUILD/GAP8_V2/GCC_RISCV
 > Replace `[CRAZYFLIE_URI]` with the URI of your crazyflie in the form radio://0/2M/80/E7E7E7E7E7
 
 
-If you configured your Crazyflie firmware such that the AIdeck will act as access point (as described in the [wifi-streamer example](/docs/test-functions/wifi-streamer.md)) you can now just connect to it. If you configured it to connect to an existing network you should make sure your computer is in the same network and you need to check the IP address of the AIdeck - for example connect to it through the cfclient and check the console prints.
+If you configured your Crazyflie firmware such that the AIdeck will act as access point (as described in the [wifi-streamer example](/docs/simple-examples/wifi-streamer.md)) you can now just connect to it. If you configured it to connect to an existing network you should make sure your computer is in the same network and you need to check the IP address of the AIdeck - for example connect to it through the cfclient and check the console prints.
 
 Now you can run the image viewer:
 
