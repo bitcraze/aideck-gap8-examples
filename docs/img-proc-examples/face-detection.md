@@ -1,8 +1,6 @@
 ---
 title: Face detection example
 page_id: face-detection
-redirects:
- - /docs/img-proc-examples/face-detection
 ---
 
 This is the face detection application based on the example as developed by Greenwaves technologies. It is a bit more tailor made towards the AI-deck and uses the wifi streamer to stream the output to your computer.

@@ -1,8 +1,6 @@
 ---
 title: Switch/replace AI-deck camera
 page_id: replace-ai-deck-camera
-redirects:
- - /docs/guides/camera-replace
 ---
 
 ## Introduction
