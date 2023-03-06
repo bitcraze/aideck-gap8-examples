@@ -1,6 +1,8 @@
 ---
 title: Face detection example
 page_id: face-detection
+redirects:
+ - /docs/img-proc-examples/face-detection
 ---
 
 This is the face detection application based on the example as developed by Greenwaves technologies. It is a bit more tailor made towards the AI-deck and uses the wifi streamer to stream the output to your computer.
@@ -43,4 +45,3 @@ In the makefile you can comment the following line if you would like to disable 
     APP_CFLAGS += -DUSE_STREAMER
 
 Or - what is way more fun to play with - you can set the resolution of the streamed image with _STREAM\_W_ and _STREAM\_H_. Note that you cannot set values higher than 324x244 and that unproportional changes will result in distorted images. Note also that you need to adapt the resolution in the _opencv-viewer.py_ as well.
-

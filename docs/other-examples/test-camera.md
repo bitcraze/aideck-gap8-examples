@@ -1,6 +1,8 @@
 ---
 title: Testing the Himax Camera
 page_id: test-camera
+redirects:
+ - /docs/test-functions/test-camera
 ---
 
 ## Testing the Himax camera on the AIdeck

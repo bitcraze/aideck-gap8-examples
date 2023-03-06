@@ -1,6 +1,8 @@
 ---
 title: GAP8
 page_id: gap8
+redirects:
+ - /docs/getting-started/gap8
 ---
 
 The GAP8 is a 9-core IoT application processor produced by Greenwaves. It is based on RISC-V and the [PULP](https://pulp-platform.org) (Parallel Ultra-Low-Power Processing Platform) open-source platform.
@@ -28,12 +30,12 @@ GAP8 features a rich peripheral set; most important for us are:
 - SPI to connect to the ESP32 in the NINA WiFi module
 - UART and GPIOs to connect to the STM32 on the Crazyflie
 
-The data transfers from peripherals can be handled by a so-called *micro DMA*, which relieves the FC of some load. 
+The data transfers from peripherals can be handled by a so-called *micro DMA*, which relieves the FC of some load.
 
 ## SDK ##
 
 The GAP8 SDK allows you to compile and execute applications on the GAP8 IoT Application Processor.
-Besides tools for building/programming/flashing, it also provides tools to help deploy neural networks and support two different operating systems. 
+Besides tools for building/programming/flashing, it also provides tools to help deploy neural networks and support two different operating systems.
 
 Due to some changes made in the GAP8 SDK it's not easy to use a local installation of the official
 SDK yet, so use our dockerized version instead. If you would like to understand the changes we've made,

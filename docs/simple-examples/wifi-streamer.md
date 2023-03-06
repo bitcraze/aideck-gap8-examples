@@ -1,6 +1,8 @@
 ---
 title: WiFi Video Streamer
 page_id: wifi-streamer
+redirects:
+ - /docs/test-functions/wifi-streamer
 ---
 
 This example streams JPEG or raw images from the GAP8 to the host where they are displayed and
@@ -14,7 +16,7 @@ colorized.
 The WiFi on the aideck can be set up in a number of ways,
 but to keep things simple for this tutorial we will be setting it up
 via the Crazyflie firmware as an access point, which means you will be
-connecting to the AI deck's WiFi to run the examples. 
+connecting to the AI deck's WiFi to run the examples.
 
 First see the [crazyflie-firmware repository documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/) for more details on how to build and flash and checkout how to setup [kbuild's menuconfig](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/).
 
@@ -25,7 +27,7 @@ $ git clone https://github.com/bitcraze/crazyflie-firmware.git
 $ cd crazyflie-firmware
 $ make menuconfig
 ```
-Note: for 
+Note: for
 Go to the menu *Expansion deck configuration* and make sure *Support AI deck*
 is enabled. In the *Support AI deck* sub menu select *WiFi setup at startup* and the option *Act as Access Point*. Now go to the *Credentials for access-point*
 menu and set the SSID and KEY as you wish.
@@ -90,4 +92,3 @@ Then you should be able to see the raw/color or jpeg image in the viewer like th
 **Note**: If you like to save the images, you can run the opencv-viewer.py with the `--save` flag.
 
 **Note**: If you enabled your aideck to connect to a wifi point, you would need to check the console tab of the CFclient to retrieve the ipaddress of the aideck. Then you will need to use the `-n` with the ip address with the viewer script.
-

@@ -1,6 +1,8 @@
 ---
 title: Send character over UART
 page_id: uart-send-char
+redirects:
+ - /docs/test-functions/uart-send-char
 ---
 
 This concerns the example in the folder *AIdeck_examples/GAP8/test_functionalities/uart_send_char/*. This was tested on **GAP_SDK version 3.8.1**.
