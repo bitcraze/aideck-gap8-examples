@@ -158,13 +158,14 @@ void setupWiFi(void) {
   txp.route.destination = CPX_T_ESP32;
   rxp.route.source = CPX_T_GAP8;
   txp.route.function = CPX_F_WIFI_CTRL;
+  txp.route.version = CPX_VERSION;
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
-  
+
   wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
   txp.dataLength = sizeof(ssid);
   cpxSendPacketBlocking(&txp);
-  
+
   wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
   wifiCtrl->data[0] = 0x01;
   txp.dataLength = 2;
@@ -203,7 +204,7 @@ static int open_camera_himax(struct pi_device *device)
   pi_open_from_conf(device, &cam_conf);
   if (pi_camera_open(device))
     return -1;
-  
+
     // rotate image
   pi_camera_control(device, PI_CAMERA_CMD_START, 0);
   uint8_t set_value=3;
@@ -257,7 +258,7 @@ void facedetection_task(void)
 #ifdef SETUP_WIFI_AP
   setupWiFi();
 #endif
-  
+
   unsigned int W = CAM_WIDTH, H = CAM_HEIGHT;
   unsigned int Wout = 64, Hout = 48;
   unsigned int ImgSize = W * H;
@@ -372,7 +373,7 @@ void facedetection_task(void)
       evBits = xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)(500/portTICK_PERIOD_MS));
       pi_camera_control(&cam, PI_CAMERA_CMD_STOP, 0);
     }
- 
+
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
     // cpxPrintToConsole(LOG_TO_CRTP, "end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
