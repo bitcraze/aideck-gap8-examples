@@ -182,13 +182,14 @@ void setupWiFi(void) {
   txp.route.destination = CPX_T_ESP32;
   rxp.route.source = CPX_T_GAP8;
   txp.route.function = CPX_F_WIFI_CTRL;
+  txp.route.version = CPX_VERSION;
   WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
-  
+
   wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
   memcpy(wifiCtrl->data, ssid, sizeof(ssid));
   txp.dataLength = sizeof(ssid);
   cpxSendPacketBlocking(&txp);
-  
+
   wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
   wifiCtrl->data[0] = 0x01;
   txp.dataLength = 2;
@@ -291,7 +292,7 @@ void camera_task(void *parameters)
         memcpy(txp.data, header.data, headerSize);
         txp.dataLength = headerSize;
         cpxSendPacketBlocking(&txp);
-        
+
         // Send image data
         sendBufferViaCPX(&txp, (uint8_t*) jpeg_data.data, jpegSize);
 

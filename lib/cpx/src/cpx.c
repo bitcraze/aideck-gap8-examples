@@ -30,7 +30,8 @@ typedef struct {
   CPXTarget_t source : 3;
   bool lastPacket : 1;
   bool reserved : 1;
-  CPXFunction_t function : 8;
+  CPXFunction_t function : 6;
+  uint8_t version : 2;
 } __attribute__((packed)) CPXRoutingPacked_t;
 
 typedef struct {
@@ -54,6 +55,9 @@ SemaphoreHandle_t xSemaphore = NULL;
 static void cpx_rx_task(void *parameters) {
   while (1) {
     com_read((packet_t*)&rxpPacked);
+
+    configASSERT(CPX_VERSION == rxpPacked.route.version);
+    rxp.route.version = rxpPacked.route.version;
 
     rxp.dataLength = rxpPacked.wireLength - CPX_HEADER_SIZE;
     rxp.route.destination = rxpPacked.route.destination;
@@ -84,6 +88,7 @@ void cpxSendPacketBlocking(const CPXPacket_t * packet) {
   txpPacked.route.destination = packet->route.destination;
   txpPacked.route.source = packet->route.source;
   txpPacked.route.function = packet->route.function;
+  txpPacked.route.version = packet->route.version;
   txpPacked.route.lastPacket = packet->route.lastPacket;
   memcpy(txpPacked.data, packet->data, packet->dataLength);
   com_write((packet_t*)&txpPacked);
@@ -118,6 +123,7 @@ void cpxInitRoute(const CPXTarget_t source, const CPXTarget_t destination, const
     route->source = source;
     route->destination = destination;
     route->function = function;
+    route->version = CPX_VERSION;
     route->lastPacket = true;
 }
 

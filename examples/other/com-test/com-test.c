@@ -57,6 +57,7 @@ static void test_task(void *parameters) {
         txp.route.source = rxp.route.destination;
         txp.route.destination = rxp.route.source;
         txp.route.function = rxp.route.function;
+        txp.route.version = rxp.route.version;
         txp.dataLength = rxp.dataLength;
         cpxSendPacketBlocking(&txp);
         break;
@@ -65,6 +66,7 @@ static void test_task(void *parameters) {
         txp.route.source = rxp.route.destination;
         txp.route.destination = rxp.route.source;
         txp.route.function = rxp.route.function;
+        txp.route.version = rxp.route.version;
         SourceTest_t * test = (SourceTest_t*) &rxp.data[1];
         txp.dataLength = test->size;
 

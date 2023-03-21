@@ -27,6 +27,7 @@
 
 #include "com.h"
 
+#define CPX_VERSION (0)
 #define CPX_HEADER_SIZE (2)
 
 // This enum is used to identify source and destination for CPX routing information
@@ -53,6 +54,7 @@ typedef struct {
   CPXTarget_t source;
   bool lastPacket;
   CPXFunction_t function;
+  uint8_t version;
 } CPXRouting_t;
 
 typedef struct {
