@@ -24,6 +24,7 @@
 #include "pmsis.h"
 #include "cpx.h"
 #include "com.h"
+#include "state.h"
 
 typedef struct {
   CPXTarget_t destination : 3;
@@ -55,7 +56,10 @@ SemaphoreHandle_t xSemaphore = NULL;
 static void cpx_rx_task(void *parameters) {
   while (1) {
     com_read((packet_t*)&rxpPacked);
-
+    if (CPX_VERSION != rxpPacked.route.version)
+    {
+      set_state(STATE_ERROR);
+    }
     configASSERT(CPX_VERSION == rxpPacked.route.version);
     rxp.route.version = rxpPacked.route.version;
 
