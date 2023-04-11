@@ -33,6 +33,7 @@
 
 #include "cpx.h"
 #include "wifi.h"
+#include "state.h"
 
 #define IMG_ORIENTATION 0x0101
 #define CAM_WIDTH 324
@@ -344,10 +345,23 @@ void hb_task(void *parameters)
 
   while (1)
   {
-    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
-    vTaskDelay(xDelay);
-    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
-    vTaskDelay(xDelay);
+    if (get_state() == STATE_OK)
+    {
+      vTaskDelay(xDelay);
+      pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
+      vTaskDelay(xDelay);
+      pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
+    } else
+    {
+      for (uint16_t i = 0; i < 20; i++)
+      {
+        vTaskDelay(xDelay/10);
+        pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
+        vTaskDelay(xDelay/10);
+        pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
+      }
+      vTaskDelay(2*xDelay);
+    }
   }
 }
 
