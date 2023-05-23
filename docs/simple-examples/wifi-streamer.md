@@ -20,24 +20,15 @@ connecting to the AI deck's WiFi to run the examples.
 
 First see the [crazyflie-firmware repository documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/) for more details on how to build and flash and checkout how to setup [kbuild's menuconfig](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/).
 
-Clone and configure the Crazyflie firmware by running the following commands:
+Clone the crazyflie firmware [via these instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#cloning)
 
-```
-$ git clone https://github.com/bitcraze/crazyflie-firmware.git
-$ cd crazyflie-firmware
-$ make menuconfig
-```
-Note: for
-Go to the menu *Expansion deck configuration* and make sure *Support AI deck*
+Then configure the Crazyflie firmware [with the kbuild instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/)
+
+In the kbuild menu, go to *Expansion deck configuration* and make sure *Support AI deck*
 is enabled. In the *Support AI deck* sub menu select *WiFi setup at startup* and the option *Act as Access Point*. Now go to the *Credentials for access-point*
 menu and set the SSID and KEY as you wish.
 
-Now it's time to flash the firmware. Build and flash over air with the following command, replacing [CRAZYFLIE_URI] with your crazyflie's URI with your own:
-
-```
-$ make
-$ cfloader flash cf2.bin stm32-fw -w [CRAZYFLIE_URI]
-```
+Now it's time to flash the firmware. Use [the following instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#flashing) to flash the configured firmware to the crazyflie.
 
 
 ## Configuration Wifi example
