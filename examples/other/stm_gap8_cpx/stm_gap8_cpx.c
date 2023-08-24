@@ -23,6 +23,7 @@
  *
  * Simple CPX communication with the Crazyflie, use together with the Crazyflie example app "app_stm_gap_cpx"
  */
+
 #include "pmsis.h"
 #include "bsp/bsp.h"
 #include "cpx.h"
