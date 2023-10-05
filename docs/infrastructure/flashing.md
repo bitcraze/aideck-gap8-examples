@@ -35,7 +35,7 @@ to be flashed on the GAP8 (which is the case for all AIdecks equal or newer than
 
 ## JTAG
 
-You can flash the example with an Olimex ARM-USB-TINY-H JTAG using the following command (replacing example-directory with the example you want to flash):
+See the [JTAG programmer](/docs/infrastructure/jtag-programmer.md) documentation for programmer details. You can e.g. flash the example with an Olimex ARM-USB-TINY-H JTAG using the following command (replacing example-directory with the example you want to flash):
 
 ```bash
 docker run --rm -v ${PWD}:/module --device /dev/ttyUSB0 --privileged -P bitcraze/aideck tools/build/make-example [example-directory] flash
