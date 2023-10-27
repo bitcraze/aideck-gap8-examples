@@ -27,7 +27,7 @@ $ python -m cfloader flash examples/other/stm_gap8_cpx/BUILD/GAP8_V2/GCC_RISCV_F
 ```
 > Note: Replace the 'radio://0/80/2M' with your crazyflie's URI
 
-Build and flash the app-stm-gap8-cpx in the Crazyflie, see the instruction in the crazyflie-firmware repository.
+Build and flash the app-stm-gap8-cpx in the Crazyflie, see the [instruction in the crazyflie-firmware repository](https://github.com/bitcraze/crazyflie-firmware/tree/master/examples/app_stm_gap8_cpx).
 
 Connect to the Crazyflie with the CFclient and open up the console tab. You should see the following output:
 ```
