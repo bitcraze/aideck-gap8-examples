@@ -20,9 +20,9 @@ connecting to the AI deck's WiFi to run the examples.
 
 First see the [crazyflie-firmware repository documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/) for more details on how to build and flash and checkout how to setup [kbuild's menuconfig](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/).
 
-Clone the crazyflie firmware [via these instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#cloning)
+Clone the crazyflie firmware [via these instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#cloning).
 
-Then configure the Crazyflie firmware [with the kbuild instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/)
+Then configure the Crazyflie firmware [with the kbuild instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/kbuild/).
 
 In the kbuild menu, go to *Expansion deck configuration* and make sure *Support AI deck*
 is enabled. In the *Support AI deck* sub menu select *WiFi setup at startup* and the option *Act as Access Point*. Now go to the *Credentials for access-point*
@@ -55,14 +55,14 @@ $ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-examp
 $ cfloader flash examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/80/2M
 ```
 
-**Note**: if you get `Unable to find image 'aideck-with-autotiler:latest' locally`, make sure that you have done [the getting started guide](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) of the 'Setting up development environment' properly. Or replace it with the autotiler-less docker image bitcraze/aideck
+**Note**: if you get `Unable to find image 'aideck-with-autotiler:latest' locally`, make sure that you have done [the getting started guide](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) of the 'Setting up development environment' properly. Or replace it with the autotiler-less docker image bitcraze/aideck.
 
 
 ## Starting the viewer
 
-In order to start the viewer, you will need to the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45). Do check [this issue](https://github.com/bitcraze/crazyflie-clients-python/issues/611) if you also use the cfclient.
+In order to start the viewer, you will need the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45). Do check [this issue](https://github.com/bitcraze/crazyflie-clients-python/issues/611) if you also use the cfclient.
 
-Install opencv python
+Install opencv python:
 
 ```shell
 $ pip install opencv-python
@@ -80,6 +80,6 @@ Then you should be able to see the raw/color or jpeg image in the viewer like th
 
 ![opencv viewer](/docs/images/viewer.png)
 
-**Note**: If you like to save the images, you can run the opencv-viewer.py with the `--save` flag.
+**Note**: If you like to save the images, you can run the `opencv-viewer.py` with the `--save` flag.
 
-**Note**: If you enabled your aideck to connect to a wifi point, you would need to check the console tab of the CFclient to retrieve the ipaddress of the aideck. Then you will need to use the `-n` with the ip address with the viewer script.
+**Note**: If you enabled your aideck to connect to a wifi point, you would need to check the console tab of the cfclient to retrieve the ipaddress of the aideck. Then you will need to use the `-n` with the ip address with the viewer script.
