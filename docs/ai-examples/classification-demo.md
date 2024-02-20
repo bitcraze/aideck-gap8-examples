@@ -29,18 +29,18 @@ For more information on good deep learning practices, we recommend reviewing [De
 #### Tensor Flow
 * A seperate Python environment with Python requirements installed. We recommend using a virtual environment manager such as Miniconda or Penv. Use python version 3.10 and install requirements using pip: `pip install -r requirements.txt`
 
-### GAP8
+#### GAP8
 There are two approaches for this:
 * Install gap_sdk natively on your machine (>= 4.8.0)
 * Build inside Docker container with gap_sdk >= 4.8.0
 
-
-We will show the instructions for building the example the docker container later.
+This document uses the Docker container to compile the example.
 
 
 ---
-## Generate a custom dataset
-
+## Select your model
+### Option 1: Fine-tune model with your custom dataset (recommended)
+#### Collect data
 Collect images from the AI-deck using the WiFi streamer example with the opencv-viewer script (use the --save flag). Place them in the training_data folder, according to the instructions inside. The captured data must be split into a train and validation set by hand (a good starting point is a 75% train - 25 % validation split). The existing classes can be renamed as desired. For more than two classes, increase the number of units in the final (dense) layer of the model.
 
 This is the folder structure you should follow:
@@ -52,16 +52,20 @@ Put here the training and validation images like this:
 /validation/class_1/*.jpeg
 /validation/class_2/*.jpeg
 ```
----
-## Fine-tune a pre-trained image classification CNN
+
+#### Fine-tune the network with your custom dataset
 From `aideck-gap8-examples/examples/ai/classification/` run `python train_classifier.py [--args]`.
 
 For possible arguments, review the `parse_args()` function in `main.py`.
 
-Automatically generates quantized and non-quantized TensorFlow Lite models.
+Automatically generates quantized and non-quantized TensorFlow Lite models and puts them in the `model/` directory.
+
+### Option 2: Use our pre-trained model
+To use our pre-trained models, trained on the Bitcraze flight arena + a Christmas package, extract `classification.tflite` and `classification_q.tflite` from `classification_tflite_files.zip` into the `model/` directory.
 
 ---
-## Execute the image classification CNN on the AI-deck
+## Deploy on the AI-deck
+### Option 1: Flash the image classification CNN to the AI-deck (recommended)
 
 After successfully completing all previous steps, you can now run the classification CNN on the AI-deck. From a terminal with the docker container, or gap_sdk dev environment, in the `aideck-gap8-examples/` folder, execute:
 
@@ -78,7 +82,7 @@ When the example is flashing, you should see the GAP8 LED blink fast, which is t
 You should also receive the classification output in the cfclient console.
 
 
-## Run the image classification CNN on the AI-deck over JTAG (not recommended)
+### Option 2: Run the image classification CNN on the AI-deck over JTAG
 
 After successfully completing all previous steps, you can now run the classification CNN on the AI-deck. However, as you want to run it with the debugger connected, you need to adapt the following parts of the code:
 - if you want the output in the terminal and not over UART, uncomment io=host and comment io=uart in the Makefile.
