@@ -85,7 +85,8 @@ You should also receive the classification output in the cfclient console.
 ### Option 2: Run the image classification CNN on the AI-deck over JTAG
 
 After successfully completing all previous steps, you can now run the classification CNN on the AI-deck. However, as you want to run it with the debugger connected, you need to adapt the following parts of the code:
-- if you want the output in the terminal and not over UART, uncomment io=host and comment io=uart in the Makefile.
+- this will overwrite the bootloader, adopt the Makefile accordingly by removing `-DFS_PARTITIONTABLE_OFFSET`
+- if you want the output in the terminal and not over UART, uncomment io=host and comment io=uart in the Makefile
 - instead of via CPX you want to write with printf, which will then be forwarded either to the terminal or UART (e.g. in cpxPrintToConsole add printf(fmt);)
 - note that you might not be able to properly communicate with the NINA module if you don't restart it as well
 

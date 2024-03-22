@@ -42,7 +42,7 @@ docker run --rm -v ${PWD}:/module --device /dev/ttyUSB0 --privileged -P bitcraze
 
 ```
 
-**Note:** This will overwrite the bootloader!
+**Note:** This will overwrite the bootloader! Remove the partition table offset (`-DFS_PARTITIONTABLE_OFFSET`) if used in the application
 
 **Note:** USB in docker is only supported on Linux
 
