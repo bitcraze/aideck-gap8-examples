@@ -147,7 +147,7 @@ int classification()
 {
   pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC*1000*1000);
   //pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL*1000*1000);
-  pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
+  __pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
 
   // For debugging
   struct pi_uart_conf uart_conf;

@@ -31,8 +31,8 @@ For more information on good deep learning practices, we recommend reviewing [De
 
 #### GAP8
 There are two approaches for this:
-* Install gap_sdk natively on your machine (>= 4.8.0)
-* Build inside Docker container with gap_sdk >= 4.8.0
+* Install gap_sdk natively on your machine (>= 4.22.0)
+* Build inside Docker container with gap_sdk >= 4.22.0
 
 This document uses the Docker container to compile the example.
 

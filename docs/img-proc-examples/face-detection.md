@@ -5,7 +5,7 @@ page_id: face-detection
 
 This is the face detection application based on the example as developed by Greenwaves technologies. It is a bit more tailor made towards the AI-deck and uses the wifi streamer to stream the output to your computer.
 
-This was tested on **GAP_SDK version 4.8.0.2**, which at the moment of writing was the newest we had a docker container for.
+This was tested on **GAP_SDK version 4.22.0**, which at the moment of writing was the newest we had a docker container for.
 
 ## Building with Docker GAP-SDK
 
