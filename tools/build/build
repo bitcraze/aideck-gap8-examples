@@ -3,4 +3,4 @@ set -e
 
 scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-${scriptDir}/make-example examples/other/wifi-img-streamer all image SETUP_WIFI_AP=1
+${scriptDir}/make-example examples/other/wifi-img-streamer build image SETUP_WIFI_AP=1
