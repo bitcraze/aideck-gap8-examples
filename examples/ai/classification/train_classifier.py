@@ -22,6 +22,7 @@ https://github.com/google-coral/tutorials/blob/52b60653698a10e7c83c5761cf6a2acc3
 
 import argparse
 import os
+import datetime
 
 import numpy as np
 import tensorflow as tf
@@ -61,7 +62,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     ROOT_PATH = (
-        f"{os.path.abspath(os.curdir)}/GAP8/ai_examples/classification/"
+        f"{os.path.abspath(os.curdir)}/examples/ai/classification/"
     )
     DATASET_PATH = f"{ROOT_PATH}{args.dataset_path}"
     if not os.path.exists(DATASET_PATH):
@@ -121,7 +122,7 @@ if __name__ == "__main__":
                 activation=None,
                 strides=FIRST_LAYER_STRIDE,
             ),
-            tf.keras.layers.experimental.preprocessing.Resizing(
+            tf.keras.layers.Resizing(
                 96, 96, interpolation="bilinear"
             ),
             base_model,
@@ -146,13 +147,15 @@ if __name__ == "__main__":
         "Number of trainable weights = {}".format(len(model.trainable_weights))
     )
 
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
     # Train the custom head
     history = model.fit(
         train_generator,
-        steps_per_epoch=len(train_generator),
         epochs=args.epochs,
         validation_data=val_generator,
-        validation_steps=len(val_generator),
+        callbacks=[tensorboard_callback],
     )
 
     # Fine-tune the model
@@ -179,10 +182,10 @@ if __name__ == "__main__":
 
     history_fine = model.fit(
         train_generator,
-        steps_per_epoch=len(train_generator),
-        epochs=args.finetune_epochs,
+        initial_epoch=args.epochs,
+        epochs=args.finetune_epochs + args.epochs,
         validation_data=val_generator,
-        validation_steps=len(val_generator),
+        callbacks=[tensorboard_callback],
     )
 
     # Convert to TensorFlow lite
