@@ -26,27 +26,40 @@ For more information on good deep learning practices, we recommend reviewing [De
 ## Prerequisites
 ### Build Environments
 
-#### Tensor Flow
-* A seperate Python environment with Python requirements installed. We recommend using a virtual environment manager such as Miniconda or Penv. Use python version 3.10 and install requirements using pip: `pip install -r requirements.txt`
+#### TensorFlow
+You can choose between two approaches for setting up the TensorFlow environment, depending on your preference:
+
+1. **Native Installation**  
+   Set up a separate Python environment with the required dependencies. We recommend using a virtual environment manager such as Miniconda or Penv. Ensure you are using Python version 3.10 and install the required packages using pip:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Docker Container** (recommended for this documentation)  
+   Alternatively, you can use Docker to handle the TensorFlow environment. This documentation uses Docker for the TensorFlow training steps. To run the training inside a container, use the following command:  
+   ```bash
+   docker run -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow:2.17.0 examples/ai/classification/docker_train_classifier.sh
+   ```
 
 #### GAP8
-There are two approaches for this:
-* Install gap_sdk natively on your machine (>= 4.22.0)
-* Build inside Docker container with gap_sdk >= 4.22.0
+Similarly, there are two ways to set up the GAP8 environment:
 
-This document uses the Docker container to compile the example.
+1. **Native Installation**  
+   Install the `gap_sdk` natively on your machine (>= 4.22.0).
 
+2. **Docker Container** (recommended for this documentation)  
+   You can also use Docker to build the GAP8 application. This documentation assumes the use of Docker for compiling the GAP8 examples.
 
 ---
 ## Select your model
 ### Option 1: Fine-tune model with your custom dataset (recommended)
+
 #### Collect data
-Collect images from the AI-deck using the WiFi streamer example with the opencv-viewer script (use the --save flag). Place them in the training_data folder, according to the instructions inside. The captured data must be split into a train and validation set by hand (a good starting point is a 75% train - 25 % validation split). The existing classes can be renamed as desired. For more than two classes, increase the number of units in the final (dense) layer of the model.
+Collect images from the AI-deck using the WiFi streamer example with the `opencv-viewer` script (use the `--save` flag). Place them in the `training_data` folder according to the instructions inside. The captured data must be split into a training and validation set manually (a good starting point is a 75% train, 25% validation split). You can rename the existing classes as needed. If you have more than two classes, be sure to adjust the number of units in the final (dense) layer of the model.
 
-This is the folder structure you should follow:
-Put here the training and validation images like this:
+The folder structure should look like this:
 
-```
+```bash
 /train/class_1/*.jpeg
 /train/class_2/*.jpeg
 /validation/class_1/*.jpeg
@@ -54,11 +67,40 @@ Put here the training and validation images like this:
 ```
 
 #### Fine-tune the network with your custom dataset
-From `aideck-gap8-examples/examples/ai/classification/` run `python train_classifier.py [--args]`.
 
-For possible arguments, review the `parse_args()` function in `main.py`.
+To fine-tune the model, run the following command from the `aideck-gap8-examples/examples/ai/classification/` directory:
 
-Automatically generates quantized and non-quantized TensorFlow Lite models and puts them in the `model/` directory.
+For **Docker**:
+```bash
+docker run -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow:2.17.0 examples/ai/classification/docker_train_classifier.sh
+```
+
+For **Native Installation**:
+```bash
+python train_classifier.py [--args]
+```
+
+#### Possible Arguments for `train_classifier.py`
+
+The following arguments can be passed to customize the training process:
+
+- `--epochs`: Number of training epochs (default: 20)
+- `--finetune_epochs`: Number of fine-tuning epochs (default: 20)
+- `--dataset_path`: Path to the dataset (default: `"training_data"`)
+- `--batch_size`: Batch size for training (default: 8)
+- `--image_width`: Width of input images (default: 324)
+- `--image_height`: Height of input images (default: 244)
+- `--image_channels`: Number of input image channels (default: 1)
+
+Example usage for native installation:
+
+```bash
+python train_classifier.py --epochs 30 --batch_size 16 --dataset_path custom_data
+```
+
+For **Docker**, to use these arguments, you need to manually edit the `docker_train_classifier.sh` script where `train_classifier.py` is called. Add the arguments directly in the script like above.
+
+The training process will automatically generate quantized and non-quantized TensorFlow Lite models, which will be placed in the `model/` directory.
 
 ### Option 2: Use our pre-trained model
 To use our pre-trained models, trained on the Bitcraze flight arena + a Christmas package, extract `classification.tflite` and `classification_q.tflite` from `classification_tflite_files.zip` into the `model/` directory.
@@ -75,7 +117,7 @@ $ docker run --rm -v ${PWD}:/module aideck-with-autotiler tools/build/make-examp
 
 Then from another terminal (outside of the container), use the cfloader to flash the example if you have the gap8 bootloader flashed AIdeck. Change the [CRAZYFLIE URI] with your crazyflie URI like radio://0/40/2M/E7E7E7E703
 ```
-cfloader flash examples/ai/classification/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w [CRAZYFLIE URI]
+cfloader flash examples/ai/classification/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/90/2M/E7E7E7E7E7
 ```
 
 When the example is flashing, you should see the GAP8 LED blink fast, which is the bootloader. The example itself can be noticed by a slow blinking LED.
