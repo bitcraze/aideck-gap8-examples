@@ -36,10 +36,7 @@ You can choose between two approaches for setting up the TensorFlow environment,
    ```
 
 2. **Docker Container** (recommended for this documentation)  
-   Alternatively, you can use Docker to handle the TensorFlow environment. This documentation uses Docker for the TensorFlow training steps. To run the training inside a container, use the following command:  
-   ```bash
-   docker run -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow:2.17.0 examples/ai/classification/docker_train_classifier.sh
-   ```
+   Alternatively, you can use Docker to handle the TensorFlow environment. This documentation uses Docker for the TensorFlow training steps.
 
 #### GAP8
 Similarly, there are two ways to set up the GAP8 environment:
