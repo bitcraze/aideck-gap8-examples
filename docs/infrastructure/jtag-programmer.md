@@ -7,7 +7,7 @@ page_id: jtag-programmer
 The GAP8 SDK has recently added support for OpenOCD and debuggers with a FTDI interface should be usable. We have tested the Olimex ARM-USB-TINY-H with success and also the JLINK. The same applies to the ESP32 and a rule of thumb is that if the JTAG debugger is compatible with the ESP32, it also works for the GAP8. The STLink v2 will not work as it can only debug Cortex cores.
 
 Tested programmers at Bitcraze AB:
-- Olimex ARM-USB-TINY-H
+- Olimex ARM-USB-TINY-H with the ARM-JTAG-20-10 adapter
 
 > It's a good choice to follow our hardware selection, you could find detailed information about Olimex Debugger in [USER’S MANUAL](https://www.olimex.com/Products/ARM/JTAG/_resources/ARM-USB-TINY_and_TINY_H_manual.pdf), it's helpful for you to learn how to use debugger with OpenOCD. The Olimex debugger needs a USB type B cable which might not be that common anymore, just a heads up.
 
