@@ -7,8 +7,7 @@ In this example, a binary classification CNN (object or background) is trained a
 
 ![classification](/docs/images/classification.gif)
 
-
-The used CNN is a pre-trained MobileNetV2 (alpha = 0.35, image input size=96x96x3) with a custom classification head and prepended convolutional layers to accept the grayscale/Bayer camera stream of the AI-deck and resize this to MobileNet's expected input shape. The example was tested on an AI-deck v1.1 with a Bayer color camera equipped.
+The CNN used in this example is a pre-trained MobileNetV2 (alpha = 0.35, image input size = 96x96x3) with a custom classification head and additional convolutional layers to process the grayscale/Bayer camera stream from the AI-deck. These layers resize the input to match MobileNet's expected input shape. The example was tested on an AI-deck v1.1 equipped with a Bayer color camera.
 
 CNN fine-tuning demo based on TensorFlow ["retrain classification" demo](https://github.com/google-coral/tutorials/blob/52b60653698a10e7c83c5761cf6a2acc3db57d22/retrain_classification_ptq_tf2.ipynb).
 
