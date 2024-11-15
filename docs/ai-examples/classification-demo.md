@@ -3,7 +3,7 @@ title: Classification Demo
 page_id: classification-demo
 ---
 
-In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very particular domain (a table in the Bitcraze arena, with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results on your own domain, the example can be trained on a custom dataset captured by the AI-deck camera, and fitted to detect multiple custom classes of your choosing. The training can currently only be done on a native installation. Execution on / flashing the AI-deck can be done with a native installation or with the GAP8 docker.
+In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very specific domain (a table in the Bitcraze arena with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results in your own domain, the example can be trained on a custom dataset captured by the AI-deck camera and tailored to detect multiple custom classes of your choosing. The training can currently only be performed on a native installation. Execution on or flashing the AI-deck can be done with either a native installation or the GAP8 Docker environment.
 
 ![classification](/docs/images/classification.gif)
 
