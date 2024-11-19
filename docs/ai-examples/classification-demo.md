@@ -3,12 +3,11 @@ title: Classification Demo
 page_id: classification-demo
 ---
 
-In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very particular domain (a table in the Bitcraze arena, with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results on your own domain, the example can be trained on a custom dataset captured by the AI-deck camera, and fitted to detect multiple custom classes of your choosing. The training can currently only be done on a native installation. Execution on / flashing the AI-deck can be done with a native installation or with the GAP8 docker.
+In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very specific domain (a table in the Bitcraze arena with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results in your own domain, the example can be trained on a custom dataset captured by the AI-deck camera and tailored to detect multiple custom classes of your choosing. The training can currently only be performed on a native installation. Execution on or flashing the AI-deck can be done with either a native installation or the GAP8 Docker environment.
 
 ![classification](/docs/images/classification.gif)
 
-
-The used CNN is a pre-trained MobileNetV2 (alpha = 0.35, image input size=96x96x3) with a custom classification head and prepended convolutional layers to accept the grayscale/Bayer camera stream of the AI-deck and resize this to MobileNet's expected input shape. The example was tested on an AI-deck v1.1 with a Bayer color camera equipped.
+The CNN used in this example is a pre-trained MobileNetV2 (alpha = 0.35, image input size = 96x96x3) with a custom classification head and additional convolutional layers to process the grayscale/Bayer camera stream from the AI-deck. These layers resize the input to match MobileNet's expected input shape. The example was tested on an AI-deck v1.1 equipped with a Bayer color camera.
 
 CNN fine-tuning demo based on TensorFlow ["retrain classification" demo](https://github.com/google-coral/tutorials/blob/52b60653698a10e7c83c5761cf6a2acc3db57d22/retrain_classification_ptq_tf2.ipynb).
 
