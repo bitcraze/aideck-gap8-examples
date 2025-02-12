@@ -1,5 +1,5 @@
 ---
-title: Other examples
+title: Examples
 page_id: other-examples-index
 sort_order: 5
 ---

@@ -1,5 +1,5 @@
 ---
-title: Writing aideck gap8 code 
+title: Step By step guide to develop for GAP8
 page_id: writing-aideck-gap8-code
 ---
 
@@ -89,7 +89,7 @@ APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
 ```
 
 ## Compile and Flash
-For this section we assume you are in the ```ai-deck-examples``` directory. 
+For this section we assume you are in the ```aideck-gap8-examples``` directory. 
 
 Now we want to compile using docker:
 
