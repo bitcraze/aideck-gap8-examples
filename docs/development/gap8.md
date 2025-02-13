@@ -10,7 +10,7 @@ You find more information about the processor itself on the [Greenwaves homepage
 
 ## Cores ##
 
-You have one separate core, the *fabric controller* (FC), which you can imagine as the system's "boss" - the core with access to the peripherals, its own L1 memory and its own instruction cache. The FC can then offload tasks to the *cluster* (CL). The CL is very powerful when working together - it has 8 cores which share L1 memory and an instruction cache. The shared resources mean great acceleration when all cores are executing the same code on different data - but keep in mind that trying to use them individually will be highly ineffective, as you will get a lot of instruction cache misses. Great examples are machine learning as the [classification example](/docs/ai-examples/classification-demo.md).
+You have one separate core, the *fabric controller* (FC), which you can imagine as the system's "boss" - the core with access to the peripherals, its own L1 memory and its own instruction cache. The FC can then offload tasks to the *cluster* (CL). The CL is very powerful when working together - it has 8 cores which share L1 memory and an instruction cache. The shared resources mean great acceleration when all cores are executing the same code on different data - but keep in mind that trying to use them individually will be highly ineffective, as you will get a lot of instruction cache misses. Great examples are machine learning as the [classification example](/docs/examples/classification-demo.md).
 
 ## Memory ##
 

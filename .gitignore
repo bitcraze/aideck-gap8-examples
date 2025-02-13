@@ -4,3 +4,4 @@
 examples/**/BUILD*
 examples/**/lib*
 BUILD
+__pycache__

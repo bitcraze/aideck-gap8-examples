@@ -3,7 +3,7 @@ title: Hello World Example
 page_id: helloworld
 ---
 
-This simple example will show how to make an app for the GAP88 chip, which sends a string that is printed out on the console on the [CFclient](https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/) through the [CPX framework](/docs/infrastructure/cpx.md).
+This simple example will show how to make an app for the GAP88 chip, which sends a string that is printed out on the console on the [CFclient](https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/) through the [CPX framework](/docs/development/cpx.md).
 
 > Make sure you have completed the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) first
 
