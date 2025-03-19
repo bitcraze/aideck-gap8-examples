@@ -67,14 +67,18 @@ The folder structure should look like this:
 
 #### Fine-tune the network with your custom dataset
 
-To fine-tune the model, run the following command from the `aideck-gap8-examples/examples/ai/classification/` directory:
+You can fine-tune the model using either Docker or a native installation. Choose your preferred method and run the corresponding command below.
 
-For **Docker**:
+##### **Docker**
+
+From the `aideck-gap8-examples` directory:
 ```bash
 docker run -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow:2.17.0 examples/ai/classification/docker_train_classifier.sh
 ```
 
-For **Native Installation**:
+##### **Native Installation**
+
+From the `aideck-gap8-examples/examples/ai/classification/` directory:
 ```bash
 python train_classifier.py [--args]
 ```
