@@ -3,6 +3,12 @@ title: Face detection example
 page_id: face-detection
 ---
 
+> ⚠️ Important Notice: The GreenWaves Technologies website is currently down, preventing the autotiler for [gap_sdk](https://github.com/GreenWaves-Technologies/gap_sdk) from being compiled. This means that following this example will not work unless you already have the required file.
+>
+> However, you can still deploy neural networks using [DORY](https://github.com/pulp-platform/dory) as an alternative.
+>
+> For more details, updates, and workarounds, see our announcement [here](https://github.com/orgs/bitcraze/discussions/1854).
+
 This is the face detection application based on the example as developed by Greenwaves technologies. It is a bit more tailor made towards the AI-deck and uses the wifi streamer to stream the output to your computer.
 
 This was tested on **GAP_SDK version 4.22.0**, which at the moment of writing was the newest we had a docker container for.

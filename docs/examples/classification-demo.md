@@ -3,6 +3,12 @@ title: Classification Demo
 page_id: classification-demo
 ---
 
+> ⚠️ Important Notice: The GreenWaves Technologies website is currently down, preventing the autotiler for [gap_sdk](https://github.com/GreenWaves-Technologies/gap_sdk) from being compiled. This means that following this example will not work unless you already have the required file.
+>
+> However, you can still deploy neural networks using [DORY](https://github.com/pulp-platform/dory) as an alternative.
+>
+> For more details, updates, and workarounds, see our announcement [here](https://github.com/orgs/bitcraze/discussions/1854).
+
 In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very specific domain (a table in the Bitcraze arena with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results in your own domain, the example can be trained on a custom dataset captured by the AI-deck camera and tailored to detect multiple custom classes of your choosing. The training can currently only be performed on a native installation. Execution on or flashing the AI-deck can be done with either a native installation or the GAP8 Docker environment.
 
 ![classification](/docs/images/classification.gif)

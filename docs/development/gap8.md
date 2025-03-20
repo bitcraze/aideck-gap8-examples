@@ -34,6 +34,10 @@ The data transfers from peripherals can be handled by a so-called *micro DMA*, w
 
 ## SDK ##
 
+> ⚠️ Important Notice: The GreenWaves Technologies website is down, preventing fetching and compiling the autotiler. This means that deploying neural networks through [gap_sdk](https://github.com/GreenWaves-Technologies/gap_sdk) or our Docker image is not possible unless you already have the file. However, you can still deploy neural networks using [DORY](https://github.com/pulp-platform/dory) as an alternative.
+>
+> For more details, updates and workarounds, see our announcement [here](https://github.com/orgs/bitcraze/discussions/1854).
+
 The GAP8 SDK allows you to compile and execute applications on the GAP8 IoT Application Processor.
 Besides tools for building/programming/flashing, it also provides tools to help deploy neural networks and support two different operating systems.
 
