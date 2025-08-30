@@ -376,7 +376,7 @@ void facedetection_task(void)
 
     // Send task to the cluster and print response
     pi_cluster_send_task_to_cl(&cluster_dev, task);
-    // cpxPrintToConsole(LOG_TO_CRTP, "end of face detection, faces detected: %d\n", ClusterCall.num_reponse);
+    // cpxPrintToConsole(LOG_TO_CRTP, "end of face detection, faces detected: %d\n", ClusterCall.num_response);
 
 #if defined(USE_STREAMER)
     if (wifiClientConnected == 1)
@@ -389,7 +389,7 @@ void facedetection_task(void)
     }
 #endif
     // Send result through the uart to the crazyflie as single characters
-    pi_uart_write(&uart, &ClusterCall.num_reponse, 1);
+    pi_uart_write(&uart, &ClusterCall.num_response, 1);
 
     nb_frames++;
   }
