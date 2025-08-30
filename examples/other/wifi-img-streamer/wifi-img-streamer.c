@@ -46,7 +46,7 @@ static pi_buffer_t buffer;
 static EventGroupHandle_t evGroup;
 #define CAPTURE_DONE_BIT (1 << 0)
 
-// Performance menasuring variables
+// Performance measuring variables
 static uint32_t start = 0;
 static uint32_t captureTime = 0;
 static uint32_t transferTime = 0;
