@@ -201,7 +201,7 @@ unsigned char *ReadImageFromFile(char *ImageName, unsigned int *W, unsigned int 
 	}
 	pi_fs_close(File);
 	pi_fs_unmount(&fs);
-	printf("Image %s, [W: %d, H: %d], Gray, Size: %d bytes, Loaded sucessfully\n", ImageName, *W, *H, AlignedSize);
+	printf("Image %s, [W: %d, H: %d], Gray, Size: %d bytes, Loaded successfully\n", ImageName, *W, *H, AlignedSize);
 
 	return (ImagePtr);
 Fail:

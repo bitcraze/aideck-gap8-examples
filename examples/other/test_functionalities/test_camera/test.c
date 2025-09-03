@@ -8,9 +8,9 @@
  * Authors: Germain Haugou, ETH (germain.haugou@iis.ee.ethz.ch)
  */
 
-// This example shows how to strean the capture of a camera image using
+// This example shows how to stream the capture of a camera image using
 // small buffers.
-// This is using aynchronous transfers to make sure a second buffer is always ready
+// This is using asynchronous transfers to make sure a second buffer is always ready
 // when the current is finished, to not lose any data.
 
 #include "pmsis.h"

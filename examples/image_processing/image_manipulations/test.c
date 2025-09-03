@@ -9,7 +9,7 @@
  * Kimberly McGuire, Bitcraze (kimberly@bitcraze.io)
  */
 
-// This example shows how to do simpel image manipulations on the 
+// This example shows how to do simple image manipulations on the
 // loaded image on the fabric controller of the gap8.
 
 #include "pmsis.h"
