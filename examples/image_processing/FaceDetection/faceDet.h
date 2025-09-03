@@ -31,7 +31,7 @@ typedef struct cascade_answers{
 	int w;
 	int h;
 	int score;
-}cascade_reponse_t;
+}cascade_response_t;
 
 typedef struct ArgCluster {
 	unsigned char*   	ImageIn;
@@ -44,8 +44,8 @@ typedef struct ArgCluster {
 	unsigned int* 		ImageIntegral;
 	unsigned int* 		SquaredImageIntegral;
 	unsigned short *		image16;
-	cascade_reponse_t* reponses;
-	unsigned char num_reponse;
+	cascade_response_t* responses;
+	unsigned char num_response;
 	int* output_map;
 	cascade_t* model;
 	unsigned int cycles;

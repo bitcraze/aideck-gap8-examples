@@ -241,34 +241,34 @@ static int rect_intersect_area( unsigned short a_x, unsigned short a_y, unsigned
 }
 
 
-static void non_max_suppress(cascade_reponse_t* reponses, int reponse_idx){
+static void non_max_suppress(cascade_response_t* responses, int response_idx){
 
 	int idx,idx_int;
 
     //Non-max supression
-     for(idx=0;idx<reponse_idx;idx++){
+     for(idx=0;idx<response_idx;idx++){
         //check if rect has been removed (-1)
-        if(reponses[idx].x==-1)
+        if(responses[idx].x==-1)
             continue;
 
-        for(idx_int=0;idx_int<reponse_idx;idx_int++){
+        for(idx_int=0;idx_int<response_idx;idx_int++){
 
-            if(reponses[idx_int].x==-1 || idx_int==idx)
+            if(responses[idx_int].x==-1 || idx_int==idx)
                 continue;
 
             //check the intersection between rects
-            int intersection = rect_intersect_area(reponses[idx].x,reponses[idx].y,reponses[idx].w,reponses[idx].h,
-               									   reponses[idx_int].x,reponses[idx_int].y,reponses[idx_int].w,reponses[idx_int].h);
+            int intersection = rect_intersect_area(responses[idx].x,responses[idx].y,responses[idx].w,responses[idx].h,
+               									   responses[idx_int].x,responses[idx_int].y,responses[idx_int].w,responses[idx_int].h);
 
             if(intersection >= NON_MAX_THRES){ //is non-max
                 //supress the one that has lower score
-                if(reponses[idx_int].score > reponses[idx].score){
-                    reponses[idx].x = -1;
-                    reponses[idx].y = -1;
+                if(responses[idx_int].score > responses[idx].score){
+                    responses[idx].x = -1;
+                    responses[idx].y = -1;
                 }
                 else{
-                    reponses[idx_int].x = -1;
-                    reponses[idx_int].y = -1;
+                    responses[idx_int].x = -1;
+                    responses[idx_int].y = -1;
                 }
             }
         }
@@ -320,14 +320,14 @@ void faceDet_cluster_init(ArgCluster_T *ArgC){
 		DEBUG_PRINTF("Error allocating cascade buffer 1...\n");
 	}
 
-	ArgC->reponses = (cascade_reponse_t*) pmsis_l2_malloc(sizeof(cascade_reponse_t)*MAX_NUM_OUT_WINS);
+	ArgC->responses = (cascade_response_t*) pmsis_l2_malloc(sizeof(cascade_response_t)*MAX_NUM_OUT_WINS);
 
 }
 
 
 void faceDet_cluster_deinit(ArgCluster_T *ArgC)
 {
-    pmsis_l2_malloc_free(ArgC->reponses, sizeof(cascade_reponse_t)*MAX_NUM_OUT_WINS);
+    pmsis_l2_malloc_free(ArgC->responses, sizeof(cascade_response_t)*MAX_NUM_OUT_WINS);
     pmsis_l2_malloc_free(ArgC->output_map, sizeof(unsigned int)*(ArgC->Hout-24+1)*(ArgC->Wout-24+1));
     pmsis_l1_malloc_free(face_det_l1_memory, FACE_DETECT_L1_MEMORY_POOL_SIZE);
 }
@@ -343,8 +343,8 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 	unsigned int i, MaxCore = gap_ncore(),Ti;
 
 	//create structure for output
-	cascade_reponse_t* reponses = ArgC->reponses;
-	int reponse_idx = 0;
+	cascade_response_t* responses = ArgC->responses;
+	int response_idx = 0;
 
 	Wout=64;
 	Hout=48;
@@ -358,7 +358,7 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 
 	//Init image windows
 	for(int i=0;i<MAX_NUM_OUT_WINS;i++)
-		reponses[i].x=-1;
+		responses[i].x=-1;
 
 #ifdef ENABLE_LAYER_1
 	ResizeImage_1(ArgC->ImageIn,ArgC->ImageOut);
@@ -372,12 +372,12 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			result = ArgC->output_map[i*(Wout-24+1)+j];
 
 			if(result!=0){
-				reponses[reponse_idx].x       = (j*Win)/Wout;
-				reponses[reponse_idx].y       = (i*Hin)/Hout;
-				reponses[reponse_idx].w = (24*Win)/Wout;
-				reponses[reponse_idx].h = (24*Hin)/Hout;
-				reponses[reponse_idx].score   = result;
-				reponse_idx++;
+				responses[response_idx].x       = (j*Win)/Wout;
+				responses[response_idx].y       = (i*Hin)/Hout;
+				responses[response_idx].w = (24*Win)/Wout;
+				responses[response_idx].h = (24*Hin)/Hout;
+				responses[response_idx].score   = result;
+				response_idx++;
 					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
 			}
 	}
@@ -397,12 +397,12 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			result = ArgC->output_map[i*(Wout-24+1)+j];
 
 			if(result!=0){
-				reponses[reponse_idx].x     = (j*Win)/Wout;
-				reponses[reponse_idx].y     = (i*Hin)/Hout;
-				reponses[reponse_idx].w 	= (24*Win)/Wout;
-				reponses[reponse_idx].h 	= (24*Hin)/Hout;
-				reponses[reponse_idx].score = result;
-				reponse_idx++;
+				responses[response_idx].x     = (j*Win)/Wout;
+				responses[response_idx].y     = (i*Hin)/Hout;
+				responses[response_idx].w 	= (24*Win)/Wout;
+				responses[response_idx].h 	= (24*Hin)/Hout;
+				responses[response_idx].score = result;
+				response_idx++;
 					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
 			}
 	}
@@ -421,41 +421,41 @@ void faceDet_cluster_main(ArgCluster_T *ArgC)
 			result = ArgC->output_map[i*(Wout-24+1)+j];
 
 			if(result!=0){
-				reponses[reponse_idx].x     = (j*Win)/Wout;
-				reponses[reponse_idx].y     = (i*Hin)/Hout;
-				reponses[reponse_idx].w 	= (24*Win)/Wout;
-				reponses[reponse_idx].h 	= (24*Hin)/Hout;
-				reponses[reponse_idx].score = result;
-				reponse_idx++;
+				responses[response_idx].x     = (j*Win)/Wout;
+				responses[response_idx].y     = (i*Hin)/Hout;
+				responses[response_idx].w 	= (24*Win)/Wout;
+				responses[response_idx].h 	= (24*Hin)/Hout;
+				responses[response_idx].score = result;
+				response_idx++;
 					//DEBUG_PRINTF("Face Found in %dx%d at X: %d, Y: %d - value: %d\n",Wout,Hout,j,i,result);
 			}
 	}
 
 #endif
 
-	non_max_suppress(reponses,reponse_idx);
+	non_max_suppress(responses, response_idx);
 
     // TODO: reset when perf api done
     ArgC->cycles = 0; //gap8_readhwtimer() - Ti;
     //DEBUG_PRINTF("Test Face Detection CNN Cluster cycles: %d\n", Ti);
 
 
-	ArgC->num_reponse=reponse_idx;
+	ArgC->num_response=response_idx;
 	int detected_faces = 0;
-	for (int i=0; i<reponse_idx; i++)
-            if (reponses[i].x!=-1)
+	for (int i=0; i<response_idx; i++)
+            if (responses[i].x!=-1)
             {
             	detected_faces++;
                 //printf("Found a face: ");
-                //printf("X: %d Y: %d W: %d H: %d\n",reponses[i].x,reponses[i].y,reponses[i].w,reponses[i].h);
-                DrawRectangle(ArgC->ImageIn, Hin, Win,  reponses[i].x, reponses[i].y, reponses[i].w, reponses[i].h, 0);
-                DrawRectangle(ArgC->ImageIn, Hin, Win,  reponses[i].x-1, reponses[i].y-1, reponses[i].w+2, reponses[i].h+2, 0);
-                DrawRectangle(ArgC->ImageIn, Hin, Win,  reponses[i].x-2, reponses[i].y-2, reponses[i].w+4, reponses[i].h+4, 0);
-                DrawRectangle(ArgC->ImageIn, Hin, Win,  reponses[i].x-3, reponses[i].y-3, reponses[i].w+6, reponses[i].h+6, 0);
-                DrawRectangle(ArgC->ImageIn, Hin, Win,  reponses[i].x-4, reponses[i].y-4, reponses[i].w+8, reponses[i].h+8, 0);
+                //printf("X: %d Y: %d W: %d H: %d\n",responses[i].x,responses[i].y,responses[i].w,responses[i].h);
+                DrawRectangle(ArgC->ImageIn, Hin, Win,  responses[i].x, responses[i].y, responses[i].w, responses[i].h, 0);
+                DrawRectangle(ArgC->ImageIn, Hin, Win,  responses[i].x-1, responses[i].y-1, responses[i].w+2, responses[i].h+2, 0);
+                DrawRectangle(ArgC->ImageIn, Hin, Win,  responses[i].x-2, responses[i].y-2, responses[i].w+4, responses[i].h+4, 0);
+                DrawRectangle(ArgC->ImageIn, Hin, Win,  responses[i].x-3, responses[i].y-3, responses[i].w+6, responses[i].h+6, 0);
+                DrawRectangle(ArgC->ImageIn, Hin, Win,  responses[i].x-4, responses[i].y-4, responses[i].w+8, responses[i].h+8, 0);
                 //real_detections++;
             }
-    ArgC->num_reponse=detected_faces;
+    ArgC->num_response=detected_faces;
 	final_resize(ArgC->ImageIn,ArgC->ImageOut);
 }
 
