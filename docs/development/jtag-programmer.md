@@ -14,6 +14,6 @@ Tested programmers at Bitcraze AB:
 ## JTAG connectors
 There are two Cortex-M 10pin (2×5, 1.27mm pitch) JTAG interfaces on the AI-deck so that both the GAP8 and the ESP32 can be programmed and debugged easily. They are edge mounted on the PCB to save height. The GAP8 JTAG is located on the left side and the ESP32 JTAG to the right when viewing the board from the top and camera front. Note that pin-1 is located to the left, marked with a 1 on the bottom side of the board.
 
-Use a 2×5 pin 1.27mm (0.05“) flat cable together with our [debug adapter](https://www.bitcraze.io/debug-adapter-kit) or e.g. an adapter such as the [Olimex ARM-JTAG-20-10](https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10), is needed to connect the debugger and the AI-deck.
+To connect to these JTAG interfaces, a compatible debugger is required. We recommend the [Olimex ARM-USB-TINY-H bundle](https://store.bitcraze.io/products/olimex-arm-usb-tiny-h-bundle) which includes the ARM-USB-TINY-H programmer, ARM-JTAG-20-10 adapter cable (to convert from the 20-pin programmer output to the 10-pin AI-deck connectors), and USB cable.
 
 ![JTAG cable connected to GAP8](/docs/images/ai-deck-jtag-connecting.png)
