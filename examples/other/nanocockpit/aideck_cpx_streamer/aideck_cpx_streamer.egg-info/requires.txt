@@ -1,0 +1,3 @@
+setuptools
+matplotlib
+opencv-python-headless

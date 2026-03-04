@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: aideck_cpx_streamer
+Version: 0.0.0
+Summary: TODO: Package description
+Maintainer: root
+Maintainer-email: root@todo.todo
+License: Apache-2.0
+Requires-Dist: setuptools
+Requires-Dist: matplotlib
+Requires-Dist: opencv-python-headless
+Dynamic: license
+Dynamic: maintainer
+Dynamic: maintainer-email
+Dynamic: requires-dist
+Dynamic: summary

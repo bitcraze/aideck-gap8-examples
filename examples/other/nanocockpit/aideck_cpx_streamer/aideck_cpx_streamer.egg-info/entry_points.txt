@@ -1,0 +1,3 @@
+[console_scripts]
+plt_viewer = aideck_cpx_streamer.plt_viewer:main
+ros_viewer = aideck_cpx_streamer.ros_viewer:main
