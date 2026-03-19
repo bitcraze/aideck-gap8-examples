@@ -12,6 +12,7 @@ page_id: classification-demo
 In this example, a binary classification CNN (object or background) is trained and executed on the AI-deck. The models included in the example are trained on data from a very specific domain (a table in the Bitcraze arena with a particular Christmas package) with limited data augmentation, resulting in poor generalization and low robustness. For good results in your own domain, the example can be trained on a custom dataset captured by the AI-deck camera and tailored to detect multiple custom classes of your choosing. The training can currently only be performed on a native installation. Execution on or flashing the AI-deck can be done with either a native installation or the GAP8 Docker environment.
 
 ![classification](/docs/images/classification.gif)
+_Screen recording showing terminal classification output alongside an external camera view of the setup_
 
 The CNN used in this example is a pre-trained MobileNetV2 (alpha = 0.35, image input size = 96x96x3) with a custom classification head and additional convolutional layers to process the grayscale/Bayer camera stream from the AI-deck. These layers resize the input to match MobileNet's expected input shape. The example was tested on an AI-deck v1.1 equipped with a Bayer color camera.
 
