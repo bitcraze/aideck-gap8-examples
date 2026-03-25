@@ -179,6 +179,9 @@ class StreamerClient:
 
         self.metadata_stats = []
         self.n_frames = 0
+        
+        self.replies_sent = False
+        self.cpx_bidi_warned = False
 
         signal.signal(signal.SIGINT, self.shutdown)
         signal.signal(signal.SIGTERM, self.shutdown)
@@ -358,6 +361,7 @@ class StreamerClient:
             reply.inference_stamped.phi = network_output[3]
 
         self.send_buffer(StreamerType.INFERENCE, reply)
+        self.replies_sent = True
 
     def log(self, *args, end='\n', **kwargs):
         if self.deferred_crlf and end != '':
@@ -384,9 +388,15 @@ class StreamerClient:
             last = self.metadata_stats[-1]
             
             height, width = last.frame_height, last.frame_width
-
-            rtt_latencies = [frame.reply_recv_timestamp - frame.reply_frame_timestamp for frame in self.metadata_stats]
-            rtt = np.mean(rtt_latencies) / 10**3
+            
+            has_rtt_stats = any(frame.reply_frame_timestamp != 0 for frame in self.metadata_stats)
+            if has_rtt_stats:
+                rtt_latencies = [frame.reply_recv_timestamp - frame.reply_frame_timestamp for frame in self.metadata_stats]
+                rtt = np.mean(rtt_latencies) / 10**3
+                rtt_str = f"{rtt:.0f}ms"
+            else:
+                self.check_cpx_bidirectional()
+                rtt_str = "--"
 
         if n_received >= 2:
             first = self.metadata_stats[0]
@@ -401,7 +411,12 @@ class StreamerClient:
         self.metadata_stats = []
         self.n_frames += n_received
 
-        self.log(f'\r{width} x {height}px, {fps:.1f}fps, RTT {rtt:.0f}ms, dropped {n_dropped}, total {self.n_frames}', end='')
+        self.log(f'\r{width} x {height}px, {fps:.1f}fps, RTT {rtt_str}, dropped {n_dropped}, total {self.n_frames}', end='')
+
+    def check_cpx_bidirectional(self):
+        if self.replies_sent and not self.cpx_bidi_warned:
+            self.log(f'Info: RTT stats not available, enable CPX_SPI_BIDIRECTIONAL in GAP config.h if you want to collect them.')
+            self.cpx_bidi_warned = True
 
     def shutdown(self, *args):
         self.fps_timer.cancel()
