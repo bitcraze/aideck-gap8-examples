@@ -76,4 +76,4 @@ The resulting `dataset/` directory will contain one PNG image for each received 
 
 ## Expected results
 
-You can expect a framerate of ~30fps without, and ~60fps with disabling bidirectional CPX. 
+You can expect a framerate of ~30fps without, and ~60fps with disabling bidirectional CPX (change the CPX_SPI_BIDIRECTIONAL define in config.h for GAP8 and TODO (NINA changes?). 
