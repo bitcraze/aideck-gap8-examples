@@ -5,6 +5,8 @@
 Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found here: TODO
 Also note that the NINA firmware will break CPX towards GAP8 - meaning you need to have a JTAG debugger to update GAP8! Do not proceed if you do not have a debugger.
 
+Make sure that you went through the 
+
 Nanocockpit has been tested with:
 - Ubuntu 22.04
 - Python 3.9
@@ -46,14 +48,11 @@ make flash
 
 You can view the images with the plotter, found in aideck_cpx_streamer
 
-Install the viewer as a Python package:
+Install the viewer as a Python package (best you do this in a virtual environment with python 3.9):
 
 ```shell
 $ pip install aideck_cpx_streamer
 ```
-
-<!-- The `-e` flag allows you to edit files in your package without having to re-install it every time. -->
-
 Launch a minimal client that shows the received data in a GUI window:
 
 ```shell
