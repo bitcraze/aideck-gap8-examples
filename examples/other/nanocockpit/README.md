@@ -5,6 +5,10 @@
 Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found here: TODO
 Also note that the NINA firmware will break CPX towards GAP8 - meaning you need to have a JTAG debugger to update GAP8! Do not proceed if you do not have a debugger.
 
+Nanocockpit has been tested with:
+- Ubuntu 22.04
+- Python 3.9
+
 ## Build instructions
 
 The nanocockpit GAP8 code is composed of reusable components, under `lib/`, and a streamer example.
