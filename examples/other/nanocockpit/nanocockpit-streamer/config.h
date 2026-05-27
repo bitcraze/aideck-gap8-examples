@@ -177,11 +177,11 @@
 /**************************** CPX SETTINGS ****************************/
 
 // Enable bidirectional CPX SPI communication (GAP<=>ESP32).
-// Disabled by default (i.e., GAP->ESP32 only), because it allows a 
-// much higher SPI bandwidth compared to bidirectional communication. 
-// This is further made worse by an AI-deck PCB bug.
-// (see also src/nina/main/spi.c)
-#define CPX_SPI_BIDIRECTIONAL
+// Keep disabled (i.e., GAP8->ESP32 only) unless needed, because it 
+// allows much higher SPI bandwidth compared to bidirectional 
+// communication. This is further made worse by an AI-deck PCB bug.
+// (see also src/nina/main/cpx_spi.c)
+// #define CPX_SPI_BIDIRECTIONAL
 
 /************************* STREAMER SETTINGS **************************/
 

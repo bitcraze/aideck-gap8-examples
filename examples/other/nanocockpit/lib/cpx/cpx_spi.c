@@ -40,7 +40,7 @@
 
 #ifdef CPX_SPI_BIDIRECTIONAL
     // Baudrate is limited to <7.2MHz if communicating GAP8<-ESP32 because of an AI-deck PCB bug
-    // (see also src/nina/main/spi.c)
+    // (see also src/nina/main/cpx_spi.c)
     #define CPX_SPI_BAUDRATE     7200000
 #else
     #define CPX_SPI_BAUDRATE    30000000

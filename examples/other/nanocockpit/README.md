@@ -2,8 +2,9 @@
 
 ## Requirements
 
-Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found here: TODO
-Also note that the NINA firmware will break CPX towards GAP8 - meaning you need to have a JTAG debugger to update GAP8! Do not proceed if you do not have a debugger.
+Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found [here](https://github.com/bitcraze/aideck-esp-firmware-v2).
+Also note that here we use the debugger to program GAP8 - meaning you might overwrite your bootloader and not be able to program over CPX anymore (unless you flash it again, more info [here] https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/development/flashing/). Only proceed if you have a debugger.
+To stream the state of the drone directly with the received images, you have to send the state from the Crazyflie to the NINA, an example on how to do it is found [here] https://github.com/bitcraze/crazyflie-firmware/tree/master/examples/app_state_stream_aideck .
 
 Make sure that you went through the 
 
@@ -53,7 +54,11 @@ Install the viewer as a Python package (best you do this in a virtual environmen
 ```shell
 $ pip install aideck_cpx_streamer
 ```
-Launch a minimal client that shows the received data in a GUI window:
+
+<!-- The `-e` flag allows you to edit files in your package without having to re-install it every time. -->
+
+Launch a minimal client that shows the received data in a GUI window
+(make sure your ai-deck and your laptop are connected to the same WiFi, which you configured when flashing the NINA module):
 
 ```shell
 $ plt_viewer
