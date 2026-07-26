@@ -32,6 +32,7 @@ typedef enum
 {
   RAW_ENCODING = 0,
   JPEG_ENCODING = 1,
+  GRAY4_ENCODING = 2,
 } __attribute__((packed)) StreamerMode_t;
 
 void cpx_stream_init(void);

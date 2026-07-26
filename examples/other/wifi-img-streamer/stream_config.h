@@ -58,6 +58,23 @@
 #define STREAM_ENCODING_MODE 0
 #endif
 
+#ifndef STREAM_WIDTH
+#define STREAM_WIDTH 64
+#endif
+
+#ifndef STREAM_HEIGHT
+#define STREAM_HEIGHT 48
+#endif
+
+#if STREAM_ENCODING_MODE == 2 && (STREAM_WIDTH == 0 || STREAM_HEIGHT == 0)
+#error Stream dimensions must be greater than zero
+#endif
+
+#if STREAM_ENCODING_MODE == 2 && \
+    (STREAM_WIDTH > CAMERA_WIDTH || STREAM_HEIGHT > CAMERA_HEIGHT)
+#error Stream dimensions must not exceed camera dimensions
+#endif
+
 #if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
 #define CAPTURE_BUFFER_COUNT 3
 #else

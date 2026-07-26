@@ -42,8 +42,10 @@ and profiling output:
 | --- | --- | --- |
 | `CAMERA_RESOLUTION` | `qvga`, `qqvga` | `qvga` |
 | `CAPTURE_MODE` | `start-stop`, `pipelined` | `start-stop` |
-| `SENSOR_FRAME_RATE` | `default`, `60` | `default` |
-| `STREAM_ENCODING` | `raw`, `jpeg` | `raw` |
+| `SENSOR_FRAME_RATE` | `default`, `60`, `65` | `default` |
+| `STREAM_ENCODING` | `raw`, `jpeg`, `gray4` | `raw` |
+| `STREAM_WIDTH` | output width for `gray4` | `64` |
+| `STREAM_HEIGHT` | output height for `gray4` | `48` |
 | `OUTPUT_PROFILING_DATA` | `0`, `1` | `0` |
 
 The pipelined mode uses three image buffers: two DMA buffers remain queued
@@ -67,6 +69,13 @@ profiling enabled using:
 
 ```shell
 $ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer clean build image SETUP_WIFI_AP=1 CAMERA_RESOLUTION=qvga CAPTURE_MODE=pipelined SENSOR_FRAME_RATE=60 STREAM_ENCODING=jpeg OUTPUT_PROFILING_DATA=1
+```
+
+For a compact policy observation stream, `gray4` downsamples the sensor frame
+and packs two 4-bit grayscale pixels into each byte. For example:
+
+```shell
+$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer clean build image SETUP_WIFI_AP=1 CAMERA_RESOLUTION=qqvga CAPTURE_MODE=pipelined SENSOR_FRAME_RATE=65 STREAM_ENCODING=gray4 STREAM_WIDTH=64 STREAM_HEIGHT=48 OUTPUT_PROFILING_DATA=1
 ```
 
 

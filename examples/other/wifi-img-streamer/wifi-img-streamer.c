@@ -32,6 +32,7 @@
 #include "cpx.h"
 #include "cpx_stream.h"
 #include "gaplib/jpeg_encoder.h"
+#include "gray4_stream.h"
 #include "stdio.h"
 #include "stream_config.h"
 #include "wifi.h"
@@ -160,6 +161,12 @@ static void camera_task(void *parameters)
     cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize JPEG encoder\n");
     return;
   }
+#elif STREAM_ENCODING_MODE == 2
+  if (gray4_stream_init())
+  {
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize gray4 stream\n");
+    return;
+  }
 #endif
 
   cpx_stream_init();
@@ -181,11 +188,18 @@ static void camera_task(void *parameters)
     uint32_t jpeg_size = 0;
     encoding_time = encode_jpeg(frame.buffer, &jpeg_size);
     image_size = jpeg_header_size + jpeg_size + jpeg_footer_size;
+#elif STREAM_ENCODING_MODE == 2
+    encoding_time = gray4_stream_encode(frame.data);
+    image_size = gray4_stream_size();
 #endif
 
     uint32_t transfer_started_at = xTaskGetTickCount();
 #if STREAM_ENCODING_MODE == 1
     send_jpeg(jpeg_size, image_size);
+#elif STREAM_ENCODING_MODE == 2
+    cpx_stream_send_header(STREAM_WIDTH, STREAM_HEIGHT, image_size,
+                           GRAY4_ENCODING);
+    cpx_stream_send_buffer(gray4_stream_data(), image_size);
 #else
     cpx_stream_send_header(CAMERA_WIDTH, CAMERA_HEIGHT, image_size,
                            RAW_ENCODING);
