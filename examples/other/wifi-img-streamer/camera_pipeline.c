@@ -8,41 +8,52 @@
 #define IMG_ORIENTATION 0x0101
 
 static struct pi_device camera;
-static pi_task_t capture_task;
+static pi_task_t capture_tasks[CAPTURE_BUFFER_COUNT];
 static EventGroupHandle_t capture_events;
 static uint8_t *image_data[CAPTURE_BUFFER_COUNT];
 static pi_buffer_t image_buffers[CAPTURE_BUFFER_COUNT];
-static volatile uint32_t capture_done_at;
-static uint32_t capture_duration;
-static uint32_t pending_capture_at;
-static uint32_t ready_buffer;
-static uint32_t pending_buffer;
+static uint32_t capture_started_at[CAPTURE_BUFFER_COUNT];
+static volatile uint32_t capture_duration;
+static volatile uint32_t ready_buffer;
+static uint32_t processing_buffer;
+static volatile int consumer_waiting;
 static int camera_streaming;
 static int pipeline_primed;
 
+static void schedule_capture(uint32_t buffer_index);
+
 static void capture_done(void *arg)
 {
-  (void)arg;
-  capture_done_at = xTaskGetTickCount();
-  xEventGroupSetBits(capture_events, CAPTURE_DONE_BIT);
+  uint32_t buffer_index = (uint32_t)(uintptr_t)arg;
+  if (consumer_waiting)
+  {
+    capture_duration =
+      xTaskGetTickCount() - capture_started_at[buffer_index];
+    ready_buffer = buffer_index;
+    consumer_waiting = 0;
+    xEventGroupSetBits(capture_events, CAPTURE_DONE_BIT);
+  }
+  else
+  {
+    schedule_capture(buffer_index);
+  }
 }
 
-static uint32_t schedule_capture(uint32_t buffer_index)
+static void schedule_capture(uint32_t buffer_index)
 {
-  uint32_t started_at = xTaskGetTickCount();
+  capture_started_at[buffer_index] = xTaskGetTickCount();
   pi_camera_capture_async(
     &camera,
     image_data[buffer_index],
     CAMERA_WIDTH * CAMERA_HEIGHT,
-    pi_task_callback(&capture_task, capture_done, NULL));
-  return started_at;
+    pi_task_callback(&capture_tasks[buffer_index], capture_done,
+                     (void *)(uintptr_t)buffer_index));
 }
 
-static void wait_for_capture(uint32_t started_at)
+static void wait_for_ready_frame(void)
 {
   xEventGroupWaitBits(capture_events, CAPTURE_DONE_BIT, pdTRUE, pdFALSE,
                       (TickType_t)portMAX_DELAY);
-  capture_duration = capture_done_at - started_at;
 }
 
 static int open_camera(void)
@@ -106,33 +117,37 @@ int camera_pipeline_init(void)
 CameraFrame_t camera_pipeline_begin_frame(void)
 {
 #if CAPTURE_MODE == CAPTURE_MODE_START_STOP
-  uint32_t started_at = schedule_capture(ready_buffer);
+  consumer_waiting = 1;
+  schedule_capture(processing_buffer);
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-  wait_for_capture(started_at);
+  wait_for_ready_frame();
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+  processing_buffer = ready_buffer;
 #else
   if (!camera_streaming)
   {
-    pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+    if (!pipeline_primed)
+    {
+      consumer_waiting = 1;
+      schedule_capture(1);
+      schedule_capture(2);
+      pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+      wait_for_ready_frame();
+      processing_buffer = ready_buffer;
+      schedule_capture(0);
+      pipeline_primed = 1;
+    }
+    else
+    {
+      pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+    }
     camera_streaming = 1;
   }
-
-#if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
-  if (!pipeline_primed)
-  {
-    wait_for_capture(schedule_capture(ready_buffer));
-    pipeline_primed = 1;
-  }
-  pending_buffer = ready_buffer ^ 1;
-  pending_capture_at = schedule_capture(pending_buffer);
-#else
-  wait_for_capture(schedule_capture(ready_buffer));
-#endif
 #endif
 
   CameraFrame_t frame = {
-    .data = image_data[ready_buffer],
-    .buffer = &image_buffers[ready_buffer],
+    .data = image_data[processing_buffer],
+    .buffer = &image_buffers[processing_buffer],
   };
   return frame;
 }
@@ -141,8 +156,10 @@ uint32_t camera_pipeline_end_frame(void)
 {
 #if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
   uint32_t wait_started_at = xTaskGetTickCount();
-  wait_for_capture(pending_capture_at);
-  ready_buffer = pending_buffer;
+  consumer_waiting = 1;
+  wait_for_ready_frame();
+  schedule_capture(processing_buffer);
+  processing_buffer = ready_buffer;
   return xTaskGetTickCount() - wait_started_at;
 #else
   return 0;
@@ -151,12 +168,11 @@ uint32_t camera_pipeline_end_frame(void)
 
 void camera_pipeline_disconnect(void)
 {
-#if CAPTURE_MODE != CAPTURE_MODE_START_STOP
+#if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
   if (camera_streaming)
   {
     pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
     camera_streaming = 0;
-    pipeline_primed = 0;
   }
 #endif
 }

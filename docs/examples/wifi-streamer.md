@@ -41,13 +41,15 @@ and profiling output:
 | Variable | Values | Default |
 | --- | --- | --- |
 | `CAMERA_RESOLUTION` | `qvga`, `qqvga` | `qvga` |
-| `CAPTURE_MODE` | `start-stop`, `continuous`, `pipelined` | `start-stop` |
+| `CAPTURE_MODE` | `start-stop`, `pipelined` | `start-stop` |
 | `SENSOR_FRAME_RATE` | `default`, `60` | `default` |
 | `STREAM_ENCODING` | `raw`, `jpeg` | `raw` |
 | `OUTPUT_PROFILING_DATA` | `0`, `1` | `0` |
 
-The pipelined mode uses two image buffers so the camera can capture the next
-frame while the current frame is encoded or transferred.
+The pipelined mode uses three image buffers: two DMA buffers remain queued
+while one complete frame is encoded or transferred. If processing is slower
+than capture, complete frames are dropped instead of starting a transfer in
+the middle of a camera frame.
 
 ## Building and flashing the example
 

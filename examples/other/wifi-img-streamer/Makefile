@@ -23,12 +23,10 @@ endif
 
 ifeq ($(CAPTURE_MODE),start-stop)
 APP_CFLAGS += -DCAPTURE_MODE=0
-else ifeq ($(CAPTURE_MODE),continuous)
-APP_CFLAGS += -DCAPTURE_MODE=1
 else ifeq ($(CAPTURE_MODE),pipelined)
 APP_CFLAGS += -DCAPTURE_MODE=2
 else
-$(error CAPTURE_MODE must be start-stop, continuous, or pipelined)
+$(error CAPTURE_MODE must be start-stop or pipelined)
 endif
 
 ifeq ($(SENSOR_FRAME_RATE),default)
