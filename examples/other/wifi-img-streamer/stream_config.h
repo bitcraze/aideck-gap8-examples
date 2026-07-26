@@ -1,0 +1,41 @@
+#pragma once
+
+#include "bsp/camera/himax.h"
+
+#ifndef CAMERA_FORMAT
+#define CAMERA_FORMAT PI_CAMERA_QVGA
+#endif
+
+#ifndef CAMERA_WIDTH
+#define CAMERA_WIDTH 324
+#endif
+
+#ifndef CAMERA_HEIGHT
+#define CAMERA_HEIGHT 244
+#endif
+
+#define CAPTURE_MODE_START_STOP 0
+#define CAPTURE_MODE_CONTINUOUS 1
+#define CAPTURE_MODE_PIPELINED 2
+
+#ifndef CAPTURE_MODE
+#define CAPTURE_MODE CAPTURE_MODE_START_STOP
+#endif
+
+#ifndef OUTPUT_PROFILING_DATA
+#define OUTPUT_PROFILING_DATA 0
+#endif
+
+#ifndef SENSOR_FRAME_RATE_HZ
+#define SENSOR_FRAME_RATE_HZ 0
+#endif
+
+#ifndef STREAM_ENCODING_MODE
+#define STREAM_ENCODING_MODE 0
+#endif
+
+#if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
+#define CAPTURE_BUFFER_COUNT 2
+#else
+#define CAPTURE_BUFFER_COUNT 1
+#endif

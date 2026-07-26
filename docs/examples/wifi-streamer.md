@@ -31,28 +31,39 @@ menu and set the SSID and KEY as you wish.
 Now it's time to flash the firmware. Use [the following instructions](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#flashing) to flash the configured firmware to the crazyflie.
 
 
-## Configuration Wifi example
+## Configuring the example
 
-To select which mode (RAW or JPEG) change the code below in the ```wifi-img-streamer.c``` file.
+The default configuration preserves the original behavior: QVGA resolution,
+raw output, and starting and stopping the camera for each frame. Build variables
+can select the camera resolution, capture mode, sensor timing, stream encoding,
+and profiling output:
 
-```c
-typedef enum
-{
-  RAW_ENCODING = 0,
-  JPEG_ENCODING = 1
-} __attribute__((packed)) StreamerMode_t;
+| Variable | Values | Default |
+| --- | --- | --- |
+| `CAMERA_RESOLUTION` | `qvga`, `qqvga` | `qvga` |
+| `CAPTURE_MODE` | `start-stop`, `continuous`, `pipelined` | `start-stop` |
+| `SENSOR_FRAME_RATE` | `default`, `60` | `default` |
+| `STREAM_ENCODING` | `raw`, `jpeg` | `raw` |
+| `OUTPUT_PROFILING_DATA` | `0`, `1` | `0` |
 
-static StreamerMode_t streamerMode = RAW_ENCODING;
-```
+The pipelined mode uses two image buffers so the camera can capture the next
+frame while the current frame is encoded or transferred.
 
 ## Building and flashing the example
 
-To build and flash the example run the following:
+To build the default configuration and flash it, run:
 
 ```shell
 $ cd aideck-gap8-examples
 $ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer image
 $ cfloader flash examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img deck-bcAI:gap8-fw -w radio://0/80/2M
+```
+
+For example, build pipelined QVGA JPEG streaming with 60 FPS sensor timing and
+profiling enabled using:
+
+```shell
+$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer clean build image SETUP_WIFI_AP=1 CAMERA_RESOLUTION=qvga CAPTURE_MODE=pipelined SENSOR_FRAME_RATE=60 STREAM_ENCODING=jpeg OUTPUT_PROFILING_DATA=1
 ```
 
 

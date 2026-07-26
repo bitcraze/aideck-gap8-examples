@@ -108,8 +108,8 @@ while(1):
       print("{}".format(1/meanTimePerImage))
 
       if format == 0:
-          bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
-          bayer_img.shape = (244, 324)
+          bayer_img = np.frombuffer(imgStream, dtype=np.uint8)
+          bayer_img.shape = (height, width)
           color_img = cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA)
           cv2.imshow('Raw', bayer_img)
           cv2.imshow('Color', color_img)
@@ -124,4 +124,3 @@ while(1):
           decoded = cv2.imdecode(nparr,cv2.IMREAD_UNCHANGED)
           cv2.imshow('JPEG', decoded)
           cv2.waitKey(1)
-
