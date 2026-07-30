@@ -1,3 +1,28 @@
+/**
+ * ,---------,       ____  _ __
+ * |  ,-^-,  |      / __ )(_) /_______________ _____  ___
+ * | (  O  ) |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
+ * | / ,--´  |    / /_/ / / /_/ /__/ / /_/ / / / /_/  __/
+ *    +------`   /_____/\_/\__/_/   \__,_/  /___/\___/
+ *
+ * AI-deck GAP8
+ *
+ * Copyright (C) 2026 Bitcraze AB
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, in version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * WiFi image streamer example
+ */
 #include "camera_pipeline.h"
 
 #include "bsp/camera/himax.h"
@@ -19,12 +44,27 @@ static uint32_t processing_buffer;
 static volatile int consumer_waiting;
 static int camera_streaming;
 static int pipeline_primed;
+static volatile uint32_t pending_captures;
+static volatile int discarding_captures;
 
 static void schedule_capture(uint32_t buffer_index);
 
 static void capture_done(void *arg)
 {
   uint32_t buffer_index = (uint32_t)(uintptr_t)arg;
+  if (pending_captures > 0)
+  {
+    pending_captures--;
+  }
+  if (discarding_captures)
+  {
+    if (pending_captures == 0)
+    {
+      xEventGroupSetBits(capture_events, CAPTURE_DONE_BIT);
+    }
+    return;
+  }
+
   if (consumer_waiting)
   {
     capture_duration =
@@ -42,6 +82,7 @@ static void capture_done(void *arg)
 static void schedule_capture(uint32_t buffer_index)
 {
   capture_started_at[buffer_index] = xTaskGetTickCount();
+  pending_captures++;
   pi_camera_capture_async(
     &camera,
     image_data[buffer_index],
@@ -171,8 +212,19 @@ void camera_pipeline_disconnect(void)
 #if CAPTURE_MODE == CAPTURE_MODE_PIPELINED
   if (camera_streaming)
   {
-    pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+    xEventGroupClearBits(capture_events, CAPTURE_DONE_BIT);
+    discarding_captures = 1;
+    /* Stop only after queued DMA captures finish at frame boundaries. */
+    if (pending_captures > 0)
+    {
+      wait_for_ready_frame();
+    }
+
     camera_streaming = 0;
+    pipeline_primed = 0;
+    consumer_waiting = 0;
+    discarding_captures = 0;
+    pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   }
 #endif
 }
