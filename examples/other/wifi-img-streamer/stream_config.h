@@ -70,6 +70,10 @@
 #error Stream dimensions must be greater than zero
 #endif
 
+#if STREAM_ENCODING_MODE == 2 && STREAM_WIDTH % 2 != 0
+#error STREAM_WIDTH must be even for gray4 encoding
+#endif
+
 #if STREAM_ENCODING_MODE == 2 && \
     (STREAM_WIDTH > CAMERA_WIDTH || STREAM_HEIGHT > CAMERA_HEIGHT)
 #error Stream dimensions must not exceed camera dimensions

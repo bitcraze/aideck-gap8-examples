@@ -44,7 +44,7 @@ and profiling output:
 | `CAPTURE_MODE` | `start-stop`, `pipelined` | `start-stop` |
 | `SENSOR_FRAME_RATE` | `default`, `60`, `65` | `default` |
 | `STREAM_ENCODING` | `raw`, `jpeg`, `gray4` | `raw` |
-| `STREAM_WIDTH` | output width for `gray4` | `64` |
+| `STREAM_WIDTH` | even output width for `gray4` | `64` |
 | `STREAM_HEIGHT` | output height for `gray4` | `48` |
 | `OUTPUT_PROFILING_DATA` | `0`, `1` | `0` |
 
