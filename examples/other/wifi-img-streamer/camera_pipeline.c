@@ -37,8 +37,9 @@ static pi_task_t capture_tasks[CAPTURE_BUFFER_COUNT];
 static EventGroupHandle_t capture_events;
 static uint8_t *image_data[CAPTURE_BUFFER_COUNT];
 static pi_buffer_t image_buffers[CAPTURE_BUFFER_COUNT];
-static uint32_t capture_started_at[CAPTURE_BUFFER_COUNT];
-static volatile uint32_t capture_duration;
+static uint32_t capture_queued_at[CAPTURE_BUFFER_COUNT];
+static volatile uint32_t queue_latency;
+static volatile uint32_t dropped_frames;
 static volatile uint32_t ready_buffer;
 static uint32_t processing_buffer;
 static volatile int consumer_waiting;
@@ -67,21 +68,22 @@ static void capture_done(void *arg)
 
   if (consumer_waiting)
   {
-    capture_duration =
-      xTaskGetTickCount() - capture_started_at[buffer_index];
+    queue_latency =
+      xTaskGetTickCount() - capture_queued_at[buffer_index];
     ready_buffer = buffer_index;
     consumer_waiting = 0;
     xEventGroupSetBits(capture_events, CAPTURE_DONE_BIT);
   }
   else
   {
+    dropped_frames++;
     schedule_capture(buffer_index);
   }
 }
 
 static void schedule_capture(uint32_t buffer_index)
 {
-  capture_started_at[buffer_index] = xTaskGetTickCount();
+  capture_queued_at[buffer_index] = xTaskGetTickCount();
   pending_captures++;
   pi_camera_capture_async(
     &camera,
@@ -215,10 +217,8 @@ void camera_pipeline_disconnect(void)
     xEventGroupClearBits(capture_events, CAPTURE_DONE_BIT);
     discarding_captures = 1;
     /* Stop only after queued DMA captures finish at frame boundaries. */
-    if (pending_captures > 0)
-    {
-      wait_for_ready_frame();
-    }
+    wait_for_ready_frame();
+    xEventGroupClearBits(capture_events, CAPTURE_DONE_BIT);
 
     camera_streaming = 0;
     pipeline_primed = 0;
@@ -229,7 +229,12 @@ void camera_pipeline_disconnect(void)
 #endif
 }
 
-uint32_t camera_pipeline_capture_time(void)
+uint32_t camera_pipeline_queue_latency(void)
 {
-  return capture_duration;
+  return queue_latency;
+}
+
+uint32_t camera_pipeline_dropped_frames(void)
+{
+  return dropped_frames;
 }

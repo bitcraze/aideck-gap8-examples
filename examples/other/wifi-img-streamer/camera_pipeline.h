@@ -38,4 +38,5 @@ int camera_pipeline_init(void);
 CameraFrame_t camera_pipeline_begin_frame(void);
 uint32_t camera_pipeline_end_frame(void);
 void camera_pipeline_disconnect(void);
-uint32_t camera_pipeline_capture_time(void);
+uint32_t camera_pipeline_queue_latency(void);
+uint32_t camera_pipeline_dropped_frames(void);

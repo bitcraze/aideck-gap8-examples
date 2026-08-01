@@ -49,7 +49,8 @@ and profiling output:
 The pipelined mode uses three image buffers: two DMA buffers remain queued
 while one complete frame is encoded or transferred. If processing is slower
 than capture, complete frames are dropped instead of starting a transfer in
-the middle of a camera frame.
+the middle of a camera frame. Profiling reports the queue-to-completion latency
+and a cumulative count of these internal whole-frame drops.
 
 ## Building and flashing the example
 

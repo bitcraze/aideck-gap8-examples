@@ -199,10 +199,10 @@ static void camera_task(void *parameters)
 #if OUTPUT_PROFILING_DATA
     cpxPrintToConsole(
       LOG_TO_CRTP,
-      "capture=%d ms, encoding=%d ms (%d bytes), transfer=%d ms, "
-      "frame=%d ms, wait=%d ms\n",
-      camera_pipeline_capture_time(), encoding_time, image_size, transfer_time,
-      frame_time, wait_time);
+      "q_ms=%u enc_ms=%u bytes=%u tx_ms=%u frame_ms=%u wait_ms=%u "
+      "drops=%u\n",
+      camera_pipeline_queue_latency(), encoding_time, image_size, transfer_time,
+      frame_time, wait_time, camera_pipeline_dropped_frames());
 #endif
   }
 }
