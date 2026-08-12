@@ -1,5 +1,9 @@
 # Nanocockpit GAP8 examples
 
+[Nanocockpit](https://github.com/idsia-robotics/nanocockpit) is an application framework for the AI-deck. It provides reusable GAP8 components - camera acquisition, CPX over SPI, co-routines, queues, state forwarding from the Crazyflie over UART, and tracing - that applications are built on top of.
+
+This folder contains the framework, under `lib/`, and one application built with it: the Wi-Fi streamer in `nanocockpit-streamer/`. Upstream ships further examples for the individual components, as well as a complete on-board CNN application.
+
 ## Requirements
 
 Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found [here](https://github.com/bitcraze/aideck-esp-firmware-v2).
@@ -23,8 +27,6 @@ The build-time settings of the streamer example live in [`nanocockpit-streamer/c
 
 ## Build instructions
 
-The nanocockpit GAP8 code is composed of reusable components, under `lib/`, and a streamer example.
-
 Configure your computer to use the GAP SDK Docker container as described [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/) (the nanocockpit framework was generally developed and tested with 3.8.1, however, for the nanocockpit streamer the newest release is also compatible).
 
 Start a bash console inside your docker:
@@ -37,7 +39,7 @@ docker run --rm -it -v "${PWD}:/module/data/" -P \
     /bin/bash -c "source /gap_sdk/configs/ai_deck.sh; cd /module/data/; bash"
 ```
 
-Select the example that you want to build, for example the nanocockpit WiFi-streamer (note that it is important that you start your bash console outside the nanocockpit folder, otherwise the lib files will not be found):
+Select the application that you want to build. This folder ships the Wi-Fi streamer (note that it is important that you start your bash console outside the nanocockpit folder, otherwise the lib files will not be found):
 ```sh
 cd nanocockpit-streamer 
 ```
