@@ -122,6 +122,14 @@ static int open_camera(void)
     return -1;
   }
 
+  /* Keep the sensor's raster height equal to the QVGA DMA frame height. */
+#if CAMERA_QVGA_WINDOW_ENABLE
+  if (himax_configure_qvga_window(&camera, 1))
+  {
+    return -1;
+  }
+#endif
+
 #if SENSOR_FRAME_RATE_HZ > 0
   if (himax_configure_frame_timing(&camera, HIMAX_FRAME_LENGTH_LINES,
                                    HIMAX_MAX_INTEGRATION_LINES,
