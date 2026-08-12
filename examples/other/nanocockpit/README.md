@@ -12,6 +12,15 @@ Nanocockpit has been tested with:
 - Ubuntu 22.04
 - Python 3.9
 
+## Configuration
+
+The build-time settings of the streamer example live in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h). It is worth having a look before you build, in particular at:
+
+- **Exposure**: auto-exposure is disabled by default (`HIMAX_AE`), so frames are captured with the fixed `HIMAX_INTEGRATION_MS` and `HIMAX_AGAIN` settings. These defaults are tuned for indoor lighting; outdoors the image will clip to white, in which case you should lower the integration time and/or the analog gain. Auto-exposure has not been validated on the AI-deck.
+- **Resolution and frame rate**: `HIMAX_FORMAT` and `HIMAX_FRAME_RATE`.
+- **Bidirectional CPX**: `CPX_SPI_BIDIRECTIONAL`, see [Expected results](#expected-results).
+- **Debug prints**: the `*_VERBOSE` defines at the top of the file.
+
 ## Build instructions
 
 The nanocockpit GAP8 code is composed of reusable components, under `lib/`, and a streamer example.
@@ -81,4 +90,4 @@ The resulting `dataset/` directory will contain one PNG image for each received 
 
 ## Expected results
 
-You can expect a framerate of ~30fps without, and ~60fps with disabling bidirectional CPX (change the CPX_SPI_BIDIRECTIONAL define in config.h for GAP8 and TODO (NINA changes?). 
+Bidirectional CPX (GAP8<=>ESP32) is disabled by default, which lets the SPI bus run at 30MHz instead of the 7.2MHz that bidirectional communication is limited to on the AI-deck. You can therefore expect ~60fps with the default configuration, and ~30fps with bidirectional CPX enabled (`CPX_SPI_BIDIRECTIONAL` in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h)). No changes to the NINA firmware are required either way.
