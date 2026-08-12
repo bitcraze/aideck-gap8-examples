@@ -66,23 +66,23 @@ class FrameSaver:
     def save(self, frame, tof_frame, metadata):
         image = Image.fromarray(frame, mode="L")
         # image = Image.fromarray(frame << 6, mode="I;16") # 10-bit images, converted to 16-bit
-        image_name = '%05d.png' % self.i
-        image_path = os.path.join(self.camera_raw_dir, image_name)
+        raw_image_name = '%05d.png' % self.i
+        image_path = os.path.join(self.camera_raw_dir, raw_image_name)
         image.save(image_path)
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BayerRG2RGB)
         image = Image.fromarray(frame_rgb, mode="RGB")
-        image_name = '%05d.jpg' % self.i
-        image_path = os.path.join(self.camera_rgb_dir, image_name)
+        rgb_image_name = '%05d.jpg' % self.i
+        image_path = os.path.join(self.camera_rgb_dir, rgb_image_name)
         image.save(image_path)
 
         if tof_frame is not None:
             image = Image.fromarray(tof_frame, mode="L")
-            image_name = '%05d.png' % self.i
-            image_path = os.path.join(self.tof_dir, image_name)
+            tof_image_name = '%05d.png' % self.i
+            image_path = os.path.join(self.tof_dir, tof_image_name)
             image.save(image_path)
 
-        self.metadata_csv.write(f"{image_name},{metadata.metadata_version},")
+        self.metadata_csv.write(f"{raw_image_name},{metadata.metadata_version},")
         self.metadata_csv.write(f"{metadata.frame_id},{metadata.frame_timestamp},{metadata.state_timestamp},{metadata.state.timestamp},{metadata.tof_timestamp},")
         self.metadata_csv.write(f"{metadata.state.x},{metadata.state.y},{metadata.state.z},")
         self.metadata_csv.write(f"{metadata.state.vx},{metadata.state.vy},{metadata.state.vz},")
