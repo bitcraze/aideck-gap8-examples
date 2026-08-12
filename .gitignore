@@ -3,5 +3,11 @@
 # GAP8 build files
 examples/**/BUILD*
 examples/**/lib*
+# ...except nanocockpit, which ships reusable sources under lib/
+!examples/other/nanocockpit/lib
+!examples/other/nanocockpit/lib/**
 BUILD
 __pycache__
+
+# Python build artifacts
+*.egg-info/
