@@ -88,6 +88,10 @@ plt_viewer -save dataset/
 
 The resulting `dataset/` directory will contain one PNG image for each received camera frame and a `metadata.csv` containing the onboard state estimation corresponding to each frame, plus some extra information.
 
+## ROS 2 viewer
+
+The package also ships a ROS 2 viewer (`ros_viewer`). It requires the `aideck_cpx_msgs` message package and a ROS 2 environment, which are not included here - see the upstream [nanocockpit](https://github.com/idsia-robotics/nanocockpit) repository.
+
 ## Expected results
 
 Bidirectional CPX (GAP8<=>ESP32) is disabled by default, which lets the SPI bus run at 30MHz instead of the 7.2MHz that bidirectional communication is limited to on the AI-deck. You can therefore expect ~60fps with the default configuration, and ~30fps with bidirectional CPX enabled (`CPX_SPI_BIDIRECTIONAL` in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h)). No changes to the NINA firmware are required either way.
