@@ -22,8 +22,6 @@
 # We kindly ask for a citation if you use in academic work.
 #
 
-from glob import glob
-import os
 from setuptools import find_packages, setup
 
 package_name = 'aideck_cpx_streamer'
@@ -36,9 +34,6 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-
-        # Include all launch files.
-        (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*')))
     ],
     install_requires=[
         'setuptools', 
@@ -53,8 +48,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'plt_viewer = aideck_cpx_streamer.plt_viewer:main',
-            'ros_viewer = aideck_cpx_streamer.ros_viewer:main'
+            'plt_viewer = aideck_cpx_streamer.plt_viewer:main'
         ],
     },
 )

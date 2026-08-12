@@ -90,7 +90,7 @@ The resulting `dataset/` directory will contain one PNG image for each received 
 
 ## ROS 2 viewer
 
-The package also ships a ROS 2 viewer (`ros_viewer`). It requires the `aideck_cpx_msgs` message package and a ROS 2 environment, which are not included here - see the upstream [nanocockpit](https://github.com/idsia-robotics/nanocockpit) repository.
+This example does not ship a ROS 2 viewer. Upstream nanocockpit has one, together with the `aideck_cpx_msgs` message package and the ROS 2 environment it needs - see the [nanocockpit](https://github.com/idsia-robotics/nanocockpit) repository.
 
 ## Expected results
 

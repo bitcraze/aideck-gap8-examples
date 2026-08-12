@@ -12,10 +12,6 @@
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
 
-  <depend>aideck_cpx_msgs</depend>
-
-  <exec_depend>ros2launch</exec_depend>
-
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
