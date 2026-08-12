@@ -34,7 +34,19 @@ typedef struct
   pi_buffer_t *buffer;
 } CameraFrame_t;
 
-int camera_pipeline_init(void);
+typedef enum
+{
+  CAMERA_PIPELINE_OK = 0,
+  CAMERA_PIPELINE_EVENT_ALLOC_FAILED,
+  CAMERA_PIPELINE_BUFFER_ALLOC_FAILED,
+  CAMERA_PIPELINE_CAMERA_OPEN_FAILED,
+  CAMERA_PIPELINE_ORIENTATION_FAILED,
+  CAMERA_PIPELINE_QVGA_WINDOW_FAILED,
+  CAMERA_PIPELINE_FRAME_TIMING_FAILED,
+} CameraPipelineStatus_t;
+
+CameraPipelineStatus_t camera_pipeline_init(void);
+const char *camera_pipeline_status_message(CameraPipelineStatus_t status);
 CameraFrame_t camera_pipeline_begin_frame(void);
 uint32_t camera_pipeline_end_frame(void);
 void camera_pipeline_disconnect(void);

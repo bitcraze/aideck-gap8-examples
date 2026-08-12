@@ -40,7 +40,7 @@ and profiling output:
 
 | Variable | Values | Default |
 | --- | --- | --- |
-| `CAMERA_RESOLUTION` | `qvga`, `qqvga` | `qvga` |
+| `CAMERA_RESOLUTION` | `qvga`, `qqvga`, `native` | `qvga` |
 | `CAPTURE_MODE` | `start-stop`, `pipelined` | `start-stop` |
 | `SENSOR_FRAME_RATE` | `default`, `60` | `default` |
 | `STREAM_ENCODING` | `raw`, `jpeg` | `raw` |
@@ -49,8 +49,13 @@ and profiling output:
 The pipelined mode uses three image buffers: two DMA buffers remain queued
 while one complete frame is encoded or transferred. If processing is slower
 than capture, complete frames are dropped instead of starting a transfer in
-the middle of a camera frame. Profiling reports the queue-to-completion latency
-and a cumulative count of these internal whole-frame drops.
+the middle of a camera frame. The next frame is selected only after the current
+transfer, favoring a fresh frame and low photon-to-host latency over maximum
+throughput. Profiling reports the queue-to-completion latency and a cumulative
+count of these internal whole-frame drops.
+
+The `native` resolution exposes the Himax sensor's full 324 x 324 array. It
+cannot be combined with `SENSOR_FRAME_RATE=60`.
 
 ## Building and flashing the example
 

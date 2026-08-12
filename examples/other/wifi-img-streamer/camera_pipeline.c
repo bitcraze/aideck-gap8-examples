@@ -44,22 +44,25 @@ static volatile uint32_t ready_buffer;
 static uint32_t processing_buffer;
 static volatile int consumer_waiting;
 static int camera_streaming;
-static int pipeline_primed;
-static volatile uint32_t pending_captures;
+static volatile uint32_t captures_queued;
+static volatile uint32_t captures_completed;
 static volatile int discarding_captures;
 
+static void queue_capture(uint32_t buffer_index);
 static void schedule_capture(uint32_t buffer_index);
+
+static uint32_t outstanding_captures(void)
+{
+  return captures_queued - captures_completed;
+}
 
 static void capture_done(void *arg)
 {
   uint32_t buffer_index = (uint32_t)(uintptr_t)arg;
-  if (pending_captures > 0)
-  {
-    pending_captures--;
-  }
   if (discarding_captures)
   {
-    if (pending_captures == 0)
+    captures_completed++;
+    if (outstanding_captures() == 0)
     {
       xEventGroupSetBits(capture_events, CAPTURE_DONE_BIT);
     }
@@ -68,6 +71,7 @@ static void capture_done(void *arg)
 
   if (consumer_waiting)
   {
+    captures_completed++;
     queue_latency =
       xTaskGetTickCount() - capture_queued_at[buffer_index];
     ready_buffer = buffer_index;
@@ -77,14 +81,14 @@ static void capture_done(void *arg)
   else
   {
     dropped_frames++;
-    schedule_capture(buffer_index);
+    /* Replacing a completed capture leaves the outstanding count unchanged. */
+    queue_capture(buffer_index);
   }
 }
 
-static void schedule_capture(uint32_t buffer_index)
+static void queue_capture(uint32_t buffer_index)
 {
   capture_queued_at[buffer_index] = xTaskGetTickCount();
-  pending_captures++;
   pi_camera_capture_async(
     &camera,
     image_data[buffer_index],
@@ -93,13 +97,19 @@ static void schedule_capture(uint32_t buffer_index)
                      (void *)(uintptr_t)buffer_index));
 }
 
+static void schedule_capture(uint32_t buffer_index)
+{
+  captures_queued++;
+  queue_capture(buffer_index);
+}
+
 static void wait_for_ready_frame(void)
 {
   xEventGroupWaitBits(capture_events, CAPTURE_DONE_BIT, pdTRUE, pdFALSE,
                       (TickType_t)portMAX_DELAY);
 }
 
-static int open_camera(void)
+static CameraPipelineStatus_t open_camera(void)
 {
   struct pi_himax_conf config;
   pi_himax_conf_init(&config);
@@ -107,7 +117,7 @@ static int open_camera(void)
   pi_open_from_conf(&camera, &config);
   if (pi_camera_open(&camera))
   {
-    return -1;
+    return CAMERA_PIPELINE_CAMERA_OPEN_FAILED;
   }
 
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
@@ -119,14 +129,14 @@ static int open_camera(void)
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
   if (actual != orientation)
   {
-    return -1;
+    return CAMERA_PIPELINE_ORIENTATION_FAILED;
   }
 
   /* Keep the sensor's raster height equal to the QVGA DMA frame height. */
 #if CAMERA_QVGA_WINDOW_ENABLE
   if (himax_configure_qvga_window(&camera, 1))
   {
-    return -1;
+    return CAMERA_PIPELINE_QVGA_WINDOW_FAILED;
   }
 #endif
 
@@ -135,20 +145,20 @@ static int open_camera(void)
                                    HIMAX_MAX_INTEGRATION_LINES,
                                    HIMAX_QVGA_WINDOW_ENABLE))
   {
-    return -1;
+    return CAMERA_PIPELINE_FRAME_TIMING_FAILED;
   }
 #endif
 
   pi_camera_control(&camera, PI_CAMERA_CMD_AEG_INIT, 0);
-  return 0;
+  return CAMERA_PIPELINE_OK;
 }
 
-int camera_pipeline_init(void)
+CameraPipelineStatus_t camera_pipeline_init(void)
 {
   capture_events = xEventGroupCreate();
   if (capture_events == NULL)
   {
-    return -1;
+    return CAMERA_PIPELINE_EVENT_ALLOC_FAILED;
   }
 
   for (uint32_t i = 0; i < CAPTURE_BUFFER_COUNT; i++)
@@ -156,13 +166,35 @@ int camera_pipeline_init(void)
     image_data[i] = pmsis_l2_malloc(CAMERA_WIDTH * CAMERA_HEIGHT);
     if (image_data[i] == NULL)
     {
-      return -1;
+      return CAMERA_PIPELINE_BUFFER_ALLOC_FAILED;
     }
     pi_buffer_init(&image_buffers[i], PI_BUFFER_TYPE_L2, image_data[i]);
     pi_buffer_set_format(&image_buffers[i], CAMERA_WIDTH, CAMERA_HEIGHT, 1,
                          PI_BUFFER_FORMAT_GRAY);
   }
   return open_camera();
+}
+
+const char *camera_pipeline_status_message(CameraPipelineStatus_t status)
+{
+  switch (status)
+  {
+    case CAMERA_PIPELINE_OK:
+      return "camera pipeline initialized";
+    case CAMERA_PIPELINE_EVENT_ALLOC_FAILED:
+      return "failed to allocate capture event group";
+    case CAMERA_PIPELINE_BUFFER_ALLOC_FAILED:
+      return "failed to allocate camera buffers";
+    case CAMERA_PIPELINE_CAMERA_OPEN_FAILED:
+      return "failed to open camera";
+    case CAMERA_PIPELINE_ORIENTATION_FAILED:
+      return "camera orientation read-back failed";
+    case CAMERA_PIPELINE_QVGA_WINDOW_FAILED:
+      return "failed to configure QVGA sensor window";
+    case CAMERA_PIPELINE_FRAME_TIMING_FAILED:
+      return "failed to configure camera frame timing";
+  }
+  return "unknown camera pipeline error";
 }
 
 CameraFrame_t camera_pipeline_begin_frame(void)
@@ -177,21 +209,13 @@ CameraFrame_t camera_pipeline_begin_frame(void)
 #else
   if (!camera_streaming)
   {
-    if (!pipeline_primed)
-    {
-      consumer_waiting = 1;
-      schedule_capture(1);
-      schedule_capture(2);
-      pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-      wait_for_ready_frame();
-      processing_buffer = ready_buffer;
-      schedule_capture(0);
-      pipeline_primed = 1;
-    }
-    else
-    {
-      pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-    }
+    consumer_waiting = 1;
+    schedule_capture(1);
+    schedule_capture(2);
+    pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
+    wait_for_ready_frame();
+    processing_buffer = ready_buffer;
+    schedule_capture(0);
     camera_streaming = 1;
   }
 #endif
@@ -229,7 +253,6 @@ void camera_pipeline_disconnect(void)
     xEventGroupClearBits(capture_events, CAPTURE_DONE_BIT);
 
     camera_streaming = 0;
-    pipeline_primed = 0;
     consumer_waiting = 0;
     discarding_captures = 0;
     pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);

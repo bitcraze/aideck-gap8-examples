@@ -103,6 +103,7 @@ static int init_jpeg_encoder(void)
   config.flags = 0;
   if (jpeg_encoder_open(&jpeg_encoder, &config))
   {
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to open JPEG encoder\n");
     return -1;
   }
 
@@ -115,6 +116,7 @@ static int init_jpeg_encoder(void)
   if (jpeg_header.data == NULL || jpeg_footer.data == NULL ||
       jpeg_data.data == NULL)
   {
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate JPEG buffers\n");
     return -1;
   }
 
@@ -123,11 +125,14 @@ static int init_jpeg_encoder(void)
   return 0;
 }
 
-static uint32_t encode_jpeg(pi_buffer_t *frame, uint32_t *jpeg_size)
+static int32_t encode_jpeg(pi_buffer_t *frame, uint32_t *jpeg_size,
+                           uint32_t *encoding_time)
 {
   uint32_t started_at = xTaskGetTickCount();
-  jpeg_encoder_process(&jpeg_encoder, frame, &jpeg_data, jpeg_size);
-  return xTaskGetTickCount() - started_at;
+  int32_t status =
+    jpeg_encoder_process(&jpeg_encoder, frame, &jpeg_data, jpeg_size);
+  *encoding_time = xTaskGetTickCount() - started_at;
+  return status;
 }
 
 static void send_jpeg(uint32_t jpeg_size, uint32_t image_size)
@@ -148,16 +153,17 @@ static void camera_task(void *parameters)
 #endif
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
-  if (camera_pipeline_init())
+  CameraPipelineStatus_t camera_status = camera_pipeline_init();
+  if (camera_status != CAMERA_PIPELINE_OK)
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize camera pipeline\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Camera initialization failed: %s\n",
+                      camera_pipeline_status_message(camera_status));
     return;
   }
 
 #if STREAM_ENCODING_MODE == 1
   if (init_jpeg_encoder())
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize JPEG encoder\n");
     return;
   }
 #endif
@@ -179,7 +185,13 @@ static void camera_task(void *parameters)
 
 #if STREAM_ENCODING_MODE == 1
     uint32_t jpeg_size = 0;
-    encoding_time = encode_jpeg(frame.buffer, &jpeg_size);
+    if (encode_jpeg(frame.buffer, &jpeg_size, &encoding_time))
+    {
+      cpxPrintToConsole(LOG_TO_CRTP,
+                        "JPEG frame exceeded the encoding buffer\n");
+      camera_pipeline_end_frame();
+      continue;
+    }
     image_size = jpeg_header_size + jpeg_size + jpeg_footer_size;
 #endif
 

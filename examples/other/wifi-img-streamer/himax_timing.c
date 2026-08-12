@@ -50,9 +50,17 @@ static int set_register_pair(struct pi_device *camera, uint32_t high_address,
 
 int himax_configure_qvga_window(struct pi_device *camera, uint8_t enabled)
 {
-  return set_register(camera, HIMAX_GROUP_PARAMETER_HOLD, 1) ||
-         set_register(camera, HIMAX_QVGA_WINDOW_ENABLE_REG, enabled) ||
-         set_register(camera, HIMAX_GROUP_PARAMETER_HOLD, 0);
+  if (set_register(camera, HIMAX_GROUP_PARAMETER_HOLD, 1))
+  {
+    return -1;
+  }
+  int failed =
+    set_register(camera, HIMAX_QVGA_WINDOW_ENABLE_REG, enabled);
+  if (set_register(camera, HIMAX_GROUP_PARAMETER_HOLD, 0))
+  {
+    return -1;
+  }
+  return failed ? -1 : 0;
 }
 
 int himax_configure_frame_timing(struct pi_device *camera,
