@@ -8,3 +8,6 @@ examples/**/lib*
 !examples/other/nanocockpit/lib/**
 BUILD
 __pycache__
+
+# Python build artifacts
+*.egg-info/
