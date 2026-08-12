@@ -3,10 +3,10 @@
 ## Requirements
 
 Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found [here](https://github.com/bitcraze/aideck-esp-firmware-v2).
-Also note that here we use the debugger to program GAP8 - meaning you might overwrite your bootloader and not be able to program over CPX anymore (unless you flash it again, more info [here] https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/development/flashing/). Only proceed if you have a debugger.
-To stream the state of the drone directly with the received images, you have to send the state from the Crazyflie to the NINA, an example on how to do it is found [here] https://github.com/bitcraze/crazyflie-firmware/tree/master/examples/app_state_stream_aideck .
+Also note that here we use the debugger to program GAP8 - meaning you might overwrite your bootloader and not be able to program over CPX anymore (unless you flash it again, more info [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/development/flashing/)). Only proceed if you have a debugger.
+To stream the state of the drone directly with the received images, you have to send the state from the Crazyflie to the NINA, an example on how to do it is found [here](https://github.com/bitcraze/crazyflie-firmware/tree/master/examples/app_state_stream_aideck).
 
-Make sure that you went through the 
+Make sure that you went through the [getting started with the AI-deck](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) tutorial first.
 
 Nanocockpit has been tested with:
 - Ubuntu 22.04
@@ -16,7 +16,7 @@ Nanocockpit has been tested with:
 
 The nanocockpit GAP8 code is composed of reusable components, under `lib/`, and a streamer example.
 
-Configure your computer to use the GAP SDK Docker container as described [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/)(The nanocockpit framework was generally developed and tested with 3.8.1, however, for the nanocockpit streamer the newest release is also compatible).
+Configure your computer to use the GAP SDK Docker container as described [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/) (the nanocockpit framework was generally developed and tested with 3.8.1, however, for the nanocockpit streamer the newest release is also compatible).
 
 Start a bash console inside your docker:
 ```sh
