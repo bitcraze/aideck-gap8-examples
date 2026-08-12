@@ -21,7 +21,7 @@ Nanocockpit has been tested with:
 The build-time settings of the streamer example live in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h). It is worth having a look before you build, in particular at:
 
 - **Exposure**: auto-exposure is disabled by default (`HIMAX_AE`), so frames are captured with the fixed `HIMAX_INTEGRATION_MS` and `HIMAX_AGAIN` settings. These defaults are tuned for indoor lighting; outdoors the image will clip to white, in which case you should lower the integration time and/or the analog gain. Auto-exposure has not been validated on the AI-deck.
-- **Resolution and frame rate**: `HIMAX_FORMAT` and `HIMAX_FRAME_RATE`.
+- **Resolution and frame rate**: `HIMAX_FORMAT` and `HIMAX_FRAME_RATE`, 162x162 at 60fps by default. Which rates a format can hit exactly depends on the sensor timing, and is listed in the [measured table](https://github.com/idsia-robotics/nanocockpit/blob/main/src/gap/docs/himax_supported_framerates.md) upstream.
 - **Bidirectional CPX**: `CPX_SPI_BIDIRECTIONAL`, see [Expected results](#expected-results).
 - **Debug prints**: the `*_VERBOSE` defines at the top of the file.
 

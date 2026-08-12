@@ -144,7 +144,10 @@
 #define HIMAX_DGAIN          (0x0100)     
 
 // Himax desired frame rate [Hz]
-#define HIMAX_FRAME_RATE    (30.0f)
+// Which rates a format can hit exactly is listed in the measured table upstream:
+// https://github.com/idsia-robotics/nanocockpit/blob/main/src/gap/docs/himax_supported_framerates.md
+// Rates in between are rounded down to what the sensor timing allows.
+#define HIMAX_FRAME_RATE    (60.0f)
 
 // Print HIMAX configuration after acquiring the first frame (requires VERBOSE)
 // #define HIMAX_CONFIG_DUMP_ONCE
