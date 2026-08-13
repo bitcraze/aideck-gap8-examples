@@ -41,7 +41,7 @@ docker run --rm -it -v "${PWD}:/module/data/" -P \
 
 Select the application that you want to build. This folder ships the Wi-Fi streamer (note that it is important that you start your bash console outside the nanocockpit folder, otherwise the lib files will not be found):
 ```sh
-cd nanocockpit-streamer 
+cd examples/other/nanocockpit/nanocockpit-streamer/
 ```
 
 Compile and run the code over JTAG:
