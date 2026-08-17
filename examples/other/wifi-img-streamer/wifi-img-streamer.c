@@ -25,341 +25,227 @@
  */
 #include "pmsis.h"
 
-#include "bsp/bsp.h"
-#include "bsp/camera/himax.h"
-#include "bsp/buffer.h"
-#include "gaplib/jpeg_encoder.h"
-#include "stdio.h"
+#include <string.h>
 
+#include "bsp/bsp.h"
+#include "camera_pipeline.h"
 #include "cpx.h"
+#include "cpx_stream.h"
+#include "gaplib/jpeg_encoder.h"
+#include "gray4_stream.h"
+#include "stdio.h"
+#include "stream_config.h"
 #include "wifi.h"
 
-#define IMG_ORIENTATION 0x0101
-#define CAM_WIDTH 324
-#define CAM_HEIGHT 244
+static int wifi_client_connected;
+static CPXPacket_t wifi_rx_packet;
+static CPXPacket_t wifi_tx_packet;
 
-static pi_task_t task1;
-static unsigned char *imgBuff;
-static struct pi_device camera;
-static pi_buffer_t buffer;
+static jpeg_encoder_t jpeg_encoder;
+static pi_buffer_t jpeg_header;
+static pi_buffer_t jpeg_footer;
+static pi_buffer_t jpeg_data;
+static uint32_t jpeg_header_size;
+static uint32_t jpeg_footer_size;
 
-static EventGroupHandle_t evGroup;
-#define CAPTURE_DONE_BIT (1 << 0)
-
-// Performance measuring variables
-static uint32_t start = 0;
-static uint32_t captureTime = 0;
-static uint32_t transferTime = 0;
-static uint32_t encodingTime = 0;
-// #define OUTPUT_PROFILING_DATA
-
-static int open_pi_camera_himax(struct pi_device *device)
+static void wifi_rx_task(void *parameters)
 {
-  struct pi_himax_conf cam_conf;
-
-  pi_himax_conf_init(&cam_conf);
-
-  cam_conf.format = PI_CAMERA_QVGA;
-
-  pi_open_from_conf(device, &cam_conf);
-  if (pi_camera_open(device))
-    return -1;
-
-  // rotate image
-  pi_camera_control(device, PI_CAMERA_CMD_START, 0);
-  uint8_t set_value = 3;
-  uint8_t reg_value;
-  pi_camera_reg_set(device, IMG_ORIENTATION, &set_value);
-  pi_time_wait_us(1000000);
-  pi_camera_reg_get(device, IMG_ORIENTATION, &reg_value);
-  if (set_value != reg_value)
+  (void)parameters;
+  while (1)
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed to rotate camera image\n");
+    cpxReceivePacketBlocking(CPX_F_WIFI_CTRL, &wifi_rx_packet);
+    WiFiCTRLPacket_t *wifi_ctrl = (WiFiCTRLPacket_t *)wifi_rx_packet.data;
+
+    if (wifi_ctrl->cmd == WIFI_CTRL_STATUS_WIFI_CONNECTED)
+    {
+      cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
+                        wifi_ctrl->data[0], wifi_ctrl->data[1],
+                        wifi_ctrl->data[2], wifi_ctrl->data[3]);
+    }
+    else if (wifi_ctrl->cmd == WIFI_CTRL_STATUS_CLIENT_CONNECTED)
+    {
+      wifi_client_connected = wifi_ctrl->data[0];
+      cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n",
+                        wifi_client_connected);
+    }
+  }
+}
+
+#ifdef SETUP_WIFI_AP
+static void setup_wifi(void)
+{
+  static char ssid[] = "WiFi streaming example";
+  cpxPrintToConsole(LOG_TO_CRTP, "Setting up WiFi AP\n");
+
+  wifi_tx_packet.route.destination = CPX_T_ESP32;
+  wifi_rx_packet.route.source = CPX_T_GAP8;
+  wifi_tx_packet.route.function = CPX_F_WIFI_CTRL;
+  wifi_tx_packet.route.version = CPX_VERSION;
+  WiFiCTRLPacket_t *wifi_ctrl = (WiFiCTRLPacket_t *)wifi_tx_packet.data;
+
+  wifi_ctrl->cmd = WIFI_CTRL_SET_SSID;
+  memcpy(wifi_ctrl->data, ssid, sizeof(ssid));
+  wifi_tx_packet.dataLength = sizeof(ssid);
+  cpxSendPacketBlocking(&wifi_tx_packet);
+
+  wifi_ctrl->cmd = WIFI_CTRL_WIFI_CONNECT;
+  wifi_ctrl->data[0] = 0x01;
+  wifi_tx_packet.dataLength = 2;
+  cpxSendPacketBlocking(&wifi_tx_packet);
+}
+#endif
+
+static int init_jpeg_encoder(void)
+{
+  struct jpeg_encoder_conf config;
+  jpeg_encoder_conf_init(&config);
+  config.width = CAMERA_WIDTH;
+  config.height = CAMERA_HEIGHT;
+  config.flags = 0;
+  if (jpeg_encoder_open(&jpeg_encoder, &config))
+  {
     return -1;
   }
-  pi_camera_control(device, PI_CAMERA_CMD_STOP, 0);
-  pi_camera_control(device, PI_CAMERA_CMD_AEG_INIT, 0);
 
+  jpeg_header.size = 1024;
+  jpeg_header.data = pmsis_l2_malloc(jpeg_header.size);
+  jpeg_footer.size = 10;
+  jpeg_footer.data = pmsis_l2_malloc(jpeg_footer.size);
+  jpeg_data.size = 1024 * 15;
+  jpeg_data.data = pmsis_l2_malloc(jpeg_data.size);
+  if (jpeg_header.data == NULL || jpeg_footer.data == NULL ||
+      jpeg_data.data == NULL)
+  {
+    return -1;
+  }
+
+  jpeg_encoder_header(&jpeg_encoder, &jpeg_header, &jpeg_header_size);
+  jpeg_encoder_footer(&jpeg_encoder, &jpeg_footer, &jpeg_footer_size);
   return 0;
 }
 
-static int wifiConnected = 0;
-static int wifiClientConnected = 0;
-
-static CPXPacket_t rxp;
-void rx_task(void *parameters)
+static uint32_t encode_jpeg(pi_buffer_t *frame, uint32_t *jpeg_size)
 {
-  while (1)
-  {
-    cpxReceivePacketBlocking(CPX_F_WIFI_CTRL, &rxp);
-
-    WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) rxp.data;
-
-    switch (wifiCtrl->cmd)
-    {
-      case WIFI_CTRL_STATUS_WIFI_CONNECTED:
-        cpxPrintToConsole(LOG_TO_CRTP, "Wifi connected (%u.%u.%u.%u)\n",
-                          wifiCtrl->data[0], wifiCtrl->data[1],
-                          wifiCtrl->data[2], wifiCtrl->data[3]);
-        wifiConnected = 1;
-        break;
-      case WIFI_CTRL_STATUS_CLIENT_CONNECTED:
-        cpxPrintToConsole(LOG_TO_CRTP, "Wifi client connection status: %u\n", wifiCtrl->data[0]);
-        wifiClientConnected = wifiCtrl->data[0];
-        break;
-      default:
-        break;
-    }
-  }
+  uint32_t started_at = xTaskGetTickCount();
+  jpeg_encoder_process(&jpeg_encoder, frame, &jpeg_data, jpeg_size);
+  return xTaskGetTickCount() - started_at;
 }
 
-static void capture_done_cb(void *arg)
+static void send_jpeg(uint32_t jpeg_size, uint32_t image_size)
 {
-  xEventGroupSetBits(evGroup, CAPTURE_DONE_BIT);
+  cpx_stream_send_header(CAMERA_WIDTH, CAMERA_HEIGHT, image_size,
+                         JPEG_ENCODING);
+  cpx_stream_send_buffer(jpeg_header.data, jpeg_header_size);
+  cpx_stream_send_buffer(jpeg_data.data, jpeg_size);
+  cpx_stream_send_buffer(jpeg_footer.data, jpeg_footer_size);
 }
 
-typedef struct
+static void camera_task(void *parameters)
 {
-  uint8_t magic;
-  uint16_t width;
-  uint16_t height;
-  uint8_t depth;
-  uint8_t type;
-  uint32_t size;
-} __attribute__((packed)) img_header_t;
-
-static jpeg_encoder_t jpeg_encoder;
-
-typedef enum
-{
-  RAW_ENCODING = 0,
-  JPEG_ENCODING = 1
-} __attribute__((packed)) StreamerMode_t;
-
-pi_buffer_t header;
-uint32_t headerSize;
-pi_buffer_t footer;
-uint32_t footerSize;
-pi_buffer_t jpeg_data;
-uint32_t jpegSize;
-
-static StreamerMode_t streamerMode = RAW_ENCODING;
-
-static CPXPacket_t txp;
-
-void createImageHeaderPacket(CPXPacket_t * packet, uint32_t imgSize, StreamerMode_t imgType) {
-  img_header_t *imgHeader = (img_header_t *) packet->data;
-  imgHeader->magic = 0xBC;
-  imgHeader->width = CAM_WIDTH;
-  imgHeader->height = CAM_HEIGHT;
-  imgHeader->depth = 1;
-  imgHeader->type = imgType;
-  imgHeader->size = imgSize;
-  packet->dataLength = sizeof(img_header_t);
-}
-
-void sendBufferViaCPX(CPXPacket_t * packet, uint8_t * buffer, uint32_t bufferSize) {
-  uint32_t offset = 0;
-  uint32_t size = 0;
-  do {
-    size = sizeof(packet->data);
-    if (offset + size > bufferSize)
-    {
-      size = bufferSize - offset;
-    }
-    memcpy(packet->data, &buffer[offset], sizeof(packet->data));
-    packet->dataLength = size;
-    cpxSendPacketBlocking(packet);
-    offset += size;
-  } while (size == sizeof(packet->data));
-}
-
-#ifdef SETUP_WIFI_AP
-void setupWiFi(void) {
-  static char ssid[] = "WiFi streaming example";
-  cpxPrintToConsole(LOG_TO_CRTP, "Setting up WiFi AP\n");
-  // Set up the routing for the WiFi CTRL packets
-  txp.route.destination = CPX_T_ESP32;
-  rxp.route.source = CPX_T_GAP8;
-  txp.route.function = CPX_F_WIFI_CTRL;
-  txp.route.version = CPX_VERSION;
-  WiFiCTRLPacket_t * wifiCtrl = (WiFiCTRLPacket_t*) txp.data;
-
-  wifiCtrl->cmd = WIFI_CTRL_SET_SSID;
-  memcpy(wifiCtrl->data, ssid, sizeof(ssid));
-  txp.dataLength = sizeof(ssid);
-  cpxSendPacketBlocking(&txp);
-
-  wifiCtrl->cmd = WIFI_CTRL_WIFI_CONNECT;
-  wifiCtrl->data[0] = 0x01;
-  txp.dataLength = 2;
-  cpxSendPacketBlocking(&txp);
-}
-#endif
-
-void camera_task(void *parameters)
-{
+  (void)parameters;
   vTaskDelay(2000);
-
 #ifdef SETUP_WIFI_AP
-  setupWiFi();
+  setup_wifi();
 #endif
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting camera task...\n");
-  uint32_t resolution = CAM_WIDTH * CAM_HEIGHT;
-  uint32_t captureSize = resolution * sizeof(unsigned char);
-  imgBuff = (unsigned char *)pmsis_l2_malloc(captureSize);
-  if (imgBuff == NULL)
+  if (camera_pipeline_init())
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed to allocate Memory for Image \n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize camera pipeline\n");
     return;
   }
 
-  if (open_pi_camera_himax(&camera))
+#if STREAM_ENCODING_MODE == 1
+  if (init_jpeg_encoder())
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed to open camera\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize JPEG encoder\n");
     return;
   }
-
-  struct jpeg_encoder_conf enc_conf;
-  jpeg_encoder_conf_init(&enc_conf);
-  enc_conf.width = CAM_WIDTH;
-  enc_conf.height = CAM_HEIGHT;
-  enc_conf.flags = 0; // Move this to the cluster
-
-  if (jpeg_encoder_open(&jpeg_encoder, &enc_conf))
+#elif STREAM_ENCODING_MODE == 2
+  if (gray4_stream_init())
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "Failed initialize JPEG encoder\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Failed to initialize gray4 stream\n");
     return;
   }
+#endif
 
-  pi_buffer_init(&buffer, PI_BUFFER_TYPE_L2, imgBuff);
-  pi_buffer_set_format(&buffer, CAM_WIDTH, CAM_HEIGHT, 1, PI_BUFFER_FORMAT_GRAY);
-
-  header.size = 1024;
-  header.data = pmsis_l2_malloc(1024);
-
-  footer.size = 10;
-  footer.data = pmsis_l2_malloc(10);
-
-  // This must fit the full encoded JPEG
-  jpeg_data.size = 1024 * 15;
-  jpeg_data.data = pmsis_l2_malloc(1024 * 15);
-
-  if (header.data == 0 || footer.data == 0 || jpeg_data.data == 0) {
-    cpxPrintToConsole(LOG_TO_CRTP, "Could not allocate memory for JPEG image\n");
-    return;
-  }
-
-  jpeg_encoder_header(&jpeg_encoder, &header, &headerSize);
-  jpeg_encoder_footer(&jpeg_encoder, &footer, &footerSize);
-
-  pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-
-  // We're reusing the same packet, so initialize the route once
-  cpxInitRoute(CPX_T_GAP8, CPX_T_WIFI_HOST, CPX_F_APP, &txp.route);
-
-  uint32_t imgSize = 0;
-
+  cpx_stream_init();
   while (1)
   {
-    if (wifiClientConnected == 1)
+    if (!wifi_client_connected)
     {
-      start = xTaskGetTickCount();
-      pi_camera_capture_async(&camera, imgBuff, resolution, pi_task_callback(&task1, capture_done_cb, NULL));
-      pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
-      xEventGroupWaitBits(evGroup, CAPTURE_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
-      pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
-      captureTime = xTaskGetTickCount() - start;
-
-      if (streamerMode == JPEG_ENCODING)
-      {
-        //jpeg_encoder_process_async(&jpeg_encoder, &buffer, &jpeg_data, pi_task_callback(&task1, encoding_done_cb, NULL));
-        //xEventGroupWaitBits(evGroup, JPEG_ENCODING_DONE_BIT, pdTRUE, pdFALSE, (TickType_t)portMAX_DELAY);
-        //jpeg_encoder_process_status(&jpegSize, NULL);
-        start = xTaskGetTickCount();
-        jpeg_encoder_process(&jpeg_encoder, &buffer, &jpeg_data, &jpegSize);
-        encodingTime = xTaskGetTickCount() - start;
-
-        imgSize = headerSize + jpegSize + footerSize;
-
-        // First send information about the image
-        createImageHeaderPacket(&txp, imgSize, JPEG_ENCODING);
-        cpxSendPacketBlocking(&txp);
-
-        start = xTaskGetTickCount();
-        // First send header
-        memcpy(txp.data, header.data, headerSize);
-        txp.dataLength = headerSize;
-        cpxSendPacketBlocking(&txp);
-
-        // Send image data
-        sendBufferViaCPX(&txp, (uint8_t*) jpeg_data.data, jpegSize);
-
-        // Send footer
-        memcpy(txp.data, footer.data, footerSize);
-        txp.dataLength = footerSize;
-        cpxSendPacketBlocking(&txp);
-
-        transferTime = xTaskGetTickCount() - start;
-      }
-      else
-      {
-        imgSize = captureSize;
-        start = xTaskGetTickCount();
-
-        // First send information about the image
-        createImageHeaderPacket(&txp, imgSize, RAW_ENCODING);
-        cpxSendPacketBlocking(&txp);
-
-        start = xTaskGetTickCount();
-        // Send image
-        sendBufferViaCPX(&txp, imgBuff, imgSize);
-
-        transferTime = xTaskGetTickCount() - start;
-      }
-// #ifdef OUTPUT_PROFILING_DATA
-      cpxPrintToConsole(LOG_TO_CRTP, "capture=%dms, encoding=%d ms (%d bytes), transfer=%d ms\n",
-                        captureTime, encodingTime, imgSize, transferTime);
-// #endif
-    }
-    else
-    {
+      camera_pipeline_disconnect();
       vTaskDelay(10);
+      continue;
     }
+
+    uint32_t frame_started_at = xTaskGetTickCount();
+    CameraFrame_t frame = camera_pipeline_begin_frame();
+    uint32_t image_size = CAMERA_WIDTH * CAMERA_HEIGHT;
+    uint32_t encoding_time = 0;
+
+#if STREAM_ENCODING_MODE == 1
+    uint32_t jpeg_size = 0;
+    encoding_time = encode_jpeg(frame.buffer, &jpeg_size);
+    image_size = jpeg_header_size + jpeg_size + jpeg_footer_size;
+#elif STREAM_ENCODING_MODE == 2
+    encoding_time = gray4_stream_encode(frame.data);
+    image_size = gray4_stream_size();
+#endif
+
+    uint32_t transfer_started_at = xTaskGetTickCount();
+#if STREAM_ENCODING_MODE == 1
+    send_jpeg(jpeg_size, image_size);
+#elif STREAM_ENCODING_MODE == 2
+    cpx_stream_send_header(STREAM_WIDTH, STREAM_HEIGHT, image_size,
+                           GRAY4_ENCODING);
+    cpx_stream_send_buffer(gray4_stream_data(), image_size);
+#else
+    cpx_stream_send_header(CAMERA_WIDTH, CAMERA_HEIGHT, image_size,
+                           RAW_ENCODING);
+    cpx_stream_send_buffer(frame.data, image_size);
+#endif
+
+    uint32_t transfer_time = xTaskGetTickCount() - transfer_started_at;
+    uint32_t wait_time = camera_pipeline_end_frame();
+    uint32_t frame_time = xTaskGetTickCount() - frame_started_at;
+
+#if OUTPUT_PROFILING_DATA
+    cpxPrintToConsole(
+      LOG_TO_CRTP,
+      "q_ms=%u enc_ms=%u bytes=%u tx_ms=%u frame_ms=%u wait_ms=%u "
+      "drops=%u\n",
+      camera_pipeline_queue_latency(), encoding_time, image_size, transfer_time,
+      frame_time, wait_time, camera_pipeline_dropped_frames());
+#endif
   }
 }
 
 #define LED_PIN 2
-static pi_device_t led_gpio_dev;
-void hb_task(void *parameters)
+static pi_device_t led_gpio_device;
+
+static void heartbeat_task(void *parameters)
 {
   (void)parameters;
-  char *taskname = pcTaskGetName(NULL);
-
-  // Initialize the LED pin
-  pi_gpio_pin_configure(&led_gpio_dev, LED_PIN, PI_GPIO_OUTPUT);
-
-  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
-
+  pi_gpio_pin_configure(&led_gpio_device, LED_PIN, PI_GPIO_OUTPUT);
+  const TickType_t delay = 500 / portTICK_PERIOD_MS;
   while (1)
   {
-    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 1);
-    vTaskDelay(xDelay);
-    pi_gpio_pin_write(&led_gpio_dev, LED_PIN, 0);
-    vTaskDelay(xDelay);
+    pi_gpio_pin_write(&led_gpio_device, LED_PIN, 1);
+    vTaskDelay(delay);
+    pi_gpio_pin_write(&led_gpio_device, LED_PIN, 0);
+    vTaskDelay(delay);
   }
 }
 
-void start_example(void)
+static void start_example(void)
 {
-  struct pi_uart_conf conf;
-  struct pi_device device;
-  pi_uart_conf_init(&conf);
-  conf.baudrate_bps = 115200;
-
-  pi_open_from_conf(&device, &conf);
-  if (pi_uart_open(&device))
+  struct pi_uart_conf config;
+  struct pi_device uart;
+  pi_uart_conf_init(&config);
+  config.baudrate_bps = 115200;
+  pi_open_from_conf(&uart, &config);
+  if (pi_uart_open(&uart))
   {
     printf("[UART] open failed !\n");
     pmsis_exit(-1);
@@ -367,36 +253,33 @@ void start_example(void)
 
   cpxInit();
   cpxEnableFunction(CPX_F_WIFI_CTRL);
-
   cpxPrintToConsole(LOG_TO_CRTP, "-- WiFi image streamer example --\n");
 
-  evGroup = xEventGroupCreate();
-
-  BaseType_t xTask;
-
-  xTask = xTaskCreate(hb_task, "hb_task", configMINIMAL_STACK_SIZE * 2,
-                      NULL, tskIDLE_PRIORITY + 1, NULL);
-  if (xTask != pdPASS)
+  BaseType_t task_status;
+  task_status = xTaskCreate(heartbeat_task, "heartbeat_task",
+                            configMINIMAL_STACK_SIZE * 2, NULL,
+                            tskIDLE_PRIORITY + 1, NULL);
+  if (task_status != pdPASS)
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "HB task did not start !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "Heartbeat task did not start !\n");
     pmsis_exit(-1);
   }
 
-  xTask = xTaskCreate(camera_task, "camera_task", configMINIMAL_STACK_SIZE * 4,
-                      NULL, tskIDLE_PRIORITY + 1, NULL);
-
-  if (xTask != pdPASS)
+  task_status = xTaskCreate(camera_task, "camera_task",
+                            configMINIMAL_STACK_SIZE * 4, NULL,
+                            tskIDLE_PRIORITY + 1, NULL);
+  if (task_status != pdPASS)
   {
     cpxPrintToConsole(LOG_TO_CRTP, "Camera task did not start !\n");
     pmsis_exit(-1);
   }
 
-  xTask = xTaskCreate(rx_task, "rx_task", configMINIMAL_STACK_SIZE * 2,
-                      NULL, tskIDLE_PRIORITY + 1, NULL);
-
-  if (xTask != pdPASS)
+  task_status = xTaskCreate(wifi_rx_task, "wifi_rx_task",
+                            configMINIMAL_STACK_SIZE * 2, NULL,
+                            tskIDLE_PRIORITY + 1, NULL);
+  if (task_status != pdPASS)
   {
-    cpxPrintToConsole(LOG_TO_CRTP, "RX task did not start !\n");
+    cpxPrintToConsole(LOG_TO_CRTP, "WiFi RX task did not start !\n");
     pmsis_exit(-1);
   }
 
@@ -409,10 +292,7 @@ void start_example(void)
 int main(void)
 {
   pi_bsp_init();
-
-  // Increase the FC freq to 250 MHz
   pi_freq_set(PI_FREQ_DOMAIN_FC, 250000000);
   __pi_pmu_voltage_set(PI_PMU_DOMAIN_FC, 1200);
-
   return pmsis_kickoff((void *)start_example);
 }

@@ -5,9 +5,72 @@ ifeq ($(SETUP_WIFI_AP), 1)
 APP_CFLAGS += -DSETUP_WIFI_AP
 endif
 
+CAMERA_RESOLUTION ?= qvga
+CAPTURE_MODE ?= start-stop
+OUTPUT_PROFILING_DATA ?= 0
+SENSOR_FRAME_RATE ?= default
+STREAM_ENCODING ?= raw
+STREAM_HEIGHT ?= 48
+STREAM_WIDTH ?= 64
+
+ifeq ($(CAMERA_RESOLUTION),qvga)
+APP_CFLAGS += -DCAMERA_FORMAT=PI_CAMERA_QVGA
+APP_CFLAGS += -DCAMERA_WIDTH=324 -DCAMERA_HEIGHT=244
+else ifeq ($(CAMERA_RESOLUTION),qqvga)
+APP_CFLAGS += -DCAMERA_FORMAT=PI_CAMERA_QQVGA
+APP_CFLAGS += -DCAMERA_WIDTH=162 -DCAMERA_HEIGHT=122
+else
+$(error CAMERA_RESOLUTION must be qvga or qqvga)
+endif
+
+ifeq ($(CAPTURE_MODE),start-stop)
+APP_CFLAGS += -DCAPTURE_MODE=0
+else ifeq ($(CAPTURE_MODE),pipelined)
+APP_CFLAGS += -DCAPTURE_MODE=2
+else
+$(error CAPTURE_MODE must be start-stop or pipelined)
+endif
+
+ifeq ($(SENSOR_FRAME_RATE),default)
+else ifeq ($(SENSOR_FRAME_RATE),60)
+APP_CFLAGS += -DSENSOR_FRAME_RATE_HZ=60
+APP_CFLAGS += -DHIMAX_FRAME_LENGTH_LINES=266
+APP_CFLAGS += -DHIMAX_MAX_INTEGRATION_LINES=264
+APP_CFLAGS += -DHIMAX_QVGA_WINDOW_ENABLE=1
+else ifeq ($(SENSOR_FRAME_RATE),65)
+ifneq ($(CAMERA_RESOLUTION),qqvga)
+$(error SENSOR_FRAME_RATE=65 requires CAMERA_RESOLUTION=qqvga)
+endif
+APP_CFLAGS += -DSENSOR_FRAME_RATE_HZ=65
+APP_CFLAGS += -DHIMAX_FRAME_LENGTH_LINES=226
+APP_CFLAGS += -DHIMAX_MAX_INTEGRATION_LINES=224
+APP_CFLAGS += -DHIMAX_QVGA_WINDOW_ENABLE=1
+else
+$(error SENSOR_FRAME_RATE must be default, 60, or 65)
+endif
+
+ifeq ($(STREAM_ENCODING),raw)
+APP_CFLAGS += -DSTREAM_ENCODING_MODE=0
+else ifeq ($(STREAM_ENCODING),jpeg)
+APP_CFLAGS += -DSTREAM_ENCODING_MODE=1
+else ifeq ($(STREAM_ENCODING),gray4)
+APP_CFLAGS += -DSTREAM_ENCODING_MODE=2
+APP_CFLAGS += -DSTREAM_WIDTH=$(STREAM_WIDTH) -DSTREAM_HEIGHT=$(STREAM_HEIGHT)
+STREAM_SRCS += gray4_stream.c
+else
+$(error STREAM_ENCODING must be raw, jpeg, or gray4)
+endif
+
+ifeq ($(filter $(OUTPUT_PROFILING_DATA),0 1),)
+$(error OUTPUT_PROFILING_DATA must be 0 or 1)
+endif
+
 APP = wifi-img-streamer
-APP_SRCS += wifi-img-streamer.c ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c
+APP_SRCS += wifi-img-streamer.c camera_pipeline.c cpx_stream.c himax_timing.c
+APP_SRCS += $(STREAM_SRCS)
+APP_SRCS += ../../../lib/cpx/src/com.c ../../../lib/cpx/src/cpx.c
 APP_CFLAGS += -O3 -g
+APP_CFLAGS += -DOUTPUT_PROFILING_DATA=$(OUTPUT_PROFILING_DATA)
 APP_INC=../../../lib/cpx/inc
 APP_CFLAGS += -DconfigUSE_TIMERS=1 -DINCLUDE_xTimerPendFunctionCall=1
 

@@ -108,14 +108,25 @@ while(1):
       print("{}".format(1/meanTimePerImage))
 
       if format == 0:
-          bayer_img = np.frombuffer(imgStream, dtype=np.uint8)   
-          bayer_img.shape = (244, 324)
+          bayer_img = np.frombuffer(imgStream, dtype=np.uint8)
+          bayer_img.shape = (height, width)
           color_img = cv2.cvtColor(bayer_img, cv2.COLOR_BayerBG2BGRA)
           cv2.imshow('Raw', bayer_img)
           cv2.imshow('Color', color_img)
           if args.save:
               cv2.imwrite(f"stream_out/raw/img_{count:06d}.png", bayer_img)
               cv2.imwrite(f"stream_out/debayer/img_{count:06d}.png", color_img)
+          cv2.waitKey(1)
+      elif format == 2:
+          packed = np.frombuffer(imgStream, dtype=np.uint8)
+          pixel_count = width * height
+          gray_img = np.empty(pixel_count, dtype=np.uint8)
+          gray_img[0::2] = packed[:(pixel_count + 1) // 2] >> 4
+          gray_img[1::2] = packed[:pixel_count // 2] & 0x0F
+          gray_img = (gray_img * 17).reshape((height, width))
+          cv2.imshow('Gray4', gray_img)
+          if args.save:
+              cv2.imwrite(f"stream_out/gray4/img_{count:06d}.png", gray_img)
           cv2.waitKey(1)
       else:
           with open("img.jpeg", "wb") as f:
@@ -124,4 +135,3 @@ while(1):
           decoded = cv2.imdecode(nparr,cv2.IMREAD_UNCHANGED)
           cv2.imshow('JPEG', decoded)
           cv2.waitKey(1)
-
