@@ -43,6 +43,7 @@ typedef enum
   CAMERA_PIPELINE_ORIENTATION_FAILED,
   CAMERA_PIPELINE_QVGA_WINDOW_FAILED,
   CAMERA_PIPELINE_FRAME_TIMING_FAILED,
+  CAMERA_PIPELINE_FRAME_SYNC_FAILED,
 } CameraPipelineStatus_t;
 
 CameraPipelineStatus_t camera_pipeline_init(void);

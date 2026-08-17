@@ -119,35 +119,57 @@ static CameraPipelineStatus_t open_camera(void)
   {
     return CAMERA_PIPELINE_CAMERA_OPEN_FAILED;
   }
-
+  CameraPipelineStatus_t status = CAMERA_PIPELINE_OK;
   pi_camera_control(&camera, PI_CAMERA_CMD_START, 0);
   uint8_t orientation = 3;
   uint8_t actual = 0;
   pi_camera_reg_set(&camera, IMG_ORIENTATION, &orientation);
-  pi_time_wait_us(1000000);
+
+#if SENSOR_FRAME_RATE_HZ > 0
+  /* Apply the QVGA raster before its shorter frame timing becomes active. */
+  if (himax_configure_qvga_window(&camera, HIMAX_QVGA_WINDOW_ENABLE))
+  {
+    status = CAMERA_PIPELINE_QVGA_WINDOW_FAILED;
+  }
+  if (status == CAMERA_PIPELINE_OK &&
+      himax_wait_for_frames(&camera, 2, 1000000))
+  {
+    status = CAMERA_PIPELINE_FRAME_SYNC_FAILED;
+  }
+  if (status == CAMERA_PIPELINE_OK &&
+      himax_configure_frame_timing(&camera, HIMAX_FRAME_LENGTH_LINES,
+                                   HIMAX_MAX_INTEGRATION_LINES,
+                                   HIMAX_QVGA_WINDOW_ENABLE))
+  {
+    status = CAMERA_PIPELINE_FRAME_TIMING_FAILED;
+  }
+#elif CAMERA_QVGA_WINDOW_ENABLE
+  /* Keep the sensor's raster height equal to the QVGA DMA frame height. */
+  if (himax_configure_qvga_window(&camera, 1))
+  {
+    status = CAMERA_PIPELINE_QVGA_WINDOW_FAILED;
+  }
+#else
+  /* The GAP SDK leaves the HM01B0 register group held after initialization. */
+  himax_commit_pending_registers(&camera);
+#endif
+
+  /* Prove the staged raster and orientation crossed frame boundaries. */
+  if (status == CAMERA_PIPELINE_OK &&
+      himax_wait_for_frames(&camera, 2, 1000000))
+  {
+    status = CAMERA_PIPELINE_FRAME_SYNC_FAILED;
+  }
   pi_camera_reg_get(&camera, IMG_ORIENTATION, &actual);
   pi_camera_control(&camera, PI_CAMERA_CMD_STOP, 0);
+  if (status != CAMERA_PIPELINE_OK)
+  {
+    return status;
+  }
   if (actual != orientation)
   {
     return CAMERA_PIPELINE_ORIENTATION_FAILED;
   }
-
-  /* Keep the sensor's raster height equal to the QVGA DMA frame height. */
-#if CAMERA_QVGA_WINDOW_ENABLE
-  if (himax_configure_qvga_window(&camera, 1))
-  {
-    return CAMERA_PIPELINE_QVGA_WINDOW_FAILED;
-  }
-#endif
-
-#if SENSOR_FRAME_RATE_HZ > 0
-  if (himax_configure_frame_timing(&camera, HIMAX_FRAME_LENGTH_LINES,
-                                   HIMAX_MAX_INTEGRATION_LINES,
-                                   HIMAX_QVGA_WINDOW_ENABLE))
-  {
-    return CAMERA_PIPELINE_FRAME_TIMING_FAILED;
-  }
-#endif
 
   pi_camera_control(&camera, PI_CAMERA_CMD_AEG_INIT, 0);
   return CAMERA_PIPELINE_OK;
@@ -193,6 +215,8 @@ const char *camera_pipeline_status_message(CameraPipelineStatus_t status)
       return "failed to configure QVGA sensor window";
     case CAMERA_PIPELINE_FRAME_TIMING_FAILED:
       return "failed to configure camera frame timing";
+    case CAMERA_PIPELINE_FRAME_SYNC_FAILED:
+      return "camera frame counter did not advance after configuration";
   }
   return "unknown camera pipeline error";
 }

@@ -33,3 +33,6 @@ int himax_configure_frame_timing(struct pi_device *camera,
                                  uint16_t max_integration_lines,
                                  uint8_t qvga_window_enable);
 int himax_configure_qvga_window(struct pi_device *camera, uint8_t enabled);
+void himax_commit_pending_registers(struct pi_device *camera);
+int himax_wait_for_frames(struct pi_device *camera, uint8_t frame_count,
+                          uint32_t timeout_us);
