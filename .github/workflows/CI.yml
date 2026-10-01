@@ -20,7 +20,7 @@ jobs:
 
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         submodules: true
 
@@ -40,7 +40,7 @@ jobs:
       run: cp examples/other/com-test/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img aideck_gap8.bin
 
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ github.sha }}
         path: aideck_gap8.bin
