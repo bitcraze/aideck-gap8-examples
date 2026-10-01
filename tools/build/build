@@ -3,4 +3,4 @@ set -e
 
 scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-${scriptDir}/make-example examples/other/wifi-img-streamer build image SETUP_WIFI_AP=1
+${scriptDir}/make-example examples/other/wifi-img-streamer build image SETUP_WIFI_AP=1 CAPTURE_MODE=pipelined CAMERA_RESOLUTION=qvga STREAM_ENCODING=raw SENSOR_FRAME_RATE=default
