@@ -71,8 +71,12 @@ For example, build pipelined QVGA JPEG streaming with 60 FPS sensor timing and
 profiling enabled using:
 
 ```shell
-$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer clean build image SETUP_WIFI_AP=1 CAMERA_RESOLUTION=qvga CAPTURE_MODE=pipelined SENSOR_FRAME_RATE=60 STREAM_ENCODING=jpeg OUTPUT_PROFILING_DATA=1
+$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/wifi-img-streamer clean build image CAMERA_RESOLUTION=qvga CAPTURE_MODE=pipelined SENSOR_FRAME_RATE=60 STREAM_ENCODING=jpeg OUTPUT_PROFILING_DATA=1
 ```
+
+Always include `clean` when changing build variables. The build does not track
+compiler flags, so without it object files compiled with the previous settings
+are reused.
 
 
 ## Starting the viewer
