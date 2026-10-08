@@ -36,6 +36,10 @@ jobs:
     - name: build com-test example
       run: docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/com-test build image
 
+    # NanoCockpit is developed and tested with GAP SDK 3.8.1
+    - name: build nanocockpit streamer example
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck:3.8.1 tools/build/make-example nanocockpit/examples/streamer build image
+
     - name: rename bin file
       run: cp examples/other/com-test/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img aideck_gap8.bin
 
