@@ -2,7 +2,7 @@
 
 [Nanocockpit](https://github.com/idsia-robotics/nanocockpit) is an application framework for the AI-deck. It provides reusable GAP8 components - camera acquisition, CPX over SPI, co-routines, queues, state forwarding from the Crazyflie over UART, and tracing - that applications are built on top of.
 
-This folder contains the framework, under `lib/`, and one application built with it: the Wi-Fi streamer in `nanocockpit-streamer/`. Upstream ships further examples for the individual components, as well as a complete on-board CNN application.
+This folder contains the framework, under `lib/`, and one application built with it: the Wi-Fi streamer in `examples/streamer/`. Upstream ships further examples for the individual components, as well as a complete on-board CNN application.
 
 ## Requirements
 
@@ -18,7 +18,7 @@ Nanocockpit has been tested with:
 
 ## Configuration
 
-The build-time settings of the streamer example live in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h). It is worth having a look before you build, in particular at:
+The build-time settings of the streamer example live in [`examples/streamer/config.h`](examples/streamer/config.h). It is worth having a look before you build, in particular at:
 
 - **Exposure**: auto-exposure is disabled by default (`HIMAX_AE`), so frames are captured with the fixed `HIMAX_INTEGRATION_MS` and `HIMAX_AGAIN` settings. These defaults are tuned for indoor lighting; outdoors the image will clip to white, in which case you should lower the integration time and/or the analog gain. Auto-exposure has not been validated on the AI-deck.
 - **Resolution and frame rate**: `HIMAX_FORMAT` and `HIMAX_FRAME_RATE`, 162x162 at 60fps by default. Which rates a format can hit exactly depends on the sensor timing, and is listed in the [measured table](https://github.com/idsia-robotics/nanocockpit/blob/main/src/gap/docs/himax_supported_framerates.md) upstream.
@@ -41,7 +41,7 @@ docker run --rm -it -v "${PWD}:/module/data/" -P \
 
 Select the application that you want to build. This folder ships the Wi-Fi streamer (note that it is important that you start your bash console outside the nanocockpit folder, otherwise the lib files will not be found):
 ```sh
-cd examples/other/nanocockpit/nanocockpit-streamer/
+cd nanocockpit/examples/streamer/
 ```
 
 Compile and run the code over JTAG:
@@ -58,16 +58,16 @@ make flash
 
 ## Matplotlib viewer
 
-You can view the images with the plotter, found in aideck_cpx_streamer
+You can view the images with the plotter, found in client/aideck_cpx_streamer
 
 Install the viewer as a Python package (best you do this in a virtual environment with python 3.9):
 
 ```shell
-cd examples/other/nanocockpit
-pip install ./aideck_cpx_streamer
+cd nanocockpit
+pip install ./client/aideck_cpx_streamer
 ```
 
-Use `pip install -e ./aideck_cpx_streamer` instead if you want to edit the viewer without having to re-install it every time.
+Use `pip install -e ./client/aideck_cpx_streamer` instead if you want to edit the viewer without having to re-install it every time.
 
 Launch a minimal client that shows the received data in a GUI window
 (make sure your ai-deck and your laptop are connected to the same WiFi, which you configured when flashing the NINA module):
@@ -96,4 +96,4 @@ This example does not ship a ROS 2 viewer. Upstream nanocockpit has one, togethe
 
 ## Expected results
 
-Bidirectional CPX (GAP8<=>ESP32) is disabled by default, which lets the SPI bus run at 30MHz instead of the 7.2MHz that bidirectional communication is limited to on the AI-deck. You can therefore expect ~60fps with the default configuration, and ~30fps with bidirectional CPX enabled (`CPX_SPI_BIDIRECTIONAL` in [`nanocockpit-streamer/config.h`](nanocockpit-streamer/config.h)). No changes to the NINA firmware are required either way.
+Bidirectional CPX (GAP8<=>ESP32) is disabled by default, which lets the SPI bus run at 30MHz instead of the 7.2MHz that bidirectional communication is limited to on the AI-deck. You can therefore expect ~60fps with the default configuration, and ~30fps with bidirectional CPX enabled (`CPX_SPI_BIDIRECTIONAL` in [`examples/streamer/config.h`](examples/streamer/config.h)). No changes to the NINA firmware are required either way.

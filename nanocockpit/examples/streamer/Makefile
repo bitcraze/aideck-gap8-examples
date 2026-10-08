@@ -19,9 +19,7 @@
 
 APP = streamer
 
-library_path = ../lib
-
-APP_INC  = $(CURDIR) $(CURDIR)/$(library_path)
+APP_CFLAGS  += -I$(CURDIR) -I$(CURDIR)/../../lib
 APP_CFLAGS  += -Werror
 
 # -O2 with -fno-indirect-inlining is just as fast as -O3 and reduces code size considerably
@@ -30,8 +28,8 @@ APP_CFLAGS  += -g -O2 -fno-indirect-inlining -flto
 APP_LDFLAGS += -g -Wl,--print-memory-usage -flto
 
 APP_SRCS += main.c
-APP_SRCS += $(library_path)/camera.c $(library_path)/camera/himax.c $(library_path)/cluster.c $(library_path)/crc32.c $(library_path)/debug.c $(library_path)/rng.c $(library_path)/soc.c $(library_path)/streamer.c $(library_path)/time.c $(library_path)/trace.c $(library_path)/queue.c
-APP_SRCS += $(library_path)/cpx/cpx.c $(library_path)/cpx/cpx_spi.c
-APP_SRCS += $(library_path)/uart.c $(library_path)/uart_protocol.c
+APP_SRCS += ../../lib/camera.c ../../lib/camera/himax.c ../../lib/cluster.c ../../lib/crc32.c ../../lib/debug.c ../../lib/rng.c ../../lib/soc.c ../../lib/streamer.c ../../lib/time.c ../../lib/trace.c ../../lib/queue.c
+APP_SRCS += ../../lib/cpx/cpx.c ../../lib/cpx/cpx_spi.c
+APP_SRCS += ../../lib/uart.c ../../lib/uart_protocol.c
 
 include $(RULES_DIR)/pmsis_rules.mk
