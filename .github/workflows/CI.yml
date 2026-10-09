@@ -41,6 +41,9 @@ jobs:
     - name: build nanocockpit streamer example
       run: docker run --rm -v ${PWD}:/module -w /module bitcraze/aideck:3.8.1 bash -c "source /gap_sdk/configs/ai_deck.sh && make -C nanocockpit/examples/streamer build image"
 
+    - name: build nanocockpit pulp-frontnet example
+      run: docker run --rm -v ${PWD}:/module -w /module bitcraze/aideck:3.8.1 bash -c "source /gap_sdk/configs/ai_deck.sh && make -C nanocockpit/examples/pulp-frontnet build image"
+
     - name: build nanocockpit cpx example
       run: docker run --rm -v ${PWD}:/module -w /module bitcraze/aideck:3.8.1 bash -c "source /gap_sdk/configs/ai_deck.sh && make -C nanocockpit/examples/cpx build image"
 
