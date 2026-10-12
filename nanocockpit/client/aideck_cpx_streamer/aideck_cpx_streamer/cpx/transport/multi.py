@@ -68,7 +68,12 @@ class MultiClientTransport(Transport):
         udp_thread.start()
 
         while self.ok:
-            packet = self.rx_queue.get()
+            try:
+                # Wake up regularly to notice a shutdown, even if no packets arrive because
+                # the receive threads are still blocked trying to connect
+                packet = self.rx_queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
 
             # Fake packet used to break out of waiting on shutdown
             if packet is None:
