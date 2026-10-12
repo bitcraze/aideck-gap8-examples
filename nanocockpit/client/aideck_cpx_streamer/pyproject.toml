@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aideck_cpx_streamer"
+version = "0.1.0"
+description = "Viewer for the NanoCockpit AI-deck camera streamer"
+authors = [
+    { name = "Elia Cereda", email = "elia.cereda@idsia.ch" },
+    { name = "Jerome Guzzi", email = "jerome.guzzi@idsia.ch" },
+    { name = "Rik Bouwmeester", email = "rik@bitcraze.io" },
+]
+maintainers = [{ name = "Rik Bouwmeester", email = "rik@bitcraze.io" }]
+license = "Apache-2.0"
+requires-python = ">=3.14"
+dependencies = [
+    "matplotlib~=3.11",
+    "numpy~=2.5",
+    "opencv-python-headless~=5.0",
+    "pillow~=12.3",
+]
+
+[project.urls]
+Upstream = "https://github.com/idsia-robotics/nanocockpit"
+
+[project.scripts]
+plt_viewer = "aideck_cpx_streamer.plt_viewer:main"
+
+[tool.setuptools.packages.find]
+include = ["aideck_cpx_streamer*"]
