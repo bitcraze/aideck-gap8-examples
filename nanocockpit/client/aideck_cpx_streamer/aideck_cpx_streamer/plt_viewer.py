@@ -25,7 +25,10 @@
 #
 
 import argparse
+import os
+import sys
 import matplotlib.pyplot as plt
+from matplotlib.backends import BackendFilter, backend_registry
 import numpy as np
 import cv2
 
@@ -41,6 +44,8 @@ class PltViewer:
         parser.add_argument("--no-udp-send", action='store_false', dest='udp_send', help="Do not send replies over UDP")
         parser.add_argument("-save", type=str, default=None, metavar="save", help="Save images to output directory")
         args = parser.parse_args()
+
+        self.check_gui_backend()
 
         self.client = StreamerClient(host=args.host, port=args.port, udp_send=args.udp_send)
 
@@ -61,6 +66,20 @@ class PltViewer:
         # The pose panel is only added once the drone sends an on-board inference
         self.pose_ax = None
         self.pose = None
+
+    @staticmethod
+    def check_gui_backend():
+        # Without a GUI toolkit, matplotlib silently falls back to a backend that cannot open
+        # a window: frames would be received but never shown.
+        backend = plt.get_backend()
+        if backend.lower() in backend_registry.list_builtin(BackendFilter.INTERACTIVE):
+            return
+
+        # A backend selected on purpose is respected, e.g. to save frames on a headless machine
+        if "MPLBACKEND" in os.environ:
+            return
+
+        sys.exit(f"plt_viewer cannot open a window: matplotlib found no GUI toolkit (backend '{backend}').")
 
     def main(self):
         try:
