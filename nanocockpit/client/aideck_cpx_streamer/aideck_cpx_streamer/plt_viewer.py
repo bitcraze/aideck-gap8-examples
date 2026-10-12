@@ -51,14 +51,16 @@ class PltViewer:
             self.frame_saver = FrameSaver(dataset_dir)
 
         plt.ion()
-        self.fig, (self.ax, self.tof_ax) = plt.subplots(1, 2)
+        self.fig, self.ax = plt.subplots()
         self.fig.canvas.mpl_connect('close_event', self.on_close)
-        
+
         self.ax.axis('off')
-        self.tof_ax.axis('off')
-        
+
         self.im = None
-        self.tof = None
+
+        # The pose panel is only added once the drone sends an on-board inference
+        self.pose_ax = None
+        self.pose = None
 
     def main(self):
         try:
@@ -71,7 +73,7 @@ class PltViewer:
                 # to the drone.
                 self.client.send_reply(metadata, None)
 
-                self.display(frame, tof_frame, metadata)
+                self.display(frame, metadata)
                 
                 if self.frame_saver:
                     self.frame_saver.save(frame, tof_frame, metadata)
@@ -79,7 +81,7 @@ class PltViewer:
             if self.frame_saver:
                 self.frame_saver.close()
     
-    def display(self, frame: np.ndarray, tof_frame: np.ndarray, metadata: StreamerMetadata):
+    def display(self, frame: np.ndarray, metadata: StreamerMetadata):
         frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB) / 255
         # frame = cv2.cvtColor(frame, cv2.COLOR_BayerRG2RGB) / 255
         # frame = cv2.cvtColor(frame, cv2.COLOR_BayerRG2RGB) / 1023
@@ -92,41 +94,73 @@ class PltViewer:
              self.im = self.ax.imshow(frame)
             #  self.im = self.ax.imshow(frame, cmap='gray', vmin=0, vmax=255)
             #  self.im = self.ax.imshow(frame, cmap='gray', vmin=0, vmax=1024)
-        
-        if self.tof is not None and (tof_frame is None or self.tof.get_shape() != tof_frame.shape):
-            self.tof.remove()
-            self.tof = None
-        
-        if self.tof is None and tof_frame is not None:
-             self.tof = self.tof_ax.imshow(tof_frame, cmap='gray', vmin=0, vmax=255)
-        
+
         if metadata is not None:
-            state_delay = (metadata.frame_timestamp - metadata.state_timestamp) / 1000.0
-            state_x = (metadata.state.x) / 1000.0
-            state_y = (metadata.state.y) / 1000.0
-            state_z = (metadata.state.z) / 1000.0
-            title = f"Frame #{metadata.frame_id}\n" \
-                    f"State: X {state_x:+.02f}m, Y {state_y:+.02f}m, Z {state_z:+.02f}m, delay {state_delay:+.0f}ms"
-            
-            if tof_frame is None:
-                tof_title = "TOF Frame <na>"
-            else:
-                tof_shape = f"{tof_frame.shape[0]}x{tof_frame.shape[1]}"
-                tof_delay = (metadata.frame_timestamp - metadata.tof_timestamp) / 1000.0
-                tof_title = f"TOF Frame {tof_shape}\n" \
-                            f"Delay {tof_delay:+.0f}ms"
+            title = f"Frame #{metadata.frame_id}"
+
+            # The state is only shown once the Crazyflie has sent one to the AI-deck
+            if metadata.state_timestamp != 0:
+                state_delay = (metadata.frame_timestamp - metadata.state_timestamp) / 1000.0
+                state_x = (metadata.state.x) / 1000.0
+                state_y = (metadata.state.y) / 1000.0
+                state_z = (metadata.state.z) / 1000.0
+                title += f"\nState: X {state_x:+.02f}m, Y {state_y:+.02f}m, Z {state_z:+.02f}m, delay {state_delay:+.0f}ms"
         else:
             title = ""
-            tof_title = ""
         self.ax.set_title(title)
-        self.tof_ax.set_title(tof_title)
-        
+
         self.im.set_data(frame)
 
-        if tof_frame is not None:
-            self.tof.set_data(tof_frame)
+        if metadata is not None and self.has_inference(metadata.inference):
+            self.display_pose(metadata.inference)
 
         self.fig.canvas.start_event_loop(0.01)
+
+    @staticmethod
+    def has_inference(inference) -> bool:
+        # Examples without a network on board (e.g., the streamer) leave the inference zeroed
+        return any(v != 0 for v in (inference.x, inference.y, inference.z, inference.phi))
+
+    def display_pose(self, inference):
+        # Top-down view of the person pose estimated on board by PULP-Frontnet, in the drone's
+        # body frame: x forward (up in the plot), y left (left in the plot). The person faces
+        # the direction phi + pi, i.e. phi = 0 means that they face the drone.
+        arrow_length = 0.4
+
+        if self.pose is None:
+            # Make room for a second panel next to the camera frame
+            width, height = self.fig.get_size_inches()
+            self.fig.set_size_inches(2 * width, height, forward=True)
+            grid = self.fig.add_gridspec(1, 2)
+            self.ax.set_subplotspec(grid[0])
+            self.pose_ax = ax = self.fig.add_subplot(grid[1])
+
+            ax.set_aspect('equal')
+            ax.set_xlim(2.0, -2.0)
+            ax.set_ylim(-0.5, 5.0)
+            ax.set_xlabel('Y [m]')
+            ax.set_ylabel('X [m]')
+            ax.grid(True)
+            ax.plot(0.0, 0.0, marker='^', markersize=12, color='tab:blue', label='Drone')
+            person, = ax.plot([], [], marker='o', markersize=10, color='tab:orange', linestyle='', label='Person')
+            heading, = ax.plot([], [], color='tab:orange', linewidth=2)
+            label = ax.text(0.03, 0.97, '', transform=ax.transAxes, va='top', family='monospace', fontsize='small')
+            ax.legend(loc='upper right')
+            self.pose = (person, heading, label)
+
+        person, heading, label = self.pose
+        facing = inference.phi + np.pi
+        person.set_data([inference.y], [inference.x])
+        heading.set_data(
+            [inference.y, inference.y + arrow_length * np.sin(facing)],
+            [inference.x, inference.x + arrow_length * np.cos(facing)],
+        )
+        label.set_text(
+            f"X   {inference.x:+.2f}m\n"
+            f"Y   {inference.y:+.2f}m\n"
+            f"Z   {inference.z:+.2f}m\n"
+            f"phi {np.degrees(inference.phi):+.0f}°"
+        )
 
     def on_close(self, _event):
         self.client.shutdown()
