@@ -86,7 +86,7 @@ class PltViewer:
             if self.frame_saver:
                 self.frame_saver.open()
 
-            for frame, tof_frame, metadata in self.client.receive():
+            for frame, _tof_frame, metadata in self.client.receive():
                 # Send reply to the drone. By default, it sends the frame statistics used
                 # to compute the round-trip time, but it can be used also to transmit user data
                 # to the drone.
@@ -95,7 +95,7 @@ class PltViewer:
                 self.display(frame, metadata)
                 
                 if self.frame_saver:
-                    self.frame_saver.save(frame, tof_frame, metadata)
+                    self.frame_saver.save(frame, metadata)
         finally:
             if self.frame_saver:
                 self.frame_saver.close()

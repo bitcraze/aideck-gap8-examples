@@ -48,14 +48,11 @@ class FrameSaver:
         self.camera_rgb_dir = os.path.join(save_dir, 'camera_rgb')
         os.makedirs(self.camera_rgb_dir, exist_ok=True)
 
-        self.tof_dir = os.path.join(save_dir, 'tof')
-        os.makedirs(self.tof_dir, exist_ok=True)
-
     def open(self):
         self.metadata_csv = open(os.path.join(self.save_dir, "metadata.csv"), "w")
 
         self.metadata_csv.write("filename,metadata_version,")
-        self.metadata_csv.write("frame_id,frame_gap8_timestamp,state_gap8_timestamp,state_stm32_timestamp,tof_timestamp,")
+        self.metadata_csv.write("frame_id,frame_gap8_timestamp,state_gap8_timestamp,state_stm32_timestamp,")
         self.metadata_csv.write("state_x,state_y,state_z,")
         self.metadata_csv.write("state_vx,state_vy,state_vz,")
         self.metadata_csv.write("state_ax,state_ay,state_az,")
@@ -63,7 +60,7 @@ class FrameSaver:
 
         self.i = 0
 
-    def save(self, frame, tof_frame, metadata):
+    def save(self, frame, metadata):
         image = Image.fromarray(frame, mode="L")
         # image = Image.fromarray(frame << 6, mode="I;16") # 10-bit images, converted to 16-bit
         raw_image_name = '%05d.png' % self.i
@@ -76,14 +73,8 @@ class FrameSaver:
         image_path = os.path.join(self.camera_rgb_dir, rgb_image_name)
         image.save(image_path)
 
-        if tof_frame is not None:
-            image = Image.fromarray(tof_frame, mode="L")
-            tof_image_name = '%05d.png' % self.i
-            image_path = os.path.join(self.tof_dir, tof_image_name)
-            image.save(image_path)
-
         self.metadata_csv.write(f"{raw_image_name},{metadata.metadata_version},")
-        self.metadata_csv.write(f"{metadata.frame_id},{metadata.frame_timestamp},{metadata.state_timestamp},{metadata.state.timestamp},{metadata.tof_timestamp},")
+        self.metadata_csv.write(f"{metadata.frame_id},{metadata.frame_timestamp},{metadata.state_timestamp},{metadata.state.timestamp},")
         self.metadata_csv.write(f"{metadata.state.x},{metadata.state.y},{metadata.state.z},")
         self.metadata_csv.write(f"{metadata.state.vx},{metadata.state.vy},{metadata.state.vz},")
         self.metadata_csv.write(f"{metadata.state.ax},{metadata.state.ay},{metadata.state.az},")
