@@ -1,99 +1,55 @@
-# Nanocockpit GAP8 examples
+# NanoCockpit
 
-[Nanocockpit](https://github.com/idsia-robotics/nanocockpit) is an application framework for the AI-deck. It provides reusable GAP8 components - camera acquisition, CPX over SPI, co-routines, queues, state forwarding from the Crazyflie over UART, and tracing - that applications are built on top of.
+[NanoCockpit](https://github.com/idsia-robotics/nanocockpit) is an application framework for
+AI-based applications on the Crazyflie with an AI-deck. This folder contains the framework for the
+GAP8 (`lib/`), example applications (`examples/`) and a viewer for the computer
+(`client/aideck_cpx_streamer/`). The NanoCockpit examples need the
+[ESP32 firmware for NanoCockpit](https://github.com/bitcraze/aideck-esp-firmware-v2).
 
-This folder contains the framework, under `lib/`, and one application built with it: the Wi-Fi streamer in `examples/streamer/`. Upstream ships further examples for the individual components, as well as a complete on-board CNN application.
+## Documentation
 
-## Requirements
+* [NanoCockpit overview and requirements](../docs/examples/nanocockpit/index.md)
+* [NanoCockpit streamer](../docs/examples/nanocockpit/streamer.md)
+* [PULP-Frontnet](../docs/examples/nanocockpit/pulp-frontnet.md)
+* [Component examples](../docs/examples/nanocockpit/component-examples.md)
+* [Switching between NanoCockpit and the original firmware](../docs/development/switching-firmware.md)
 
-Note that you need to flash the compatible NINA (ESP32) code for the nanocockpit to work, found [here](https://github.com/bitcraze/aideck-esp-firmware-v2).
-Also note that here we use the debugger to program GAP8 - meaning you might overwrite your bootloader and not be able to program over CPX anymore (unless you flash it again, more info [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/development/flashing/)). Only proceed if you have a debugger.
-To stream the state of the drone directly with the received images, you have to send the state from the Crazyflie to the NINA, an example on how to do it is found [here](https://github.com/bitcraze/crazyflie-firmware/tree/master/examples/app_state_stream_aideck).
+## More in upstream NanoCockpit
 
-Make sure that you went through the [getting started with the AI-deck](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) tutorial first.
+Some parts of NanoCockpit are not included here. They are found in the
+[upstream repository](https://github.com/idsia-robotics/nanocockpit):
 
-Nanocockpit has been tested with:
-- Ubuntu 22.04
-- Python 3.9
+* the closed-loop follow-me demo, in which the Crazyflie follows a person using the on-board
+  neural network
+* a ROS 2 viewer
+* Wireshark dissectors for the NanoCockpit protocols
+* a notebook for analysing traces from the ESP32
 
-## Configuration
+## Credit
 
-The build-time settings of the streamer example live in [`examples/streamer/config.h`](examples/streamer/config.h). It is worth having a look before you build, in particular at:
+NanoCockpit was created by Elia Cereda, Alessandro Giusti and Daniele Palossi (IDSIA, USI-SUPSI;
+IIS, ETH Zürich). If you use NanoCockpit in an academic context, please cite their publication:
 
-- **Exposure**: auto-exposure is disabled by default (`HIMAX_AE`), so frames are captured with the fixed `HIMAX_INTEGRATION_MS` and `HIMAX_AGAIN` settings. These defaults are tuned for indoor lighting; outdoors the image will clip to white, in which case you should lower the integration time and/or the analog gain. Auto-exposure has not been validated on the AI-deck.
-- **Resolution and frame rate**: `HIMAX_FORMAT` and `HIMAX_FRAME_RATE`, 162x162 at 60fps by default. Which rates a format can hit exactly depends on the sensor timing, and is listed in the [measured table](https://github.com/idsia-robotics/nanocockpit/blob/main/src/gap/docs/himax_supported_framerates.md) upstream.
-- **Bidirectional CPX**: `CPX_SPI_BIDIRECTIONAL`, see [Expected results](#expected-results).
-- **Debug prints**: the `*_VERBOSE` defines at the top of the file.
+E. Cereda, A. Giusti, and D. Palossi, "NanoCockpit: Performance-optimized Application Framework for
+AI-based Autonomous Nanorobotics", in IEEE Robotics and Automation Practice, 2026.
+[IEEE Xplore](https://ieeexplore.ieee.org/document/11494460),
+[arXiv](https://arxiv.org/abs/2601.07476)
 
-## Build instructions
-
-Configure your computer to use the GAP SDK Docker container as described [here](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/) (the nanocockpit framework was generally developed and tested with 3.8.1, however, for the nanocockpit streamer the newest release is also compatible).
-
-Start a bash console inside your docker:
-```sh
-docker run --rm -it -v "${PWD}:/module/data/" -P \
-    -e "GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg" \
-    --device-cgroup-rule="c 189:* rmw" \
-    -v /dev/bus:/dev/bus:ro -v /dev/serial:/dev/serial:ro \
-    bitcraze/aideck:3.8.1 \
-    /bin/bash -c "source /gap_sdk/configs/ai_deck.sh; cd /module/data/; bash"
+```bibtex
+@article{cereda2025nanocockpit,
+  author={Cereda, Elia and Giusti, Alessandro and Palossi, Daniele},
+  title={NanoCockpit: Performance-optimized Application Framework for AI-based Autonomous Nanorobotics},
+  journal={IEEE Robotics and Automation Practice},
+  year={2026},
+  volume={},
+  number={},
+  pages={1-6},
+  doi={10.1109/RAP.2026.3687493}
+}
 ```
 
-Select the application that you want to build. This folder ships the Wi-Fi streamer (note that it is important that you start your bash console outside the nanocockpit folder, otherwise the lib files will not be found):
-```sh
-cd nanocockpit/examples/streamer/
-```
+## License
 
-Compile and run the code over JTAG:
-
-```shell
-make all run
-```
-
-Flash the code:
-
-```shell
-make flash
-```
-
-## Matplotlib viewer
-
-You can view the images with the plotter, found in client/aideck_cpx_streamer
-
-Install the viewer as a Python package (best you do this in a virtual environment with python 3.9):
-
-```shell
-cd nanocockpit
-pip install ./client/aideck_cpx_streamer
-```
-
-Use `pip install -e ./client/aideck_cpx_streamer` instead if you want to edit the viewer without having to re-install it every time.
-
-Launch a minimal client that shows the received data in a GUI window
-(make sure your ai-deck and your laptop are connected to the same WiFi, which you configured when flashing the NINA module):
-
-```shell
-plt_viewer
-```
-
-By default the client will attempt to connect to `aideck.local`, the default mDNS hostname used by the NINA code. You can connect to a different hostname using:
-
-```shell
-plt_viewer -host your-hostname.local
-```
-
-This client also supports saving the received data in a simple dataset format:
-
-```shell
-plt_viewer -save dataset/
-```
-
-The resulting `dataset/` directory will contain one PNG image for each received camera frame and a `metadata.csv` containing the onboard state estimation corresponding to each frame, plus some extra information.
-
-## ROS 2 viewer
-
-This example does not ship a ROS 2 viewer. Upstream nanocockpit has one, together with the `aideck_cpx_msgs` message package and the ROS 2 environment it needs - see the [nanocockpit](https://github.com/idsia-robotics/nanocockpit) repository.
-
-## Expected results
-
-Bidirectional CPX (GAP8<=>ESP32) is disabled by default, which lets the SPI bus run at 30MHz instead of the 7.2MHz that bidirectional communication is limited to on the AI-deck. You can therefore expect ~60fps with the default configuration, and ~30fps with bidirectional CPX enabled (`CPX_SPI_BIDIRECTIONAL` in [`examples/streamer/config.h`](examples/streamer/config.h)). No changes to the NINA firmware are required either way.
+NanoCockpit is licensed under the Apache License 2.0, see [LICENSE](LICENSE). The exceptions are
+`lib/crc32.c` and `lib/crc32.h`, which are licensed under the GNU General Public License version 3,
+as stated in their headers.
