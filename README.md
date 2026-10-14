@@ -6,3 +6,15 @@
 
 Check out the [documentation](https://www.bitcraze.io/documentation/repository/aideck-gap8-examples/master/)
 for starting guides.
+
+The examples use one of two firmware combinations on the AI-deck:
+
+* [NanoCockpit](nanocockpit/), in the `nanocockpit` folder, uses the
+  [ESP32 firmware for NanoCockpit](https://github.com/bitcraze/aideck-esp-firmware-v2) and is
+  flashed to the GAP8 with a JTAG programmer.
+* The other examples, in the `examples` folder, use the original ESP32 firmware and the GAP8
+  bootloader.
+
+Newer Crazyflie release packages include the ESP32 firmware for NanoCockpit. Upgrading the
+Crazyflie with such a release therefore replaces the original ESP32 firmware, see
+[switching firmware](docs/development/switching-firmware.md).

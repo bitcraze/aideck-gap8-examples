@@ -47,7 +47,8 @@ have a look at the [aideck-docker repository](https://github.com/bitcraze/docker
 [GreenWaves SDK](https://github.com/GreenWaves-Technologies/gap_sdk).
 
 To see a list of what SDK versions we have docker containers for, have a look at [our Docker hub](https://hub.docker.com/r/bitcraze/aideck/tags),
-note that we only aim to keep the examples working with the latest tag.
+note that we only aim to keep the examples working with the latest tag. The exception is
+[NanoCockpit](/docs/examples/nanocockpit/index.md), which uses the `3.8.1` tag.
 
 Also, note that to be able to use the autotiler in the GAP8 SDK (Facedetection and Classifcation examples), you will have to set it up and accept the license manually.
 
