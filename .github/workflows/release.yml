@@ -1,70 +1,58 @@
-# Release jobs
+# Build the streamer binaries and create a draft GitHub release. Run it on a tag.
 
 name: Release
 
 on:
   workflow_dispatch:
 
-jobs:
-  release:
-    name: Create Release on Github
-    runs-on: ubuntu-latest
-    steps:
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: true
-        prerelease: true
-    - name: Release URL on file
-      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-    - name: Save Release URL File For Uploading Files
-      uses: actions/upload-artifact@v4
-      with:
-        name: release_url
-        path: release_url.txt
+permissions:
+  contents: read
 
-  upload:
-    name: Upload Binaries to release
-    needs: [release]
+jobs:
+  check-tag:
+    name: Check that this runs on a tag
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Fail when started on a branch
+      if: github.ref_type != 'tag'
+      run: |
+        echo "::error::Run this workflow on a tag, not on a branch"
+        exit 1
+
+  release:
+    permissions:
+      contents: write  # for softprops/action-gh-release to create a release
+    name: Create draft GitHub release
+    needs: check-tag
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         submodules: true
 
-    - name: Build
-      run: docker run --rm -v ${PWD}:/module bitcraze/aideck bash -c "./tools/build/build"
+    - name: Build wifi-img-streamer
+      run: docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/build
 
-    - name: Load Release URL File from release job
-      uses: actions/download-artifact@v4
-      with:
-        name: release_url
+    # NanoCockpit is developed and tested with GAP SDK 3.8.1, see CI.yml
+    - name: Build NanoCockpit streamer
+      run: docker run --rm -v ${PWD}:/module -w /module bitcraze/aideck:3.8.1 bash -c "source /gap_sdk/configs/ai_deck.sh && make -C nanocockpit/examples/streamer build image"
 
-    - name: Get Release File Name & Upload URL
-      id: get_release_info
+    # The file names have no version in them, so that links to the latest release keep working
+    - name: Name the binaries
       run: |
-        value=`cat release_url.txt`
-        echo ::set-output name=upload_url::$value
+        cp examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img aideck_gap8_wifi_img_streamer_with_ap.bin
+        cp nanocockpit/examples/streamer/BUILD/GAP8_V2/GCC_RISCV/target.board.devices.flash.img aideck_gap8_nanocockpit_streamer.bin
 
-    - name: Get the version
-      id: get_release_version
-      env:
-        GITHUB_REF : ${{ github.ref }}
-      run: echo ::set-output name=release_version::${GITHUB_REF/refs\/tags\//}
-
-    - name: Upload binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create draft release
+      uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
       with:
-        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-        asset_path: examples/other/wifi-img-streamer/BUILD/GAP8_V2/GCC_RISCV_FREERTOS/target.board.devices.flash.img
-        asset_name: aideck_gap8_wifi_img_streamer_with_ap.bin
-        asset_content_type: application/octet-stream
+        tag_name: ${{ github.ref_name }}
+        name: ${{ github.ref_name }}
+        draft: true
+        fail_on_unmatched_files: true
+        files: |
+          aideck_gap8_wifi_img_streamer_with_ap.bin
+          aideck_gap8_nanocockpit_streamer.bin
