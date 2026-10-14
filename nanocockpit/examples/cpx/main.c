@@ -36,12 +36,12 @@ typedef enum {
 
 typedef struct example_cmd1_s {
     uint32_t a;
-    uint8_t _padding;
+    uint8_t _padding[3];
 } __attribute__((packed)) example_cmd1_t;
 
 typedef struct example_cmd2_s {
     float b;
-    uint8_t _padding;
+    uint8_t _padding[3];
 } __attribute__((packed)) example_cmd2_t;
 
 typedef struct example_packet_s {
