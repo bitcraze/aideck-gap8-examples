@@ -3,9 +3,11 @@ title: Classification Demo
 page_id: classification-demo
 ---
 
-> ⚠️ Important Notice: The GreenWaves Technologies website is currently down, preventing the autotiler for [gap_sdk](https://github.com/GreenWaves-Technologies/gap_sdk) from being compiled. This means that following this example will not work unless you already have the required file.
->
-> However, you can still deploy neural networks using [DORY](https://github.com/pulp-platform/dory) as an alternative.
+**Note:** This example needs the Autotiler of the GAP8 SDK, which can no longer be downloaded:
+GreenWaves Technologies, the company behind the GAP8, went into liquidation in 2025, and its website
+is no longer online. So this example can only be built if you already have the Autotiler. Neural
+networks can be deployed with [DORY](https://github.com/pulp-platform/dory) instead, as in the
+[PULP-Frontnet](/docs/examples/nanocockpit/pulp-frontnet.md) example in NanoCockpit.
 >
 > For more details, updates, and workarounds, see our announcement [here](https://github.com/orgs/bitcraze/discussions/1854).
 
