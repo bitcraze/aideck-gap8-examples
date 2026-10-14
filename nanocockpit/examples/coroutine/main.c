@@ -89,10 +89,10 @@ CO_FN_END()
 
 void main_task() {
     int arg = 1234;
-    co_fn_ctx_t ctx1;
+    static co_fn_ctx_t ctx1;
     co_fn_push_start(&ctx1, example_task1, (void *)arg, NULL);
 
-    co_fn_ctx_t ctx2;
+    static co_fn_ctx_t ctx2;
     co_fn_push_start(&ctx2, example_task2, NULL, NULL);
 
     while (true) {
