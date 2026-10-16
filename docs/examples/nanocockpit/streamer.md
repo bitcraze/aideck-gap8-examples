@@ -11,29 +11,15 @@ with the state, as a dataset.
 
 * The [requirements for NanoCockpit](/docs/examples/nanocockpit/index.md#requirements)
 
-For flashing, mount the AI-deck on the Crazyflie and connect the JTAG programmer to the GAP8 JTAG
-connector. We recommend disconnecting the programmer when flashing is done.
+## Flashing the example
 
-## Flashing the released binary
+The streamer is released as a ready-made image with the default configuration,
+`aideck_gap8_nanocockpit_streamer.bin` on the
+[releases page](https://github.com/bitcraze/aideck-gap8-examples/releases). Flash it as described
+in [flashing a ready-made image](/docs/development/flashing.md#flashing-a-ready-made-image).
 
-The streamer is released as a ready-made binary with the default configuration. Download
-`aideck_gap8_nanocockpit_streamer.bin` from the
-[releases page](https://github.com/bitcraze/aideck-gap8-examples/releases) and run the following
-command in the directory where you saved it. The command is for the Olimex ARM-USB-TINY-H:
-
-```bash
-docker run --rm -it -v "${PWD}:/module" -w /module \
-    --device-cgroup-rule="c 189:* rmw" \
-    -v /dev/bus:/dev/bus:ro -v /dev/serial:/dev/serial:ro \
-    bitcraze/aideck:3.8.1 \
-    bash -c 'source /gap_sdk/configs/ai_deck.sh; f=aideck_gap8_nanocockpit_streamer.bin; gap8-openocd -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -c "script interface/ftdi/olimex-arm-usb-tiny-h.cfg; script target/gap8revb.tcl; script tcl/flash_image.tcl; script tcl/jtag_boot.tcl; gap_flash_raw_hyper $f $(stat -c %s $f) /gap_sdk/tools/gap8-openocd-tools; exit;"'
-```
-
-Disconnect the programmer and power cycle the Crazyflie when the command is done.
-
-**Note:** Flashing over JTAG overwrites the GAP8 bootloader, see
-[switching firmware](/docs/development/switching-firmware.md) if you later want to use the other
-examples.
+To change the configuration, build and flash the example in `nanocockpit/examples/streamer` as
+described in [building and flashing an example](/docs/development/flashing.md#building-and-flashing-an-example).
 
 ## Configuring the example
 
@@ -56,45 +42,29 @@ The most important ones are
   viewer. It lowers the SPI clock from 30 MHz to 7.2 MHz because of a limitation of the AI-deck
   hardware, which lowers the frame rate that can be reached.
 
-## Building and flashing the example
-
-From the root of this repository, start a console in the container:
-
-```bash
-docker run --rm -it -v "${PWD}:/module/data/" -P \
-    -e "GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg" \
-    --device-cgroup-rule="c 189:* rmw" \
-    -v /dev/bus:/dev/bus:ro -v /dev/serial:/dev/serial:ro \
-    bitcraze/aideck:3.8.1 \
-    /bin/bash -c "source /gap_sdk/configs/ai_deck.sh; cd /module/data/; bash"
-```
-
-In the container, build and flash the example:
-
-```bash
-cd nanocockpit/examples/streamer
-make clean build image flash
-```
-
-Disconnect the programmer and power cycle the Crazyflie when flashing is done.
-
-**Note:** USB in Docker is only supported on Linux.
-
 ## Starting the viewer
 
-Connect the computer to the Wi-Fi network of the AI-deck, `aideck-nanocockpit` by default. Then,
-from the root of this repository, run
+The first time, uv downloads the viewer and the Python version it needs, which needs an internet
+connection. The Wi-Fi network of the AI-deck has no internet, so install the viewer before you
+connect to it. From the root of this repository, run
 
 ```bash
 cd nanocockpit/client/aideck_cpx_streamer
+uv sync
+```
+
+Then connect the computer to the Wi-Fi network of the AI-deck, `aideck-nanocockpit` by default,
+and start the viewer in the same directory:
+
+```bash
 uv run plt_viewer
 ```
 
-The first time, uv installs the viewer and the Python version it needs. The viewer connects to
-`aideck.local` and shows the images, the frame rate it receives and the number of dropped frames.
+The viewer connects to `aideck.local` and shows the images, the frame rate it receives and the
+number of dropped frames.
 
 The images are sent uncompressed, with 8 bits per pixel, and the viewer shows them in grayscale.
-With the color camera, the colors are not reconstructed.
+With the color camera, the viewer does not reconstruct the colors.
 
 The default hostname works with the default settings of the ESP32 firmware. Only if you changed
 the hostname, or your computer cannot find `aideck.local`, give the hostname or IP address:
@@ -109,8 +79,14 @@ To save the received images as a dataset, use
 uv run plt_viewer -save [directory]
 ```
 
-The directory gets one PNG image per frame and a `metadata.csv` file, with the state of the
-Crazyflie that belongs to each frame.
+The viewer creates a subdirectory named after the date and time, with
+
+* `camera_raw/`: one PNG image per frame, as received
+* `camera_rgb/`: one JPEG image per frame, with the colors reconstructed as for the color camera
+* `metadata.csv`: one line per frame, with the frame's timestamp and the state of the Crazyflie
+  that belongs to it
+
+The state is only filled in when the Crazyflie sends it, see the next section.
 
 ## Sending the state of the Crazyflie to the GAP8
 
@@ -120,6 +96,7 @@ the Crazyflie to send it, flash the
 to the Crazyflie. It sends the state to the GAP8 100 times per second over UART1. The viewer then
 shows the state with the image, and saves it in `metadata.csv`.
 
-**Note:** The state streamer app cannot be used together with other decks that use UART1. Check
-the [deck pin allocation](https://www.bitcraze.io/documentation/system/platform/cf2-expansiondecks/#deck-pin-allocation)
+**Note:** The state streamer app cannot be used together with other decks that use UART1, for
+example the Lighthouse deck, without changing the firmware. Check the
+[deck pin allocation](https://www.bitcraze.io/documentation/system/platform/cf2-expansiondecks/#deck-pin-allocation)
 to see which decks use it.

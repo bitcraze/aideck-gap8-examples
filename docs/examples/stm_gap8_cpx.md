@@ -12,12 +12,12 @@ This example is intended to be used together with the STM example "app_stm_gap8_
 [crazyflie-firmware repository](https://github.com/bitcraze/crazyflie-firmware)
 
 
-> Make sure you have completed the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) first
+> Make sure your AI-deck meets the [requirements for these examples](/docs/examples/index.md#requirements) first
 
 First build the stm-gap8-cpx example:
 
 ```
-$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/stm_gap8_cpx all
+$ docker run --rm -v ${PWD}:/module bitcraze/aideck tools/build/make-example examples/other/stm_gap8_cpx build image
 ```
 
 Then flash the example on the AIdeck

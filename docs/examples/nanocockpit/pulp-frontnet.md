@@ -27,16 +27,8 @@ example is configured for the HALF format at 30 frames per second by default.
 
 ## Building and flashing the example
 
-Start a console in the container and flash the example as described for the
-[NanoCockpit streamer](/docs/examples/nanocockpit/streamer.md#building-and-flashing-the-example),
-but in the `pulp-frontnet` directory:
-
-```bash
-cd nanocockpit/examples/pulp-frontnet
-make clean build image flash
-```
-
-Disconnect the programmer and power cycle the Crazyflie when flashing is done.
+Build and flash the example in `nanocockpit/examples/pulp-frontnet` as described in
+[building and flashing an example](/docs/development/flashing.md#building-and-flashing-an-example).
 
 ## Viewing the results
 
