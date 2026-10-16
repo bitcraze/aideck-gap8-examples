@@ -13,13 +13,13 @@ The AIdeck enables WiFi communication with the Crazyflie
 as well as using the power-efficient GAP8 to run neural networks on board. This tutorial will teach you about how to set up your own applications for your AIdeck.
 
 ## Folder Structure
-In the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) tutorial you already cloned the [AIdeck example repository](https://github.com/bitcraze/aideck-gap8-examples). As we use some library files from there it is important that you respect the exact paths (or do all required changes in paths yourself). For convinience the files we tell you to create already exist - so if you don't want to cheat but to follow this tutorial step by step, first delete the ```ai-deck-examples/examples/other/hello_world_gap8``` directory.
+In the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) tutorial you already cloned the [AIdeck example repository](https://github.com/bitcraze/aideck-gap8-examples). As we use some library files from there it is important that you respect the exact paths (or do all required changes in paths yourself). For convinience the files we tell you to create already exist - so if you don't want to cheat but to follow this tutorial step by step, first delete the ```aideck-gap8-examples/examples/other/hello_world_gap8``` directory.
 
 We'll use a classic example here: Hello World.
-So we call our folder which contains the example ```hello_world_gap8```, and create the c file (called ```hello_world_gap8.c```) and the ```Makefile``` (for now all empty). We also say that this example belongs to the category ```other```, so we place it in ```ai-deck-examples/examples/other```
+So we call our folder which contains the example ```hello_world_gap8```, and create the c file (called ```hello_world_gap8.c```) and the ```Makefile``` (for now all empty). We also say that this example belongs to the category ```other```, so we place it in ```aideck-gap8-examples/examples/other```
 Now the folder structure looks like this (omitting all other examples):
 ```
-ai-deck-examples   
+aideck-gap8-examples
 │
 └───examples
     │
@@ -99,7 +99,7 @@ For this section we assume you are in the ```aideck-gap8-examples``` directory.
 Now we want to compile using docker:
 
 ```
-docker run --rm -v ${PWD}:/module --privileged bitcraze/aideck tools/build/make-example SRC_DIR clean all
+docker run --rm -v ${PWD}:/module --privileged bitcraze/aideck tools/build/make-example SRC_DIR clean build image
 ```
 Where SRC_DIR is  the location of your code, here it is ```examples/other/hello_world_gap8```.
 
