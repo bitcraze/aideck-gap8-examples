@@ -5,7 +5,10 @@ redirects:
  - /docs/getting-started/flashing
 ---
 
-There are two different ways to flash firmware on the GAP8, via JTAG or via cfloader (Crazyflie PA).
+There are two different ways to flash firmware on the GAP8: with a JTAG programmer, or over the air
+with cfloader or cfcli, through a Crazyradio. Flashing over the air only works with the
+original ESP32 firmware, so the [NanoCockpit examples](/docs/examples/nanocockpit/index.md) are
+flashed with JTAG.
 If you only want to know how to flash your own code to the Crazyflie, just skip ahead to the *cfloader* section.
 If you are interested in more details about how the two ways for flashing work, just read on, the *System Architecture* paragraph will explain it to you.
 

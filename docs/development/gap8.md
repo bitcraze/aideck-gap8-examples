@@ -6,7 +6,7 @@ redirects:
 ---
 
 The GAP8 is a 9-core IoT application processor produced by Greenwaves. It is based on RISC-V and the [PULP](https://pulp-platform.org) (Parallel Ultra-Low-Power Processing Platform) open-source platform.
-You find more information about the processor itself on the [Greenwaves homepage](https://greenwaves-technologies.com/gap8_mcu_ai/) and in the [manual](https://greenwaves-technologies.com/manuals/BUILD/HOME/html/index.html), but to give you a quick start with the AIdeck we also explain some of the features of GAP8 and how it is connected on the AIdeck here.
+To give you a quick start with the AIdeck, we explain some of the features of GAP8 and how it is connected on the AIdeck here.
 
 ## Cores ##
 
@@ -34,9 +34,12 @@ The data transfers from peripherals can be handled by a so-called *micro DMA*, w
 
 ## SDK ##
 
-> ⚠️ Important Notice: The GreenWaves Technologies website is down, preventing fetching and compiling the autotiler. This means that deploying neural networks through [gap_sdk](https://github.com/GreenWaves-Technologies/gap_sdk) or our Docker image is not possible unless you already have the file. However, you can still deploy neural networks using [DORY](https://github.com/pulp-platform/dory) as an alternative.
->
-> For more details, updates and workarounds, see our announcement [here](https://github.com/orgs/bitcraze/discussions/1854).
+**Note:** The Autotiler of the GAP8 SDK can no longer be downloaded: GreenWaves Technologies, the
+company behind the GAP8, went into liquidation in 2025, and its website is no longer online. So
+deploying neural networks with the Autotiler is only possible if you already have it. Neural
+networks can be deployed with [DORY](https://github.com/pulp-platform/dory) instead, as in the
+[PULP-Frontnet](/docs/examples/nanocockpit/pulp-frontnet.md) example in NanoCockpit. See our
+[announcement](https://github.com/orgs/bitcraze/discussions/1854) for more details.
 
 The GAP8 SDK allows you to compile and execute applications on the GAP8 IoT Application Processor.
 Besides tools for building/programming/flashing, it also provides tools to help deploy neural networks and support two different operating systems.
@@ -47,37 +50,11 @@ have a look at the [aideck-docker repository](https://github.com/bitcraze/docker
 [GreenWaves SDK](https://github.com/GreenWaves-Technologies/gap_sdk).
 
 To see a list of what SDK versions we have docker containers for, have a look at [our Docker hub](https://hub.docker.com/r/bitcraze/aideck/tags),
-note that we only aim to keep the examples working with the latest tag.
+note that we only aim to keep the examples working with the latest tag. The exception is
+[NanoCockpit](/docs/examples/nanocockpit/index.md), which uses the `3.8.1` tag.
 
-Also, note that to be able to use the autotiler in the GAP8 SDK (Facedetection and Classifcation examples), you will have to set it up and accept the license manually.
+The Autotiler, which the face detection and classification examples need, used to be downloaded
+with `make autotiler`, which no longer works. If you already have it, in an `aideck-with-autotiler`
+image you created earlier or as the `LibTile.a` file, you can keep using it.
 
-Setting up docker and the autotiler
-
-```
-$ docker run --rm -it --name myAiDeckContainer bitcraze/aideck
-$ cd /gap_sdk
-$ source configs/ai_deck.sh
-$ make autotiler
-```
-
-Follow the instructions of the autotiler pull script. Press enter immediately at  `Enter URL from email: `, fill in your information, wait for the email with the URL. Once you receive the email, fill in the URL at the current `Enter URL from email: `, read the licence and accept if it is all fine with you.
-
-In a second **separate** terminal on your local machine, commit the changes to a new image by running:
-```
-$ docker commit myAiDeckContainer aideck-with-autotiler
-```
-
-This will save the state of the container with the installed autotiler to a new image called `aideck-with-autotiler` that you will use later.
-
-You can now go back to the first terminal and close the container.
-
-```
-$ exit
-```
-
-Remember that this needs to be done every time you pull a new image of the bitcraze/aideck docker image.
-
-
-
-
-For additional information on the SDK, look at the [GreenWaves GAP SDK documentation](https://greenwaves-technologies.com/manuals/BUILD/HOME/html/index.html).
+For additional information on the SDK, look at the [GAP SDK repository](https://github.com/GreenWaves-Technologies/gap_sdk).

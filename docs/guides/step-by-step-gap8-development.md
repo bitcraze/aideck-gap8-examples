@@ -4,6 +4,11 @@ page_id: writing-aideck-gap8-code
 ---
 
 ## Introduction
+
+**Note:** This guide uses the original ESP32 firmware and its CPX library. For NanoCockpit, the
+[component examples](/docs/examples/nanocockpit/component-examples.md) are a starting point
+instead.
+
 The AIdeck enables WiFi communication with the Crazyflie
 as well as using the power-efficient GAP8 to run neural networks on board. This tutorial will teach you about how to set up your own applications for your AIdeck.
 
