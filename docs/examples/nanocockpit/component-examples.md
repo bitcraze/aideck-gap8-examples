@@ -6,8 +6,8 @@ page_id: nanocockpit-component-examples
 These small examples each show how to use one part of the NanoCockpit framework. They are a good
 starting point for writing your own NanoCockpit application.
 
-* `cpx`: shows the sending side of the low-level CPX API. Every half second, the GAP8 sends a small
-  test packet addressed to the computer and prints that it did. Nothing on the computer side is
+* `cpx`: shows the sending side of the low-level CPX API. Every half second, the GAP8 sends two small
+  test packets addressed to the computer and prints that it did. Nothing on the computer side is
   included to receive the packets.
 * `coroutine`: runs several tasks at the same time with the coroutines of `lib/coroutine.h`.
 * `queue`: shows how to put elements in a queue and take them out again (`lib/queue.h`).

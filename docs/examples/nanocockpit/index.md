@@ -39,7 +39,7 @@ air is not supported.
 * [Docker](https://www.docker.com/) with the `bitcraze/aideck:3.8.1` image. NanoCockpit is
   developed and tested with GAP SDK 3.8.1, which is older than the version the other examples use.
 * [uv](https://docs.astral.sh/uv/) for the viewer. The viewer is a normal Python package, so other
-  tools work too, but the instructions use uv.
+  tools work too, with Python 3.14 or newer, but the instructions use uv.
 
 ## More in upstream NanoCockpit
 
