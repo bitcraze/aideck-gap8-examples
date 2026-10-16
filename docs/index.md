@@ -7,9 +7,6 @@ This repository contains examples that can be run on the GAP8 as well as some su
 documentation for developing for the GAP8. The examples are a good starting point for
 creating your own applications.
 
-Start with the
-[Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/).
-
 The examples use one of two firmware combinations on the AI-deck:
 
 * The [NanoCockpit examples](/docs/examples/nanocockpit/index.md) use the
@@ -24,3 +21,6 @@ other.
 Newer Crazyflie release packages include the ESP32 firmware for NanoCockpit. Upgrading the
 Crazyflie with such a release therefore replaces the original ESP32 firmware, see
 [switching firmware](/docs/development/switching-firmware.md).
+
+For an introduction to the AI-deck, see the
+[Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/).

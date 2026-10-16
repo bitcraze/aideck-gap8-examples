@@ -17,7 +17,7 @@ This was tested on **GAP_SDK version 4.22.0**, which at the moment of writing wa
 
 ## Building with Docker GAP-SDK
 
-Make sure to follow the [getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) before continuing.
+Make sure your AI-deck meets the [requirements for these examples](/docs/examples/index.md#requirements) before continuing.
 
 To clean, compile and flash the FaceDetection example you have to be in the aideck-gap8-examples directory and execute:
 

@@ -10,7 +10,7 @@ colorized.
 
 ## Prerequisites
 
-* Completed the [Getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/)
+* The [requirements for these examples](/docs/examples/index.md#requirements)
 
 ## Setup the WiFi via the Crazyflie firmware
 The WiFi on the aideck can be set up in a number of ways,

@@ -33,7 +33,7 @@ For more information on good deep learning practices, we recommend reviewing [De
 ---
 ## Prerequisites
 
-Make sure to follow the [getting started with the AI deck tutorial](https://www.bitcraze.io/documentation/tutorials/getting-started-with-aideck/) before continuing.
+Make sure your AI-deck meets the [requirements for these examples](/docs/examples/index.md#requirements) before continuing.
 
 ### Build Environments
 
