@@ -15,8 +15,8 @@ The examples use one of two firmware combinations on the AI-deck:
 * The [NanoCockpit examples](/docs/examples/nanocockpit/index.md) use the
   [ESP32 firmware for NanoCockpit](https://www.bitcraze.io/documentation/repository/aideck-esp-firmware-v2/main/),
   and are flashed to the GAP8 with a JTAG programmer.
-* The other examples use the original ESP32 firmware and the GAP8 bootloader, and are flashed to
-  the GAP8 over the air.
+* The other examples use the original ESP32 firmware and the GAP8 bootloader, and can be flashed
+  to the GAP8 over the air.
 
 See [switching firmware](/docs/development/switching-firmware.md) for how to go from one to the
 other.

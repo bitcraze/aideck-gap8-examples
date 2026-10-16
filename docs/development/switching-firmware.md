@@ -25,7 +25,7 @@ flash things to go from one combination to the other.
    [releases page](https://github.com/bitcraze/aideck-esp-firmware/releases), as described in the
    [aideck-esp-firmware](https://github.com/bitcraze/aideck-esp-firmware#flash-using-the-cfloader)
    repository. With cfcli, the command is `cfcli bootload flash --bin bcAI:esp-fw=aideck_esp.bin`.
-3. **Flash an example** to the GAP8 over the air, see [flashing](/docs/development/flashing.md), and
+3. **Flash an example** to the GAP8 over the air, see [flashing](/docs/development/flashing.md#over-the-air), and
    set up the Wi-Fi through the Crazyflie firmware, as described in the
    [WiFi video streamer](/docs/examples/wifi-streamer.md#setup-the-wifi-via-the-crazyflie-firmware)
    example.

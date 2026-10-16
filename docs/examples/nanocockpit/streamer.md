@@ -11,29 +11,15 @@ with the state, as a dataset.
 
 * The [requirements for NanoCockpit](/docs/examples/nanocockpit/index.md#requirements)
 
-For flashing, mount the AI-deck on the Crazyflie and connect the JTAG programmer to the GAP8 JTAG
-connector. We recommend disconnecting the programmer when flashing is done.
+## Flashing the example
 
-## Flashing the released binary
+The streamer is released as a ready-made image with the default configuration,
+`aideck_gap8_nanocockpit_streamer.bin` on the
+[releases page](https://github.com/bitcraze/aideck-gap8-examples/releases). Flash it as described
+in [flashing a ready-made image](/docs/development/flashing.md#flashing-a-ready-made-image).
 
-The streamer is released as a ready-made binary with the default configuration. Download
-`aideck_gap8_nanocockpit_streamer.bin` from the
-[releases page](https://github.com/bitcraze/aideck-gap8-examples/releases) and run the following
-command in the directory where you saved it. The command is for the Olimex ARM-USB-TINY-H:
-
-```bash
-docker run --rm -it -v "${PWD}:/module" -w /module \
-    --device-cgroup-rule="c 189:* rmw" \
-    -v /dev/bus:/dev/bus:ro -v /dev/serial:/dev/serial:ro \
-    bitcraze/aideck:3.8.1 \
-    bash -c 'source /gap_sdk/configs/ai_deck.sh; f=aideck_gap8_nanocockpit_streamer.bin; gap8-openocd -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -c "script interface/ftdi/olimex-arm-usb-tiny-h.cfg; script target/gap8revb.tcl; script tcl/flash_image.tcl; script tcl/jtag_boot.tcl; gap_flash_raw_hyper $f $(stat -c %s $f) /gap_sdk/tools/gap8-openocd-tools; exit;"'
-```
-
-Disconnect the programmer and power cycle the Crazyflie when the command is done.
-
-**Note:** Flashing over JTAG overwrites the GAP8 bootloader, see
-[switching firmware](/docs/development/switching-firmware.md) if you later want to use the other
-examples.
+To change the configuration, build and flash the example in `nanocockpit/examples/streamer` as
+described in [building and flashing an example](/docs/development/flashing.md#building-and-flashing-an-example).
 
 ## Configuring the example
 
@@ -55,30 +41,6 @@ The most important ones are
   Enable it if the GAP8 must also receive data from the computer, or to see round-trip times in the
   viewer. It lowers the SPI clock from 30 MHz to 7.2 MHz because of a limitation of the AI-deck
   hardware, which lowers the frame rate that can be reached.
-
-## Building and flashing the example
-
-From the root of this repository, start a console in the container:
-
-```bash
-docker run --rm -it -v "${PWD}:/module/data/" -P \
-    -e "GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-tiny-h.cfg" \
-    --device-cgroup-rule="c 189:* rmw" \
-    -v /dev/bus:/dev/bus:ro -v /dev/serial:/dev/serial:ro \
-    bitcraze/aideck:3.8.1 \
-    /bin/bash -c "source /gap_sdk/configs/ai_deck.sh; cd /module/data/; bash"
-```
-
-In the container, build and flash the example:
-
-```bash
-cd nanocockpit/examples/streamer
-make clean build image flash
-```
-
-Disconnect the programmer and power cycle the Crazyflie when flashing is done.
-
-**Note:** USB in Docker is only supported on Linux.
 
 ## Starting the viewer
 
