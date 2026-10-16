@@ -11,6 +11,10 @@ The examples use one of two firmware combinations on the AI-deck:
 * The other examples, in the `examples` folder, use the original ESP32 firmware and the GAP8
   bootloader.
 
+We recommend NanoCockpit. The other examples need the original firmware, which is only needed to
+flash the GAP8 over the air without a JTAG programmer, or to send CPX packets between the GAP8 and
+the Crazyflie.
+
 Newer Crazyflie release packages include the ESP32 firmware for NanoCockpit. Upgrading the
 Crazyflie with such a release therefore replaces the original ESP32 firmware, see
 [switching firmware](docs/development/switching-firmware.md).
