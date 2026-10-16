@@ -13,6 +13,12 @@ colorized.
 * The [requirements for these examples](/docs/examples/index.md#requirements)
 
 ## Setup the WiFi via the Crazyflie firmware
+
+The example can set up the WiFi itself, as an access point named `WiFi streaming example`, when it
+is built with `SETUP_WIFI_AP=1` (see [Configuring the example](#configuring-the-example)). The
+released `aideck_gap8_wifi_img_streamer_with_ap.bin` is built this way. Otherwise, set up the WiFi
+via the Crazyflie firmware as described below.
+
 The WiFi on the aideck can be set up in a number of ways,
 but to keep things simple for this tutorial we will be setting it up
 via the Crazyflie firmware as an access point, which means you will be
@@ -45,6 +51,7 @@ and profiling output:
 | `SENSOR_FRAME_RATE` | `default`, `60` | `default` |
 | `STREAM_ENCODING` | `raw`, `jpeg` | `raw` |
 | `OUTPUT_PROFILING_DATA` | `0`, `1` | `0` |
+| `SETUP_WIFI_AP` | `0`, `1` | `0` |
 
 The pipelined mode uses three image buffers: two DMA buffers remain queued
 while one complete frame is encoded or transferred. If processing is slower
