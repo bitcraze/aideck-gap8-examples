@@ -88,7 +88,7 @@ are reused.
 
 ## Starting the viewer
 
-In order to start the viewer, you will need the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45). Do check [this issue](https://github.com/bitcraze/crazyflie-clients-python/issues/611) if you also use the cfclient.
+In order to start the viewer, you will need the [python package of opencv](https://pypi.org/project/opencv-python/?msclkid=d7172048cae011ecb4ebefc85fe0fc45).
 
 Install opencv python:
 
