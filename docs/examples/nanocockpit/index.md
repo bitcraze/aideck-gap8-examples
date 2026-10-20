@@ -33,6 +33,11 @@ air is not supported.
 
 ## Requirements
 
+* A copy of this repository:
+
+  ```bash
+  git clone https://github.com/bitcraze/aideck-gap8-examples.git
+  ```
 * A JTAG programmer, see the [JTAG programmer documentation](/docs/development/jtag-programmer.md)
 * The ESP32 firmware for NanoCockpit, see the
   [aideck-esp-firmware-v2 documentation](https://www.bitcraze.io/documentation/repository/aideck-esp-firmware-v2/main/)
